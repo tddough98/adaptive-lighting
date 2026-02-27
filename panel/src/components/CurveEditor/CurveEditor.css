@@ -1,0 +1,6 @@
+.curve-editor {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 12px;
+  padding: 20px;
+}

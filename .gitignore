@@ -138,3 +138,12 @@ config/*
 
 # Home Assistant core
 core/
+
+# pnpm content-addressable store
+.pnpm-store/
+
+# Panel (Node.js / Vite)
+panel/node_modules/
+panel/dist/
+panel/.vite/
+panel/tsconfig.tsbuildinfo
