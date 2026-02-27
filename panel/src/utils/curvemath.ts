@@ -62,7 +62,16 @@ export function getPhase(
 
 /**
  * Interpolate between start and end values with adjustable sharpness.
- * Uses tanh-based S-curve: k = 2 + sharpness * 8
+ *
+ * Sharpness controls both the transition shape AND where the curve is
+ * at the midpoint (progress=0.5):
+ *   sharpness=0 → value ≈ startVal at midpoint (transition happens late)
+ *   sharpness=0.5 → value = (startVal+endVal)/2 (symmetric S-curve)
+ *   sharpness=1 → value ≈ endVal at midpoint (transition happens early)
+ *
+ * Uses a biased tanh S-curve: the sigmoid center shifts so the curve
+ * passes through the sharpness-determined value at progress=0.5, with
+ * adaptive steepness to ensure endpoints are reached.
  */
 export function interpolateWithSharpness(
   progress: number,
@@ -70,13 +79,19 @@ export function interpolateWithSharpness(
   startVal: number,
   endVal: number,
 ): number {
-  let t: number;
-  if (sharpness <= 0) {
-    t = progress;
-  } else {
-    const k = 2 + sharpness * 8;
-    t = (Math.tanh((progress - 0.5) * k) + 1) / 2;
-  }
+  // Clamp to avoid atanh(±1) singularity
+  const s = Math.max(0.01, Math.min(0.99, sharpness));
+  const u = 2 * s - 1;
+  const halfArg = Math.atanh(u);
+
+  // Adaptive k: base steepness of 5, increased for extreme biases
+  // to ensure the curve still reaches ~0/1 at both endpoints.
+  const k = Math.max(5, 5 + 2 * Math.abs(halfArg));
+
+  // Bias: shift the sigmoid center so that at progress=0.5, t = s
+  const b = 0.5 - halfArg / k;
+
+  const t = (Math.tanh((progress - b) * k) + 1) / 2;
   return startVal + (endVal - startVal) * t;
 }
 

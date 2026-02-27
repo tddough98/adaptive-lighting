@@ -1,43 +1,108 @@
+import { useCallback, useState } from 'react';
 import type { ScaleLinear } from 'd3';
-import type { CurveDefinition, ResolvedCurve } from '../../types/curves';
+import type {
+  ChartMargins,
+  CurveDefinition,
+  CurveSet,
+  CurveSetAction,
+  ResolvedCurve,
+  SunTimes,
+  TimingPointType,
+} from '../../types/curves';
 import { formatHour } from '../../utils/timeformat';
+import {
+  absoluteHourToTimingValue,
+  getTimePointConstraints,
+  snapToMinutes,
+} from '../../utils/constraints';
+import { useDrag } from '../../hooks/useDrag';
 
 interface TimePointMarkersProps {
   resolved: ResolvedCurve;
   curveDefinition: CurveDefinition;
   yScale: ScaleLinear<number, number>;
   xScale: ScaleLinear<number, number>;
+  svgRef: React.RefObject<SVGSVGElement | null>;
+  margins: ChartMargins;
+  sunTimes: SunTimes;
+  curveSet: CurveSet;
+  onPointDrag: (action: CurveSetAction) => void;
+  onPointDragEnd: (action: CurveSetAction) => void;
 }
+
+const LABELS: Record<TimingPointType, string> = {
+  transition_start: 'P1',
+  hold_start: 'P2',
+  hold_end: 'P4',
+  transition_end: 'P5',
+};
 
 export function TimePointMarkers({
   resolved,
   curveDefinition,
   yScale,
   xScale,
+  svgRef,
+  margins,
+  sunTimes,
+  curveSet,
+  onPointDrag,
+  onPointDragEnd,
 }: TimePointMarkersProps) {
   const { maxValue, minValue } = resolved;
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const { dragState, startDrag } = useDrag<CurveSetAction>({
+    svgRef,
+    onDrag: onPointDrag,
+    onDragEnd: onPointDragEnd,
+  });
+
+  const makeConstrainFn = useCallback(
+    (pointType: TimingPointType) => {
+      return (svgX: number, _svgY: number): CurveSetAction => {
+        const plotX = svgX - margins.left;
+        const rawHour = xScale.invert(plotX);
+        const constraints = getTimePointConstraints(pointType, curveSet, sunTimes);
+        const clamped = Math.max(
+          constraints.minHour,
+          Math.min(constraints.maxHour, rawHour),
+        );
+        const snapped = snapToMinutes(clamped, constraints.snapMinutes);
+        const newValue = absoluteHourToTimingValue(snapped, pointType, sunTimes);
+
+        return {
+          type: 'UPDATE_TIME_POINT',
+          curveName: 'brightness',
+          pointType,
+          newValue,
+        };
+      };
+    },
+    [margins.left, xScale, curveSet, sunTimes],
+  );
 
   const points = [
     {
-      label: 'P1',
+      type: 'transition_start' as const,
       hour: resolved.p1,
       value: maxValue,
       isRelative: curveDefinition.transitionStart.isRelative,
     },
     {
-      label: 'P2',
+      type: 'hold_start' as const,
       hour: resolved.p2,
       value: minValue,
       isRelative: curveDefinition.holdStart.isRelative,
     },
     {
-      label: 'P4',
+      type: 'hold_end' as const,
       hour: resolved.p4,
       value: minValue,
       isRelative: curveDefinition.holdEnd.isRelative,
     },
     {
-      label: 'P5',
+      type: 'transition_end' as const,
       hour: resolved.p5,
       value: maxValue,
       isRelative: curveDefinition.transitionEnd.isRelative,
@@ -47,28 +112,43 @@ export function TimePointMarkers({
   return (
     <g className="time-point-markers">
       {points.map((pt) => {
+        const label = LABELS[pt.type];
         const cx = xScale(pt.hour);
         const cy = yScale(pt.value);
+        const isDragging =
+          dragState.isDragging && dragState.activePointId === pt.type;
+        const isHovered = hoveredId === pt.type;
+        const scale = isDragging ? 1.2 : isHovered ? 1.2 : 1;
+
         return (
-          <g key={pt.label}>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={5}
-              fill="var(--bg-card)"
-              stroke="#fff"
-              strokeWidth={1.5}
-              strokeDasharray={pt.isRelative ? '3 2' : undefined}
-            />
+          <g key={label} transform={`translate(${cx},${cy})`}>
+            {/* Label with time */}
             <text
-              x={cx}
-              y={cy - 10}
+              x={0}
+              y={-14}
               textAnchor="middle"
               fill="var(--text-secondary)"
               fontSize={8}
             >
-              {pt.label} {formatHour(pt.hour)}
+              {label} {formatHour(pt.hour)}
             </text>
+            {/* Circle marker */}
+            <circle
+              r={8}
+              fill="var(--bg-card)"
+              stroke="#4caf50"
+              strokeWidth={2}
+              strokeDasharray={pt.isRelative ? '3 2' : undefined}
+              style={{
+                cursor: 'ew-resize',
+                transform: `scale(${scale})`,
+                transition: isDragging ? 'none' : 'transform 0.15s ease',
+              }}
+              filter={isDragging ? 'url(#drag-glow)' : undefined}
+              onMouseDown={startDrag(pt.type, makeConstrainFn(pt.type))}
+              onMouseEnter={() => setHoveredId(pt.type)}
+              onMouseLeave={() => setHoveredId(null)}
+            />
           </g>
         );
       })}

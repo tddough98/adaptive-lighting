@@ -64,3 +64,20 @@ export interface CurveSample {
   hour: number;
   value: number;
 }
+
+export type CurveName = 'brightness' | 'colorTemp';
+
+export type CurveSetAction =
+  | {
+      type: 'UPDATE_TIME_POINT';
+      curveName: CurveName;
+      pointType: TimingPointType;
+      newValue: number;
+    }
+  | {
+      type: 'UPDATE_SHARPNESS';
+      curveName: CurveName;
+      which: 'evening' | 'morning';
+      newSharpness: number;
+    }
+  | { type: 'TOGGLE_LINKED' };

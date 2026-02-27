@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { scaleLinear } from 'd3';
-import type { CurveSet } from '../../types/curves';
+import type { CurveSet, CurveSetAction, SunTimes } from '../../types/curves';
 import type { ChartMargins } from '../../types/curves';
 import type { CurveData } from '../../hooks/useCurveData';
 import { ChartCanvas } from '../ChartCanvas/ChartCanvas';
@@ -22,9 +22,19 @@ const MARGINS: ChartMargins = { top: 16, right: 60, bottom: 36, left: 56 };
 interface CurveEditorProps {
   data: CurveData;
   curveSet: CurveSet;
+  sunTimes: SunTimes;
+  onPointDrag: (action: CurveSetAction) => void;
+  onPointDragEnd: (action: CurveSetAction) => void;
 }
 
-export function CurveEditor({ data, curveSet }: CurveEditorProps) {
+export function CurveEditor({
+  data,
+  curveSet,
+  sunTimes,
+  onPointDrag,
+  onPointDragEnd,
+}: CurveEditorProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
   const innerWidth = WIDTH - MARGINS.left - MARGINS.right;
   const innerHeight = HEIGHT - MARGINS.top - MARGINS.bottom;
 
@@ -46,6 +56,7 @@ export function CurveEditor({ data, curveSet }: CurveEditorProps) {
   return (
     <div className="curve-editor">
       <ChartCanvas
+        ref={svgRef}
         width={WIDTH}
         height={HEIGHT}
         margins={MARGINS}
@@ -88,11 +99,21 @@ export function CurveEditor({ data, curveSet }: CurveEditorProps) {
           curveDefinition={curveSet.brightness}
           yScale={yBrightnessScale}
           xScale={xScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          sunTimes={sunTimes}
+          curveSet={curveSet}
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
         />
         <SharpnessPointMarkers
           resolved={data.resolvedBrightness}
           xScale={xScale}
           yScale={yBrightnessScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
         />
         <XAxisLabels
           xScale={xScale}
