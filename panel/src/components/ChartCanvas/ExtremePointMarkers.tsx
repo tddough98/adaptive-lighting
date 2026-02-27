@@ -74,8 +74,7 @@ export function ExtremePointMarkers({
 
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
-        const minY = Math.max(resolved.p1Value, resolved.p5Value);
-        const newValue = constrainYValue(rawY, minY, resolved.maxValue);
+        const newValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
 
         return {
           type: 'UPDATE_PEAK',
@@ -99,8 +98,7 @@ export function ExtremePointMarkers({
 
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
-        const maxY = Math.min(resolved.p2Value, resolved.p4Value);
-        const newValue = constrainYValue(rawY, resolved.minValue, maxY);
+        const newValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
 
         return {
           type: 'UPDATE_VALLEY',

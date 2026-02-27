@@ -1,6 +1,56 @@
-.curve-editor {
+.curve-editor-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.curve-editor-header {
+  display: flex;
+  justify-content: center;
+}
+
+.curve-editor-panels {
+  display: flex;
+  gap: 12px;
+}
+
+.single-curve-panel {
+  flex: 1;
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
   border-radius: 12px;
-  padding: 20px;
+  padding: 12px;
+}
+
+.single-curve-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.linked-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--bg-card-border);
+  border-radius: 20px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.linked-toggle:hover {
+  background: var(--bg-card-border);
+  border-color: var(--text-secondary);
+}
+
+@media (max-width: 800px) {
+  .curve-editor-panels {
+    flex-direction: column;
+  }
 }

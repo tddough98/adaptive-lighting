@@ -22,6 +22,11 @@ export default function App() {
     [],
   );
 
+  const handleToggleLinked = useCallback(
+    () => dispatch({ type: 'TOGGLE_LINKED' }),
+    [],
+  );
+
   return (
     <div className="app">
       <header className="app-header">
@@ -33,6 +38,7 @@ export default function App() {
         sunTimes={sunTimes}
         onPointDrag={handlePointDrag}
         onPointDragEnd={handlePointDragEnd}
+        onToggleLinked={handleToggleLinked}
       />
     </div>
   );

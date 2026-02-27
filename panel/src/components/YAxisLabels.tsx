@@ -1,80 +1,53 @@
 import { useEffect, useRef } from 'react';
-import { axisLeft, axisRight, select, type ScaleLinear } from 'd3';
+import { axisLeft, select, type ScaleLinear } from 'd3';
 
 interface YAxisLabelsProps {
-  yBrightnessScale: ScaleLinear<number, number>;
-  yColorTempScale: ScaleLinear<number, number>;
-  width: number;
+  yScale: ScaleLinear<number, number>;
+  label: string;
+  accentColor: string;
+  tickFormat: (d: number) => string;
 }
 
 export function YAxisLabels({
-  yBrightnessScale,
-  yColorTempScale,
-  width,
+  yScale,
+  label,
+  accentColor,
+  tickFormat,
 }: YAxisLabelsProps) {
-  const leftRef = useRef<SVGGElement>(null);
-  const rightRef = useRef<SVGGElement>(null);
+  const ref = useRef<SVGGElement>(null);
 
   useEffect(() => {
-    if (!leftRef.current) return;
-    const axis = axisLeft(yBrightnessScale)
+    if (!ref.current) return;
+    const axis = axisLeft(yScale)
       .ticks(5)
-      .tickFormat((d) => `${d}%`)
+      .tickFormat((d) => tickFormat(d as number))
       .tickSize(0)
       .tickPadding(6);
 
-    const g = select(leftRef.current);
+    const g = select(ref.current);
     g.call(axis);
     g.select('.domain').remove();
     g.selectAll('text')
-      .attr('fill', 'var(--accent-brightness)')
+      .attr('fill', accentColor)
       .attr('font-size', '9px');
-  }, [yBrightnessScale]);
+  }, [yScale, tickFormat, accentColor]);
 
-  useEffect(() => {
-    if (!rightRef.current) return;
-    const axis = axisRight(yColorTempScale)
-      .ticks(5)
-      .tickFormat((d) => `${d}K`)
-      .tickSize(0)
-      .tickPadding(6);
-
-    const g = select(rightRef.current);
-    g.call(axis);
-    g.select('.domain').remove();
-    g.selectAll('text')
-      .attr('fill', 'var(--accent-colortemp)')
-      .attr('font-size', '9px');
-  }, [yColorTempScale]);
+  const [domainMin, domainMax] = yScale.domain();
+  const midY = yScale((domainMin + domainMax) / 2);
 
   return (
     <>
-      <g ref={leftRef} />
-      {/* Left axis label */}
+      <g ref={ref} />
       <text
         transform="rotate(-90)"
-        x={-yBrightnessScale(50)}
+        x={-midY}
         y={-44}
         textAnchor="middle"
-        fill="var(--accent-brightness)"
+        fill={accentColor}
         fontSize={10}
         fontWeight={500}
       >
-        Brightness %
-      </text>
-
-      <g ref={rightRef} transform={`translate(${width},0)`} />
-      {/* Right axis label */}
-      <text
-        transform="rotate(90)"
-        x={yColorTempScale(3750)}
-        y={-(width + 48)}
-        textAnchor="middle"
-        fill="var(--accent-colortemp)"
-        fontSize={10}
-        fontWeight={500}
-      >
-        Color Temp (K)
+        {label}
       </text>
     </>
   );

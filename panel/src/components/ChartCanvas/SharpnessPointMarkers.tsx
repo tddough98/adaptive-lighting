@@ -16,6 +16,7 @@ interface SharpnessPointMarkersProps {
   svgRef: React.RefObject<SVGSVGElement | null>;
   margins: ChartMargins;
   curveName: CurveName;
+  accentColor?: string;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
 }
@@ -34,6 +35,7 @@ export function SharpnessPointMarkers({
   svgRef,
   margins,
   curveName,
+  accentColor = 'var(--accent-colortemp)',
   onPointDrag,
   onPointDragEnd,
 }: SharpnessPointMarkersProps) {
@@ -106,7 +108,7 @@ export function SharpnessPointMarkers({
           <g key={m.id} transform={`translate(${cx},${cy})`}>
             <circle
               r={6}
-              fill="var(--accent-colortemp)"
+              fill={accentColor}
               stroke="var(--bg-card)"
               strokeWidth={1.5}
               style={{

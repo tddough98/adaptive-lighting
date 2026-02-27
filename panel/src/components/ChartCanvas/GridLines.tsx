@@ -5,15 +5,16 @@ interface GridLinesProps {
   height: number;
   xScale: ScaleLinear<number, number>;
   yScale: ScaleLinear<number, number>;
+  yTicks?: number[];
 }
 
-const Y_TICKS = [0, 25, 50, 75, 100];
+const DEFAULT_Y_TICKS = [0, 25, 50, 75, 100];
 const X_TICKS = [0, 3, 6, 9, 12, 15, 18, 21, 24];
 
-export function GridLines({ width, height, xScale, yScale }: GridLinesProps) {
+export function GridLines({ width, height, xScale, yScale, yTicks = DEFAULT_Y_TICKS }: GridLinesProps) {
   return (
     <g className="grid-lines">
-      {Y_TICKS.map((v) => (
+      {yTicks.map((v) => (
         <line
           key={`h-${v}`}
           x1={0}

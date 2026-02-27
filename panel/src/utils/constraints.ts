@@ -1,4 +1,4 @@
-import type { CurveSet, ResolvedCurve, SunTimes, TimingPointType } from '../types/curves';
+import type { CurveName, CurveSet, ResolvedCurve, SunTimes, TimingPointType } from '../types/curves';
 import { resolveCurve } from './curvemath';
 
 export interface TimePointConstraints {
@@ -21,8 +21,9 @@ export function getTimePointConstraints(
   pointType: TimingPointType,
   curveSet: CurveSet,
   sunTimes: SunTimes,
+  curveName: CurveName = 'brightness',
 ): TimePointConstraints {
-  const resolved = resolveCurve(curveSet.brightness, sunTimes);
+  const resolved = resolveCurve(curveSet[curveName], sunTimes);
 
   switch (pointType) {
     case 'transition_start': // P1

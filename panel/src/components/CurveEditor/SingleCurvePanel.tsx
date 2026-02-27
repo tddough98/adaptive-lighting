@@ -1,0 +1,174 @@
+import { useMemo, useRef } from 'react';
+import { scaleLinear } from 'd3';
+import type {
+  ChartMargins,
+  CurveName,
+  CurveSample,
+  CurveSet,
+  CurveSetAction,
+  ResolvedCurve,
+  SunTimes,
+} from '../../types/curves';
+import { ChartCanvas } from '../ChartCanvas/ChartCanvas';
+import { CurveGradientBackground } from '../ChartCanvas/CurveGradientBackground';
+import { GridLines } from '../ChartCanvas/GridLines';
+import { SunEventMarkers } from '../ChartCanvas/SunEventMarkers';
+import { CurvePath } from '../ChartCanvas/CurvePath';
+import { SingleCurveTimeIndicator } from '../ChartCanvas/SingleCurveTimeIndicator';
+import { TimePointMarkers } from '../ChartCanvas/TimePointMarkers';
+import { SharpnessPointMarkers } from '../ChartCanvas/SharpnessPointMarkers';
+import { ExtremePointMarkers } from '../ChartCanvas/ExtremePointMarkers';
+import { XAxisLabels } from '../XAxisLabels';
+import { YAxisLabels } from '../YAxisLabels';
+
+const WIDTH = 540;
+const HEIGHT = 310;
+const MARGINS: ChartMargins = { top: 16, right: 20, bottom: 36, left: 50 };
+
+interface SingleCurvePanelProps {
+  curveName: CurveName;
+  title: string;
+  samples: CurveSample[];
+  resolved: ResolvedCurve;
+  curveSet: CurveSet;
+  sunTimes: SunTimes;
+  currentHour: number;
+  yDomain: [number, number];
+  yTicks: number[];
+  yAxisLabel: string;
+  yTickFormat: (d: number) => string;
+  curveColor: string;
+  dashArray?: string;
+  gradientId: string;
+  mapValueToColor: (value: number) => string;
+  onPointDrag: (action: CurveSetAction) => void;
+  onPointDragEnd: (action: CurveSetAction) => void;
+}
+
+export function SingleCurvePanel({
+  curveName,
+  title,
+  samples,
+  resolved,
+  curveSet,
+  sunTimes,
+  currentHour,
+  yDomain,
+  yTicks,
+  yAxisLabel,
+  yTickFormat,
+  curveColor,
+  dashArray,
+  gradientId,
+  mapValueToColor,
+  onPointDrag,
+  onPointDragEnd,
+}: SingleCurvePanelProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const innerWidth = WIDTH - MARGINS.left - MARGINS.right;
+  const innerHeight = HEIGHT - MARGINS.top - MARGINS.bottom;
+
+  const xScale = useMemo(
+    () => scaleLinear().domain([0, 24]).range([0, innerWidth]),
+    [innerWidth],
+  );
+
+  const yScale = useMemo(
+    () => scaleLinear().domain(yDomain).range([innerHeight, 0]),
+    [innerHeight, yDomain],
+  );
+
+  return (
+    <div className="single-curve-panel">
+      <div className="single-curve-panel-title" style={{ color: curveColor }}>
+        {title}
+      </div>
+      <ChartCanvas
+        ref={svgRef}
+        width={WIDTH}
+        height={HEIGHT}
+        margins={MARGINS}
+      >
+        <CurveGradientBackground
+          samples={samples}
+          width={innerWidth}
+          height={innerHeight}
+          xScale={xScale}
+          gradientId={gradientId}
+          mapValueToColor={mapValueToColor}
+        />
+        <GridLines
+          width={innerWidth}
+          height={innerHeight}
+          xScale={xScale}
+          yScale={yScale}
+          yTicks={yTicks}
+        />
+        <SunEventMarkers
+          sunTimes={sunTimes}
+          height={innerHeight}
+          xScale={xScale}
+        />
+        <CurvePath
+          samples={samples}
+          xScale={xScale}
+          yScale={yScale}
+          color={curveColor}
+          dashArray={dashArray}
+        />
+        <SingleCurveTimeIndicator
+          currentHour={currentHour}
+          samples={samples}
+          height={innerHeight}
+          xScale={xScale}
+          yScale={yScale}
+          accentColor={curveColor}
+        />
+        <TimePointMarkers
+          resolved={resolved}
+          curveDefinition={curveSet[curveName]}
+          yScale={yScale}
+          xScale={xScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          sunTimes={sunTimes}
+          curveSet={curveSet}
+          curveName={curveName}
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
+        />
+        <SharpnessPointMarkers
+          resolved={resolved}
+          xScale={xScale}
+          yScale={yScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          curveName={curveName}
+          accentColor={curveColor}
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
+        />
+        <ExtremePointMarkers
+          resolved={resolved}
+          xScale={xScale}
+          yScale={yScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          curveName={curveName}
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
+        />
+        <XAxisLabels
+          xScale={xScale}
+          height={innerHeight}
+        />
+        <YAxisLabels
+          yScale={yScale}
+          label={yAxisLabel}
+          accentColor={curveColor}
+          tickFormat={yTickFormat}
+        />
+      </ChartCanvas>
+    </div>
+  );
+}

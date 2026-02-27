@@ -67,7 +67,7 @@ export function TimePointMarkers({
         // X: time constraint (same as before)
         const plotX = svgX - margins.left;
         const rawHour = xScale.invert(plotX);
-        const constraints = getTimePointConstraints(pointType, curveSet, sunTimes);
+        const constraints = getTimePointConstraints(pointType, curveSet, sunTimes, curveName);
         const clamped = Math.max(
           constraints.minHour,
           Math.min(constraints.maxHour, rawHour),
@@ -75,22 +75,10 @@ export function TimePointMarkers({
         const snapped = snapToMinutes(clamped, constraints.snapMinutes);
         const newValue = absoluteHourToTimingValue(snapped, pointType, sunTimes);
 
-        // Y: per-point value constraint
+        // Y: domain-only constraint (inter-point hierarchy enforced in reducer)
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
-        let minY = resolved.minValue;
-        let maxY = resolved.maxValue;
-        switch (pointType) {
-          case 'transition_start': // P1: can't go below P2
-            minY = resolved.p2Value; break;
-          case 'hold_start':       // P2: can't go above P1
-            maxY = resolved.p1Value; break;
-          case 'hold_end':         // P4: can't go above P5
-            maxY = resolved.p5Value; break;
-          case 'transition_end':   // P5: can't go below P4
-            minY = resolved.p4Value; break;
-        }
-        const newYValue = constrainYValue(rawY, minY, maxY);
+        const newYValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
 
         return {
           type: 'UPDATE_TIME_POINT',
