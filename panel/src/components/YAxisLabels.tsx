@@ -6,6 +6,7 @@ interface YAxisLabelsProps {
   label: string;
   accentColor: string;
   tickFormat: (d: number) => string;
+  mapValueToColor?: (d: number) => string;
 }
 
 export function YAxisLabels({
@@ -13,6 +14,7 @@ export function YAxisLabels({
   label,
   accentColor,
   tickFormat,
+  mapValueToColor,
 }: YAxisLabelsProps) {
   const ref = useRef<SVGGElement>(null);
 
@@ -22,15 +24,24 @@ export function YAxisLabels({
       .ticks(5)
       .tickFormat((d) => tickFormat(d as number))
       .tickSize(0)
-      .tickPadding(6);
+      .tickPadding(mapValueToColor ? 14 : 6);
 
     const g = select(ref.current);
     g.call(axis);
     g.select('.domain').remove();
-    g.selectAll('text')
-      .attr('fill', accentColor)
-      .attr('font-size', '9px');
-  }, [yScale, tickFormat, accentColor]);
+    g.selectAll('text').attr('font-size', '9px');
+    if (mapValueToColor) {
+      g.selectAll<SVGTextElement, number>('.tick text').each(function () {
+        const tick = select(this);
+        const tickValue = parseFloat(tick.text().replace(/[^0-9.]/g, ''));
+        if (!isNaN(tickValue)) {
+          tick.attr('fill', mapValueToColor(tickValue));
+        }
+      });
+    } else {
+      g.selectAll('text').attr('fill', accentColor);
+    }
+  }, [yScale, tickFormat, accentColor, mapValueToColor]);
 
   const [domainMin, domainMax] = yScale.domain();
   const midY = yScale((domainMin + domainMax) / 2);

@@ -146,7 +146,7 @@ export function TimePointMarkers({
             <circle
               r={8}
               fill="var(--bg-card)"
-              stroke="#4caf50"
+              stroke="var(--accent-brightness)"
               strokeWidth={2}
               strokeDasharray={pt.isRelative ? '3 2' : undefined}
               style={{

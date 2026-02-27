@@ -1,7 +1,9 @@
 import type {
+  ColorModeConfig,
   CurveDefinition,
   CurveSet,
   CurveSetAction,
+  SunTimes,
   TimingPointType,
 } from '../types/curves';
 
@@ -138,6 +140,17 @@ function mirrorTimingToColorTemp(state: CurveSet): CurveDefinition {
   };
 }
 
+/** Resolve null boundaries to sun times. Returns the color_temp active range. */
+export function resolveColorModeBoundaries(
+  config: ColorModeConfig,
+  sunTimes: SunTimes,
+): { startHour: number; endHour: number } {
+  return {
+    startHour: config.colorTempStartHour ?? sunTimes.sunriseHour,
+    endHour: config.colorTempEndHour ?? sunTimes.sunsetHour,
+  };
+}
+
 export function curveSetReducer(
   state: CurveSet,
   action: CurveSetAction,
@@ -236,6 +249,14 @@ export function curveSetReducer(
         };
       }
       return { ...state, linked };
+    }
+
+    case 'UPDATE_COLOR_MODE_BOUNDARY': {
+      const key = action.boundary === 'start' ? 'colorTempStartHour' : 'colorTempEndHour';
+      return {
+        ...state,
+        colorMode: { ...state.colorMode, [key]: action.newHour },
+      };
     }
   }
 }

@@ -47,7 +47,7 @@ export function resolveCurve(
 }
 
 /** Check if hour is within the arc from start to end (handles midnight wrap). */
-function isInArc(hour: number, start: number, end: number): boolean {
+export function isInArc(hour: number, start: number, end: number): boolean {
   if (start <= end) return hour >= start && hour < end;
   return hour >= start || hour < end;
 }

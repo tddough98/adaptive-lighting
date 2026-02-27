@@ -33,10 +33,17 @@ export interface CurveDefinition {
   valley: ExtremePoint;          // Nighttime minimum between P2→P4
 }
 
+export interface ColorModeConfig {
+  colorTempStartHour: number | null; // null = follow sunriseHour
+  colorTempEndHour: number | null;   // null = follow sunsetHour
+  sleepRgbColor: [number, number, number];
+}
+
 export interface CurveSet {
   brightness: CurveDefinition;
   colorTemp: CurveDefinition;
   linked: boolean;
+  colorMode: ColorModeConfig;
 }
 
 export interface SunTimes {
@@ -111,4 +118,5 @@ export type CurveSetAction =
       newHour: number;
       newValue: number;
     }
-  | { type: 'TOGGLE_LINKED' };
+  | { type: 'TOGGLE_LINKED' }
+  | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number };

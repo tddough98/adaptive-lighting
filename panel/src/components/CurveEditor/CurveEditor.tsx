@@ -1,9 +1,14 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { scaleLinear } from 'd3';
 import type { CurveSet, CurveSetAction, SunTimes } from '../../types/curves';
 import type { CurveData } from '../../hooks/useCurveData';
-import { brightnessToColor, kelvinToRgb } from '../../utils/colormap';
+import { brightnessToColor, kelvinToRgb, kelvinToRgbTuple } from '../../utils/colormap';
+import { lerpColorHsv, rgbTupleToString } from '../../utils/colorInterpolation';
+import { isInArc } from '../../utils/curvemath';
+import { resolveColorModeBoundaries } from '../../hooks/useCurveSetReducer';
 import { SingleCurvePanel } from './SingleCurvePanel';
 import { LinkedToggle } from './LinkedToggle';
+import { ColorModeBar } from '../ChartCanvas/ColorModeBar';
 import './CurveEditor.css';
 
 interface CurveEditorProps {
@@ -20,6 +25,11 @@ const BRIGHTNESS_Y_TICKS = [0, 25, 50, 75, 100];
 const COLOR_TEMP_Y_DOMAIN: [number, number] = [2000, 5500];
 const COLOR_TEMP_Y_TICKS = [2000, 2875, 3750, 4625, 5500];
 
+// Must match SingleCurvePanel layout
+const CHART_WIDTH = 540;
+const CHART_MARGINS = { top: 16, right: 20, bottom: 36, left: 50 };
+const INNER_WIDTH = CHART_WIDTH - CHART_MARGINS.left - CHART_MARGINS.right;
+
 const formatBrightnessTickCb = (d: number) => `${d}%`;
 const formatColorTempTickCb = (d: number) => `${d}K`;
 
@@ -31,8 +41,41 @@ export function CurveEditor({
   onPointDragEnd,
   onToggleLinked,
 }: CurveEditorProps) {
-  const mapBrightnessColor = useCallback(brightnessToColor, []);
-  const mapColorTempColor = useCallback(kelvinToRgb, []);
+  const { startHour, endHour } = resolveColorModeBoundaries(curveSet.colorMode, sunTimes);
+  const { sleepRgbColor } = curveSet.colorMode;
+  const minK = curveSet.colorTemp.minValue;
+  const maxK = curveSet.colorTemp.maxValue;
+
+  const minRgb = useMemo(() => kelvinToRgbTuple(minK), [minK]);
+
+  const mapBrightnessColor = useCallback(
+    (value: number, _hour: number) => brightnessToColor(value),
+    [],
+  );
+
+  const mapColorTempModeAware = useCallback(
+    (value: number, hour: number) => {
+      if (isInArc(hour, startHour, endHour)) {
+        return kelvinToRgb(value);
+      }
+      // Nighttime: HSV lerp toward sleepRgbColor
+      const t = maxK > minK ? 1 - (value - minK) / (maxK - minK) : 0;
+      const clamped = Math.max(0, Math.min(1, t));
+      return rgbTupleToString(lerpColorHsv(minRgb, sleepRgbColor, clamped));
+    },
+    [startHour, endHour, minK, maxK, minRgb, sleepRgbColor],
+  );
+
+  // Pure Kelvin colors for Y-axis (always daytime/color_temp mode)
+  const mapColorTempValueOnly = useCallback(
+    (value: number) => kelvinToRgb(value),
+    [],
+  );
+
+  const barXScale = useMemo(
+    () => scaleLinear().domain([0, 24]).range([0, INNER_WIDTH]),
+    [],
+  );
 
   return (
     <div className="curve-editor-layout">
@@ -58,25 +101,39 @@ export function CurveEditor({
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
         />
-        <SingleCurvePanel
-          curveName="colorTemp"
-          title="Color Temperature"
-          samples={data.colorTempSamples}
-          resolved={data.resolvedColorTemp}
-          curveSet={curveSet}
-          sunTimes={sunTimes}
-          currentHour={data.currentHour}
-          yDomain={COLOR_TEMP_Y_DOMAIN}
-          yTicks={COLOR_TEMP_Y_TICKS}
-          yAxisLabel="Color Temp (K)"
-          yTickFormat={formatColorTempTickCb}
-          curveColor="var(--accent-colortemp)"
-          dashArray="6 3"
-          gradientId="bg-gradient-colortemp"
-          mapValueToColor={mapColorTempColor}
-          onPointDrag={onPointDrag}
-          onPointDragEnd={onPointDragEnd}
-        />
+        <div className="color-temp-panel-with-bar">
+          <SingleCurvePanel
+            curveName="colorTemp"
+            title="Color Temperature"
+            samples={data.colorTempSamples}
+            resolved={data.resolvedColorTemp}
+            curveSet={curveSet}
+            sunTimes={sunTimes}
+            currentHour={data.currentHour}
+            yDomain={COLOR_TEMP_Y_DOMAIN}
+            yTicks={COLOR_TEMP_Y_TICKS}
+            yAxisLabel="Color Temp (K)"
+            yTickFormat={formatColorTempTickCb}
+            curveColor="var(--accent-colortemp)"
+            dashArray="6 3"
+            gradientId="bg-gradient-colortemp"
+            mapValueToColor={mapColorTempModeAware}
+            mapValueOnly={mapColorTempValueOnly}
+            onPointDrag={onPointDrag}
+            onPointDragEnd={onPointDragEnd}
+          />
+          <ColorModeBar
+            xScale={barXScale}
+            innerWidth={INNER_WIDTH}
+            colorTempStartHour={startHour}
+            colorTempEndHour={endHour}
+            samples={data.colorTempSamples}
+            mapSampleToColor={mapColorTempModeAware}
+            margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
+            onBoundaryDrag={onPointDrag}
+            onBoundaryDragEnd={onPointDragEnd}
+          />
+        </div>
       </div>
     </div>
   );

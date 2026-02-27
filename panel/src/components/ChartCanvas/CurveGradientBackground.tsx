@@ -8,7 +8,7 @@ interface CurveGradientBackgroundProps {
   height: number;
   xScale: ScaleLinear<number, number>;
   gradientId: string;
-  mapValueToColor: (value: number) => string;
+  mapValueToColor: (value: number, hour: number) => string;
   opacity?: number;
 }
 
@@ -21,7 +21,7 @@ export function CurveGradientBackground({
   xScale,
   gradientId,
   mapValueToColor,
-  opacity = 0.15,
+  opacity = 1,
 }: CurveGradientBackgroundProps) {
   const stops = useMemo(() => {
     if (samples.length === 0) return [];
@@ -32,7 +32,7 @@ export function CurveGradientBackground({
       const pct = (xScale(s.hour) / width) * 100;
       result.push({
         offset: `${pct.toFixed(1)}%`,
-        color: mapValueToColor(s.value),
+        color: mapValueToColor(s.value, s.hour),
       });
     }
     // Ensure last sample is included
@@ -41,7 +41,7 @@ export function CurveGradientBackground({
     if (result.length === 0 || result[result.length - 1].offset !== `${lastPct.toFixed(1)}%`) {
       result.push({
         offset: `${lastPct.toFixed(1)}%`,
-        color: mapValueToColor(last.value),
+        color: mapValueToColor(last.value, last.hour),
       });
     }
     return result;

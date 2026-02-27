@@ -60,4 +60,9 @@ export const DEFAULT_CURVE_SET: CurveSet = {
     valley: { hour: 2.0, value: 2000 },
   },
   linked: true,
+  colorMode: {
+    colorTempStartHour: null,   // null = follow sunriseHour
+    colorTempEndHour: null,     // null = follow sunsetHour
+    sleepRgbColor: [255, 56, 0],  // Matches Shiny DEFAULT_SLEEP_RGB_COLOR
+  },
 };

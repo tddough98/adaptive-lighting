@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { scaleLinear } from 'd3';
 import type {
   ChartMargins,
@@ -20,6 +20,7 @@ import { SharpnessPointMarkers } from '../ChartCanvas/SharpnessPointMarkers';
 import { ExtremePointMarkers } from '../ChartCanvas/ExtremePointMarkers';
 import { XAxisLabels } from '../XAxisLabels';
 import { YAxisLabels } from '../YAxisLabels';
+import { YAxisColorbar } from '../ChartCanvas/YAxisColorbar';
 
 const WIDTH = 540;
 const HEIGHT = 310;
@@ -40,7 +41,8 @@ interface SingleCurvePanelProps {
   curveColor: string;
   dashArray?: string;
   gradientId: string;
-  mapValueToColor: (value: number) => string;
+  mapValueToColor: (value: number, hour: number) => string;
+  mapValueOnly?: (value: number) => string;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
 }
@@ -61,12 +63,19 @@ export function SingleCurvePanel({
   dashArray,
   gradientId,
   mapValueToColor,
+  mapValueOnly,
   onPointDrag,
   onPointDragEnd,
 }: SingleCurvePanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const innerWidth = WIDTH - MARGINS.left - MARGINS.right;
   const innerHeight = HEIGHT - MARGINS.top - MARGINS.bottom;
+
+  // For Y-axis display: always use daytime (color_temp mode) colors
+  const yAxisColorFn = useCallback(
+    (value: number) => mapValueOnly ? mapValueOnly(value) : mapValueToColor(value, 12),
+    [mapValueOnly, mapValueToColor],
+  );
 
   const xScale = useMemo(
     () => scaleLinear().domain([0, 24]).range([0, innerWidth]),
@@ -162,11 +171,18 @@ export function SingleCurvePanel({
           xScale={xScale}
           height={innerHeight}
         />
+        <YAxisColorbar
+          yScale={yScale}
+          yDomain={yDomain}
+          mapValueToColor={yAxisColorFn}
+          gradientId={gradientId}
+        />
         <YAxisLabels
           yScale={yScale}
           label={yAxisLabel}
           accentColor={curveColor}
           tickFormat={yTickFormat}
+          mapValueToColor={yAxisColorFn}
         />
       </ChartCanvas>
     </div>
