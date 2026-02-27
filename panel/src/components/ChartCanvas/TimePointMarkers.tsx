@@ -3,6 +3,7 @@ import type { ScaleLinear } from 'd3';
 import type {
   ChartMargins,
   CurveDefinition,
+  CurveName,
   CurveSet,
   CurveSetAction,
   ResolvedCurve,
@@ -27,6 +28,7 @@ interface TimePointMarkersProps {
   margins: ChartMargins;
   sunTimes: SunTimes;
   curveSet: CurveSet;
+  curveName: CurveName;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
 }
@@ -47,6 +49,7 @@ export function TimePointMarkers({
   margins,
   sunTimes,
   curveSet,
+  curveName,
   onPointDrag,
   onPointDragEnd,
 }: TimePointMarkersProps) {
@@ -72,21 +75,33 @@ export function TimePointMarkers({
         const snapped = snapToMinutes(clamped, constraints.snapMinutes);
         const newValue = absoluteHourToTimingValue(snapped, pointType, sunTimes);
 
-        // Y: value constraint
+        // Y: per-point value constraint
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
-        const newYValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
+        let minY = resolved.minValue;
+        let maxY = resolved.maxValue;
+        switch (pointType) {
+          case 'transition_start': // P1: can't go below P2
+            minY = resolved.p2Value; break;
+          case 'hold_start':       // P2: can't go above P1
+            maxY = resolved.p1Value; break;
+          case 'hold_end':         // P4: can't go above P5
+            maxY = resolved.p5Value; break;
+          case 'transition_end':   // P5: can't go below P4
+            minY = resolved.p4Value; break;
+        }
+        const newYValue = constrainYValue(rawY, minY, maxY);
 
         return {
           type: 'UPDATE_TIME_POINT',
-          curveName: 'brightness',
+          curveName,
           pointType,
           newValue,
           newYValue,
         };
       };
     },
-    [margins.left, margins.top, xScale, yScale, curveSet, sunTimes, resolved.maxValue],
+    [margins.left, margins.top, xScale, yScale, curveSet, sunTimes, curveName, resolved],
   );
 
   const points = [

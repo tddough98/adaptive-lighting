@@ -95,6 +95,41 @@ export function CurveEditor({
           yBrightnessScale={yBrightnessScale}
           yColorTempScale={yColorTempScale}
         />
+        {/* ColorTemp markers rendered first (lower z-order) */}
+        <TimePointMarkers
+          resolved={data.resolvedColorTemp}
+          curveDefinition={curveSet.colorTemp}
+          yScale={yColorTempScale}
+          xScale={xScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          sunTimes={sunTimes}
+          curveSet={curveSet}
+          curveName="colorTemp"
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
+        />
+        <SharpnessPointMarkers
+          resolved={data.resolvedColorTemp}
+          xScale={xScale}
+          yScale={yColorTempScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          curveName="colorTemp"
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
+        />
+        <ExtremePointMarkers
+          resolved={data.resolvedColorTemp}
+          xScale={xScale}
+          yScale={yColorTempScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          curveName="colorTemp"
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
+        />
+        {/* Brightness markers rendered last (higher z-order) */}
         <TimePointMarkers
           resolved={data.resolvedBrightness}
           curveDefinition={curveSet.brightness}
@@ -104,6 +139,7 @@ export function CurveEditor({
           margins={MARGINS}
           sunTimes={sunTimes}
           curveSet={curveSet}
+          curveName="brightness"
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
         />
@@ -113,6 +149,7 @@ export function CurveEditor({
           yScale={yBrightnessScale}
           svgRef={svgRef}
           margins={MARGINS}
+          curveName="brightness"
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
         />
@@ -122,6 +159,7 @@ export function CurveEditor({
           yScale={yBrightnessScale}
           svgRef={svgRef}
           margins={MARGINS}
+          curveName="brightness"
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
         />

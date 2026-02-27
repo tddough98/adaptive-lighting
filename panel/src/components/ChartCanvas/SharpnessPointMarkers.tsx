@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import type { ScaleLinear } from 'd3';
 import type {
   ChartMargins,
+  CurveName,
   CurveSetAction,
   ResolvedCurve,
 } from '../../types/curves';
@@ -14,6 +15,7 @@ interface SharpnessPointMarkersProps {
   yScale: ScaleLinear<number, number>;
   svgRef: React.RefObject<SVGSVGElement | null>;
   margins: ChartMargins;
+  curveName: CurveName;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
 }
@@ -31,6 +33,7 @@ export function SharpnessPointMarkers({
   yScale,
   svgRef,
   margins,
+  curveName,
   onPointDrag,
   onPointDragEnd,
 }: SharpnessPointMarkersProps) {
@@ -63,13 +66,13 @@ export function SharpnessPointMarkers({
 
         return {
           type: 'UPDATE_SHARPNESS',
-          curveName: 'brightness',
+          curveName,
           which,
           newSharpness,
         };
       };
     },
-    [margins.top, yScale, p1Value, p2Value, p4Value, p5Value],
+    [margins.top, yScale, curveName, p1Value, p2Value, p4Value, p5Value],
   );
 
   // Marker Y = curve value at midpoint using per-point values

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import type { ScaleLinear } from 'd3';
 import type {
   ChartMargins,
+  CurveName,
   CurveSetAction,
   ResolvedCurve,
 } from '../../types/curves';
@@ -19,6 +20,7 @@ interface ExtremePointMarkersProps {
   yScale: ScaleLinear<number, number>;
   svgRef: React.RefObject<SVGSVGElement | null>;
   margins: ChartMargins;
+  curveName: CurveName;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
 }
@@ -49,6 +51,7 @@ export function ExtremePointMarkers({
   yScale,
   svgRef,
   margins,
+  curveName,
   onPointDrag,
   onPointDragEnd,
 }: ExtremePointMarkersProps) {
@@ -71,17 +74,18 @@ export function ExtremePointMarkers({
 
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
-        const newValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
+        const minY = Math.max(resolved.p1Value, resolved.p5Value);
+        const newValue = constrainYValue(rawY, minY, resolved.maxValue);
 
         return {
           type: 'UPDATE_PEAK',
-          curveName: 'brightness',
+          curveName,
           newHour: snapped,
           newValue,
         };
       };
     },
-    [margins.left, margins.top, xScale, yScale, resolved],
+    [margins.left, margins.top, xScale, yScale, curveName, resolved],
   );
 
   const makeValleyConstrainFn = useCallback(
@@ -95,17 +99,18 @@ export function ExtremePointMarkers({
 
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
-        const newValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
+        const maxY = Math.min(resolved.p2Value, resolved.p4Value);
+        const newValue = constrainYValue(rawY, resolved.minValue, maxY);
 
         return {
           type: 'UPDATE_VALLEY',
-          curveName: 'brightness',
+          curveName,
           newHour: snapped,
           newValue,
         };
       };
     },
-    [margins.left, margins.top, xScale, yScale, resolved],
+    [margins.left, margins.top, xScale, yScale, curveName, resolved],
   );
 
   const markers = [
