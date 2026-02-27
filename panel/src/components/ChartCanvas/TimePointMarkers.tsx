@@ -12,6 +12,7 @@ import type {
 import { formatHour } from '../../utils/timeformat';
 import {
   absoluteHourToTimingValue,
+  constrainYValue,
   getTimePointConstraints,
   snapToMinutes,
 } from '../../utils/constraints';
@@ -49,7 +50,6 @@ export function TimePointMarkers({
   onPointDrag,
   onPointDragEnd,
 }: TimePointMarkersProps) {
-  const { maxValue, minValue } = resolved;
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const { dragState, startDrag } = useDrag<CurveSetAction>({
@@ -60,7 +60,8 @@ export function TimePointMarkers({
 
   const makeConstrainFn = useCallback(
     (pointType: TimingPointType) => {
-      return (svgX: number, _svgY: number): CurveSetAction => {
+      return (svgX: number, svgY: number): CurveSetAction => {
+        // X: time constraint (same as before)
         const plotX = svgX - margins.left;
         const rawHour = xScale.invert(plotX);
         const constraints = getTimePointConstraints(pointType, curveSet, sunTimes);
@@ -71,40 +72,46 @@ export function TimePointMarkers({
         const snapped = snapToMinutes(clamped, constraints.snapMinutes);
         const newValue = absoluteHourToTimingValue(snapped, pointType, sunTimes);
 
+        // Y: value constraint
+        const plotY = svgY - margins.top;
+        const rawY = yScale.invert(plotY);
+        const newYValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
+
         return {
           type: 'UPDATE_TIME_POINT',
           curveName: 'brightness',
           pointType,
           newValue,
+          newYValue,
         };
       };
     },
-    [margins.left, xScale, curveSet, sunTimes],
+    [margins.left, margins.top, xScale, yScale, curveSet, sunTimes, resolved.maxValue],
   );
 
   const points = [
     {
       type: 'transition_start' as const,
       hour: resolved.p1,
-      value: maxValue,
+      value: resolved.p1Value,
       isRelative: curveDefinition.transitionStart.isRelative,
     },
     {
       type: 'hold_start' as const,
       hour: resolved.p2,
-      value: minValue,
+      value: resolved.p2Value,
       isRelative: curveDefinition.holdStart.isRelative,
     },
     {
       type: 'hold_end' as const,
       hour: resolved.p4,
-      value: minValue,
+      value: resolved.p4Value,
       isRelative: curveDefinition.holdEnd.isRelative,
     },
     {
       type: 'transition_end' as const,
       hour: resolved.p5,
-      value: maxValue,
+      value: resolved.p5Value,
       isRelative: curveDefinition.transitionEnd.isRelative,
     },
   ];
@@ -140,7 +147,7 @@ export function TimePointMarkers({
               strokeWidth={2}
               strokeDasharray={pt.isRelative ? '3 2' : undefined}
               style={{
-                cursor: 'ew-resize',
+                cursor: 'move',
                 transform: `scale(${scale})`,
                 transition: isDragging ? 'none' : 'transform 0.15s ease',
               }}

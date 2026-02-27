@@ -12,6 +12,12 @@ export interface TimingPoint {
   value: number;          // Minutes offset (if relative) or absolute hour 0–24
   isRelative: boolean;
   anchor?: SunAnchor;
+  yValue: number;         // Curve value at this point (e.g. brightness % or Kelvin)
+}
+
+export interface ExtremePoint {
+  hour: number;   // Absolute hour 0–24
+  value: number;  // Curve value at this point
 }
 
 export interface CurveDefinition {
@@ -23,6 +29,8 @@ export interface CurveDefinition {
   morningSharpness: number;      // 0.0–1.0
   minValue: number;
   maxValue: number;
+  peak: ExtremePoint;            // Daytime maximum between P5→P1
+  valley: ExtremePoint;          // Nighttime minimum between P2→P4
 }
 
 export interface CurveSet {
@@ -41,6 +49,14 @@ export interface ResolvedCurve {
   p2: number;  // Absolute hour for hold_start
   p4: number;  // Absolute hour for hold_end
   p5: number;  // Absolute hour for transition_end
+  p1Value: number;
+  p2Value: number;
+  p4Value: number;
+  p5Value: number;
+  peakHour: number;
+  peakValue: number;
+  valleyHour: number;
+  valleyValue: number;
   eveningSharpness: number;
   morningSharpness: number;
   minValue: number;
@@ -48,10 +64,12 @@ export interface ResolvedCurve {
 }
 
 export type CurvePhase =
-  | 'day'
-  | 'evening_transition'
-  | 'hold'
-  | 'morning_transition';
+  | 'evening_transition'    // P1→P2
+  | 'descent_to_valley'     // P2→Valley
+  | 'ascent_from_valley'    // Valley→P4
+  | 'morning_transition'    // P4→P5
+  | 'ascent_to_peak'        // P5→Peak
+  | 'descent_from_peak';    // Peak→P1
 
 export interface ChartMargins {
   top: number;
@@ -73,11 +91,24 @@ export type CurveSetAction =
       curveName: CurveName;
       pointType: TimingPointType;
       newValue: number;
+      newYValue: number;
     }
   | {
       type: 'UPDATE_SHARPNESS';
       curveName: CurveName;
       which: 'evening' | 'morning';
       newSharpness: number;
+    }
+  | {
+      type: 'UPDATE_PEAK';
+      curveName: CurveName;
+      newHour: number;
+      newValue: number;
+    }
+  | {
+      type: 'UPDATE_VALLEY';
+      curveName: CurveName;
+      newHour: number;
+      newValue: number;
     }
   | { type: 'TOGGLE_LINKED' };

@@ -31,6 +31,14 @@ export function resolveCurve(
     p2: resolveTime(curve.holdStart, sunTimes),
     p4: resolveTime(curve.holdEnd, sunTimes),
     p5: resolveTime(curve.transitionEnd, sunTimes),
+    p1Value: curve.transitionStart.yValue,
+    p2Value: curve.holdStart.yValue,
+    p4Value: curve.holdEnd.yValue,
+    p5Value: curve.transitionEnd.yValue,
+    peakHour: curve.peak.hour,
+    peakValue: curve.peak.value,
+    valleyHour: curve.valley.hour,
+    valleyValue: curve.valley.value,
     eveningSharpness: curve.eveningSharpness,
     morningSharpness: curve.morningSharpness,
     minValue: curve.minValue,
@@ -38,26 +46,28 @@ export function resolveCurve(
   };
 }
 
-/** Determine which phase a given hour falls in. Handles midnight crossover. */
+/** Check if hour is within the arc from start to end (handles midnight wrap). */
+function isInArc(hour: number, start: number, end: number): boolean {
+  if (start <= end) return hour >= start && hour < end;
+  return hour >= start || hour < end;
+}
+
+/** Determine which phase a given hour falls in (6-segment model). */
 export function getPhase(
   hour: number,
   p1: number,
   p2: number,
+  valleyHour: number,
   p4: number,
   p5: number,
+  peakHour: number,
 ): CurvePhase {
-  if (p2 > p4) {
-    // Overnight hold (e.g. 23:00 → 05:30)
-    if (hour >= p2 || hour <= p4) return 'hold';
-    if (hour > p4 && hour < p5) return 'morning_transition';
-    if (hour >= p1 && hour < p2) return 'evening_transition';
-    return 'day';
-  }
-  // Same-day hold (unusual but supported)
-  if (hour >= p2 && hour <= p4) return 'hold';
-  if (hour > p4 && hour < p5) return 'morning_transition';
-  if (hour >= p1 && hour < p2) return 'evening_transition';
-  return 'day';
+  if (isInArc(hour, p1, p2)) return 'evening_transition';
+  if (isInArc(hour, p2, valleyHour)) return 'descent_to_valley';
+  if (isInArc(hour, valleyHour, p4)) return 'ascent_from_valley';
+  if (isInArc(hour, p4, p5)) return 'morning_transition';
+  if (isInArc(hour, p5, peakHour)) return 'ascent_to_peak';
+  return 'descent_from_peak';
 }
 
 /**
@@ -95,6 +105,16 @@ export function interpolateWithSharpness(
   return startVal + (endVal - startVal) * t;
 }
 
+/** Cosine interpolation for smooth zero-derivative joins. */
+export function cosineInterpolate(
+  progress: number,
+  startVal: number,
+  endVal: number,
+): number {
+  const t = (1 - Math.cos(progress * Math.PI)) / 2;
+  return startVal + (endVal - startVal) * t;
+}
+
 /** Helper: elapsed hours between two times, handling midnight wrap. */
 function elapsedHours(from: number, to: number): number {
   return to >= from ? to - from : to + 24 - from;
@@ -105,38 +125,55 @@ export function calculateValueAtHour(
   hour: number,
   resolved: ResolvedCurve,
 ): number {
-  const { p1, p2, p4, p5, minValue, maxValue } = resolved;
-  const phase = getPhase(hour, p1, p2, p4, p5);
+  const {
+    p1, p2, p4, p5,
+    p1Value, p2Value, p4Value, p5Value,
+    peakHour, peakValue, valleyHour, valleyValue,
+  } = resolved;
+
+  const phase = getPhase(hour, p1, p2, valleyHour, p4, p5, peakHour);
 
   switch (phase) {
-    case 'day':
-      return maxValue;
-
-    case 'hold':
-      return minValue;
-
     case 'evening_transition': {
       const duration = elapsedHours(p1, p2);
       const elapsed = elapsedHours(p1, hour);
       const progress = duration > 0 ? elapsed / duration : 0;
-      return interpolateWithSharpness(
-        progress,
-        resolved.eveningSharpness,
-        maxValue,
-        minValue,
-      );
+      return interpolateWithSharpness(progress, resolved.eveningSharpness, p1Value, p2Value);
+    }
+
+    case 'descent_to_valley': {
+      const duration = elapsedHours(p2, valleyHour);
+      const elapsed = elapsedHours(p2, hour);
+      const progress = duration > 0 ? elapsed / duration : 0;
+      return cosineInterpolate(progress, p2Value, valleyValue);
+    }
+
+    case 'ascent_from_valley': {
+      const duration = elapsedHours(valleyHour, p4);
+      const elapsed = elapsedHours(valleyHour, hour);
+      const progress = duration > 0 ? elapsed / duration : 0;
+      return cosineInterpolate(progress, valleyValue, p4Value);
     }
 
     case 'morning_transition': {
       const duration = elapsedHours(p4, p5);
       const elapsed = elapsedHours(p4, hour);
       const progress = duration > 0 ? elapsed / duration : 0;
-      return interpolateWithSharpness(
-        progress,
-        resolved.morningSharpness,
-        minValue,
-        maxValue,
-      );
+      return interpolateWithSharpness(progress, resolved.morningSharpness, p4Value, p5Value);
+    }
+
+    case 'ascent_to_peak': {
+      const duration = elapsedHours(p5, peakHour);
+      const elapsed = elapsedHours(p5, hour);
+      const progress = duration > 0 ? elapsed / duration : 0;
+      return cosineInterpolate(progress, p5Value, peakValue);
+    }
+
+    case 'descent_from_peak': {
+      const duration = elapsedHours(peakHour, p1);
+      const elapsed = elapsedHours(peakHour, hour);
+      const progress = duration > 0 ? elapsed / duration : 0;
+      return cosineInterpolate(progress, peakValue, p1Value);
     }
   }
 }

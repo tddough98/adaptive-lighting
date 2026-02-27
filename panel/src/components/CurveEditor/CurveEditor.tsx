@@ -10,6 +10,7 @@ import { CurvePath } from '../ChartCanvas/CurvePath';
 import { CurrentTimeIndicator } from '../ChartCanvas/CurrentTimeIndicator';
 import { TimePointMarkers } from '../ChartCanvas/TimePointMarkers';
 import { SharpnessPointMarkers } from '../ChartCanvas/SharpnessPointMarkers';
+import { ExtremePointMarkers } from '../ChartCanvas/ExtremePointMarkers';
 import { XAxisLabels } from '../XAxisLabels';
 import { YAxisLabels } from '../YAxisLabels';
 import { Legend } from '../Legend';
@@ -107,6 +108,15 @@ export function CurveEditor({
           onPointDragEnd={onPointDragEnd}
         />
         <SharpnessPointMarkers
+          resolved={data.resolvedBrightness}
+          xScale={xScale}
+          yScale={yBrightnessScale}
+          svgRef={svgRef}
+          margins={MARGINS}
+          onPointDrag={onPointDrag}
+          onPointDragEnd={onPointDragEnd}
+        />
+        <ExtremePointMarkers
           resolved={data.resolvedBrightness}
           xScale={xScale}
           yScale={yBrightnessScale}

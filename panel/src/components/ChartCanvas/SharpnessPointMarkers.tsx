@@ -34,7 +34,7 @@ export function SharpnessPointMarkers({
   onPointDrag,
   onPointDragEnd,
 }: SharpnessPointMarkersProps) {
-  const { p1, p2, p4, p5, eveningSharpness, morningSharpness, minValue, maxValue } = resolved;
+  const { p1, p2, p4, p5, eveningSharpness, morningSharpness, p1Value, p2Value, p4Value, p5Value } = resolved;
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const { dragState, startDrag } = useDrag<CurveSetAction>({
@@ -49,14 +49,15 @@ export function SharpnessPointMarkers({
         const plotY = svgY - margins.top;
         const rawValue = yScale.invert(plotY);
 
-        // Sharpness = normalized position within the value range.
-        // Evening (max→min): dragging down = higher sharpness (more transitioned)
-        // Morning (min→max): dragging up = higher sharpness (more transitioned)
         let rawSharpness: number;
         if (which === 'evening') {
-          rawSharpness = (maxValue - rawValue) / (maxValue - minValue);
+          // Evening (p1Value→p2Value): sharpness = how far from p1Value toward p2Value
+          const range = p1Value - p2Value;
+          rawSharpness = range !== 0 ? (p1Value - rawValue) / range : 0;
         } else {
-          rawSharpness = (rawValue - minValue) / (maxValue - minValue);
+          // Morning (p4Value→p5Value): sharpness = how far from p4Value toward p5Value
+          const range = p5Value - p4Value;
+          rawSharpness = range !== 0 ? (rawValue - p4Value) / range : 0;
         }
         const newSharpness = constrainSharpness(rawSharpness);
 
@@ -68,13 +69,12 @@ export function SharpnessPointMarkers({
         };
       };
     },
-    [margins.top, yScale, maxValue, minValue],
+    [margins.top, yScale, p1Value, p2Value, p4Value, p5Value],
   );
 
-  // Marker Y = curve value at midpoint, which equals the linear sharpness mapping
-  // because interpolateWithSharpness is designed so t(0.5) = sharpness.
-  const eveningMarkerValue = maxValue - eveningSharpness * (maxValue - minValue);
-  const morningMarkerValue = minValue + morningSharpness * (maxValue - minValue);
+  // Marker Y = curve value at midpoint using per-point values
+  const eveningMarkerValue = p1Value - eveningSharpness * (p1Value - p2Value);
+  const morningMarkerValue = p4Value + morningSharpness * (p5Value - p4Value);
 
   const markers = [
     {

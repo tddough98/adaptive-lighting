@@ -1,4 +1,4 @@
-import type { CurveSet, SunTimes, TimingPointType } from '../types/curves';
+import type { CurveSet, ResolvedCurve, SunTimes, TimingPointType } from '../types/curves';
 import { resolveCurve } from './curvemath';
 
 export interface TimePointConstraints {
@@ -89,5 +89,24 @@ export function absoluteHourToTimingValue(
 export function constrainSharpness(raw: number): number {
   const clamped = Math.max(0, Math.min(1, raw));
   return Math.round(clamped / 0.05) * 0.05;
+}
+
+/** Clamp a Y-value to [minValue, maxValue] and snap to integer. */
+export function constrainYValue(raw: number, minValue: number, maxValue: number): number {
+  return Math.max(minValue, Math.min(maxValue, Math.round(raw)));
+}
+
+/** Get hour constraints for the Peak point (daytime: P5 → P1). */
+export function getPeakConstraints(resolved: ResolvedCurve): { minHour: number; maxHour: number } {
+  const minHour = resolved.p5 + MIN_GAP_HOURS;
+  const maxHour = resolved.p1 - MIN_GAP_HOURS;
+  return { minHour, maxHour };
+}
+
+/** Get hour constraints for the Valley point (nighttime: P2 → P4). */
+export function getValleyConstraints(resolved: ResolvedCurve): { minHour: number; maxHour: number } {
+  const minHour = resolved.p2 + MIN_GAP_HOURS;
+  const maxHour = resolved.p4 - MIN_GAP_HOURS;
+  return { minHour, maxHour };
 }
 
