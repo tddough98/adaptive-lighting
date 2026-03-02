@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { ScaleLinear } from 'd3';
 import type {
   ChartMargins,
@@ -10,7 +10,7 @@ import type {
   SunTimes,
   TimingPointType,
 } from '../../types/curves';
-import { formatHour } from '../../utils/timeformat';
+import { formatHour, formatRelativeOffset } from '../../utils/timeformat';
 import {
   absoluteHourToTimingValue,
   constrainYValue,
@@ -18,6 +18,7 @@ import {
   snapToMinutes,
 } from '../../utils/constraints';
 import { useDrag } from '../../hooks/useDrag';
+import { SunModeIcon, ClockModeIcon } from './ModeIcons';
 
 interface TimePointMarkersProps {
   resolved: ResolvedCurve;
@@ -41,6 +42,16 @@ const LABELS: Record<TimingPointType, string> = {
   transition_end: 'P5',
 };
 
+const POINT_FIELDS: Record<TimingPointType, keyof CurveDefinition> = {
+  transition_start: 'transitionStart',
+  hold_start: 'holdStart',
+  hold_end: 'holdEnd',
+  transition_end: 'transitionEnd',
+};
+
+const DOUBLE_CLICK_MS = 300;
+const DOUBLE_CLICK_RADIUS = 5;
+
 export function TimePointMarkers({
   resolved,
   curveDefinition,
@@ -56,6 +67,7 @@ export function TimePointMarkers({
   readOnly,
 }: TimePointMarkersProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const lastMouseDown = useRef<{ pointId: string; time: number; x: number; y: number } | null>(null);
 
   const { dragState, startDrag } = useDrag<CurveSetAction>({
     svgRef,
@@ -66,7 +78,6 @@ export function TimePointMarkers({
   const makeConstrainFn = useCallback(
     (pointType: TimingPointType) => {
       return (svgX: number, svgY: number): CurveSetAction => {
-        // X: time constraint (same as before)
         const plotX = svgX - margins.left;
         const rawHour = xScale.invert(plotX);
         const constraints = getTimePointConstraints(pointType, curveSet, sunTimes, curveName);
@@ -75,9 +86,11 @@ export function TimePointMarkers({
           Math.min(constraints.maxHour, rawHour),
         );
         const snapped = snapToMinutes(clamped, constraints.snapMinutes);
-        const newValue = absoluteHourToTimingValue(snapped, pointType, sunTimes);
+        const field = POINT_FIELDS[pointType];
+        const point = curveDefinition[field];
+        const tp = point as { isRelative: boolean; anchor?: 'sunset' | 'sunrise' };
+        const newValue = absoluteHourToTimingValue(snapped, tp.isRelative, tp.anchor, sunTimes);
 
-        // Y: domain-only constraint (inter-point hierarchy enforced in reducer)
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
         const newYValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
@@ -91,7 +104,38 @@ export function TimePointMarkers({
         };
       };
     },
-    [margins.left, margins.top, xScale, yScale, curveSet, sunTimes, curveName, resolved],
+    [margins.left, margins.top, xScale, yScale, curveSet, sunTimes, curveName, resolved, curveDefinition],
+  );
+
+  const handleMouseDown = useCallback(
+    (pointType: TimingPointType, e: React.MouseEvent) => {
+      const now = Date.now();
+      const prev = lastMouseDown.current;
+
+      if (
+        prev &&
+        prev.pointId === pointType &&
+        now - prev.time < DOUBLE_CLICK_MS &&
+        Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < DOUBLE_CLICK_RADIUS
+      ) {
+        // Double-click detected — toggle time lock
+        lastMouseDown.current = null;
+        e.preventDefault();
+        e.stopPropagation();
+        onPointDragEnd({
+          type: 'TOGGLE_TIME_LOCK',
+          curveName,
+          pointId: pointType,
+          sunTimes,
+        });
+        return;
+      }
+
+      lastMouseDown.current = { pointId: pointType, time: now, x: e.clientX, y: e.clientY };
+      // Proceed with normal drag
+      startDrag(pointType, makeConstrainFn(pointType))(e);
+    },
+    [curveName, sunTimes, onPointDragEnd, startDrag, makeConstrainFn],
   );
 
   const points = [
@@ -100,24 +144,32 @@ export function TimePointMarkers({
       hour: resolved.p1,
       value: resolved.p1Value,
       isRelative: curveDefinition.transitionStart.isRelative,
+      anchor: curveDefinition.transitionStart.anchor,
+      storedValue: curveDefinition.transitionStart.value,
     },
     {
       type: 'hold_start' as const,
       hour: resolved.p2,
       value: resolved.p2Value,
       isRelative: curveDefinition.holdStart.isRelative,
+      anchor: curveDefinition.holdStart.anchor,
+      storedValue: curveDefinition.holdStart.value,
     },
     {
       type: 'hold_end' as const,
       hour: resolved.p4,
       value: resolved.p4Value,
       isRelative: curveDefinition.holdEnd.isRelative,
+      anchor: curveDefinition.holdEnd.anchor,
+      storedValue: curveDefinition.holdEnd.value,
     },
     {
       type: 'transition_end' as const,
       hour: resolved.p5,
       value: resolved.p5Value,
       isRelative: curveDefinition.transitionEnd.isRelative,
+      anchor: curveDefinition.transitionEnd.anchor,
+      storedValue: curveDefinition.transitionEnd.value,
     },
   ];
 
@@ -132,18 +184,29 @@ export function TimePointMarkers({
         const isHovered = hoveredId === pt.type;
         const scale = isDragging ? 1.2 : isHovered ? 1.2 : 1;
 
+        const timeLabel = pt.isRelative && pt.anchor
+          ? formatRelativeOffset(pt.storedValue, pt.anchor)
+          : formatHour(pt.hour);
+
         return (
           <g key={label} transform={`translate(${cx},${cy})`}>
-            {/* Label with time */}
-            <text
-              x={0}
-              y={-14}
-              textAnchor="middle"
-              fill="var(--text-secondary)"
-              fontSize={8}
-            >
-              {label} {formatHour(pt.hour)}
-            </text>
+            {/* Mode icon + label with time */}
+            <g transform="translate(0,-14)">
+              {pt.isRelative
+                ? <SunModeIcon x={-18} y={0} />
+                : <ClockModeIcon x={-18} y={0} />
+              }
+              <text
+                x={0}
+                y={0}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="var(--text-secondary)"
+                fontSize={8}
+              >
+                {label} {timeLabel}
+              </text>
+            </g>
             {/* Circle marker */}
             <circle
               r={8}
@@ -158,7 +221,7 @@ export function TimePointMarkers({
                 opacity: readOnly ? 0.7 : 1,
               }}
               filter={isDragging ? 'url(#drag-glow)' : undefined}
-              onMouseDown={readOnly ? undefined : startDrag(pt.type, makeConstrainFn(pt.type))}
+              onMouseDown={readOnly ? undefined : (e) => handleMouseDown(pt.type, e)}
               onMouseEnter={() => setHoveredId(pt.type)}
               onMouseLeave={() => setHoveredId(null)}
             />

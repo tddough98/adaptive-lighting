@@ -1,6 +1,7 @@
 import type {
   CurveDefinition,
   CurvePhase,
+  ExtremePoint,
   ResolvedCurve,
   SunTimes,
   TimingPoint,
@@ -21,6 +22,19 @@ export function resolveTime(point: TimingPoint, sunTimes: SunTimes): number {
   return hour;
 }
 
+/** Convert an ExtremePoint to an absolute decimal hour (0–24). */
+export function resolveExtremeTime(point: ExtremePoint, sunTimes: SunTimes): number {
+  if (!point.isRelative || point.offsetMinutes == null) {
+    return point.hour;
+  }
+  const base =
+    point.anchor === 'sunset' ? sunTimes.sunsetHour : sunTimes.sunriseHour;
+  let hour = base + point.offsetMinutes / 60;
+  if (hour < 0) hour += 24;
+  if (hour >= 24) hour -= 24;
+  return hour;
+}
+
 /** Resolve all timing points in a CurveDefinition to absolute hours. */
 export function resolveCurve(
   curve: CurveDefinition,
@@ -35,9 +49,9 @@ export function resolveCurve(
     p2Value: curve.holdStart.yValue,
     p4Value: curve.holdEnd.yValue,
     p5Value: curve.transitionEnd.yValue,
-    peakHour: curve.peak.hour,
+    peakHour: resolveExtremeTime(curve.peak, sunTimes),
     peakValue: curve.peak.value,
-    valleyHour: curve.valley.hour,
+    valleyHour: resolveExtremeTime(curve.valley, sunTimes),
     valleyValue: curve.valley.value,
     minValue: curve.minValue,
     maxValue: curve.maxValue,

@@ -43,8 +43,8 @@ export const DEFAULT_CURVE_SET: CurveSet = {
     ...SHARED_TIMING,
     minValue: 1,          // 1%
     maxValue: 100,        // 100%
-    peak: { hour: 13.0, value: 100 },
-    valley: { hour: 2.0, value: 1 },
+    peak: { hour: 13.0, value: 100, isRelative: false },
+    valley: { hour: 2.0, value: 1, isRelative: false },
   },
   colorTemp: {
     ...SHARED_TIMING,
@@ -54,8 +54,8 @@ export const DEFAULT_CURVE_SET: CurveSet = {
     transitionEnd: { ...SHARED_TIMING.transitionEnd, id: 'ct-te', yValue: 5500 },
     minValue: 2000,       // Warm (Kelvin)
     maxValue: 5500,       // Cool (Kelvin)
-    peak: { hour: 13.0, value: 5500 },
-    valley: { hour: 2.0, value: 2000 },
+    peak: { hour: 13.0, value: 5500, isRelative: false },
+    valley: { hour: 2.0, value: 2000, isRelative: false },
   },
   linked: true,
   colorMode: {

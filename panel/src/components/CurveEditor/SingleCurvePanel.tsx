@@ -161,11 +161,13 @@ export function SingleCurvePanel({
         />
         <ExtremePointMarkers
           resolved={resolved}
+          curveDefinition={curveSet[curveName]}
           xScale={xScale}
           yScale={yScale}
           svgRef={svgRef}
           margins={MARGINS}
           curveName={curveName}
+          sunTimes={sunTimes}
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
           readOnly={readOnly}

@@ -16,8 +16,11 @@ export interface TimingPoint {
 }
 
 export interface ExtremePoint {
-  hour: number;   // Absolute hour 0–24
-  value: number;  // Curve value at this point
+  hour: number;           // Absolute hour (authoritative when !isRelative, cached when isRelative)
+  value: number;          // Curve value at this point
+  isRelative?: boolean;   // defaults to false
+  anchor?: SunAnchor;
+  offsetMinutes?: number; // minutes from anchor (authoritative when isRelative)
 }
 
 export interface CurveDefinition {
@@ -101,12 +104,20 @@ export type CurveSetAction =
       curveName: CurveName;
       newHour: number;
       newValue: number;
+      sunTimes: SunTimes;
     }
   | {
       type: 'UPDATE_VALLEY';
       curveName: CurveName;
       newHour: number;
       newValue: number;
+      sunTimes: SunTimes;
+    }
+  | {
+      type: 'TOGGLE_TIME_LOCK';
+      curveName: CurveName;
+      pointId: TimingPointType | 'peak' | 'valley';
+      sunTimes: SunTimes;
     }
   | { type: 'TOGGLE_LINKED' }
   | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number }

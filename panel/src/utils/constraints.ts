@@ -1,4 +1,4 @@
-import type { CurveName, CurveSet, ResolvedCurve, SunTimes, TimingPointType } from '../types/curves';
+import type { CurveName, CurveSet, ResolvedCurve, SunAnchor, SunTimes, TimingPointType } from '../types/curves';
 import { resolveCurve } from './curvemath';
 
 export interface TimePointConstraints {
@@ -62,28 +62,20 @@ export function snapToMinutes(hour: number, snapMinutes: number): number {
 
 /**
  * Convert an absolute hour back to the stored timing value.
- * For relative points (P1, P5): returns minutes offset from sun anchor.
- * For absolute points (P2, P4): returns the absolute hour.
+ * If isRelative, returns minutes offset from the sun anchor.
+ * Otherwise returns the absolute hour.
  */
 export function absoluteHourToTimingValue(
   hour: number,
-  pointType: TimingPointType,
+  isRelative: boolean,
+  anchor: SunAnchor | undefined,
   sunTimes: SunTimes,
 ): number {
-  switch (pointType) {
-    case 'transition_start': {
-      // Relative to sunset, value is in minutes
-      return (hour - sunTimes.sunsetHour) * 60;
-    }
-    case 'transition_end': {
-      // Relative to sunrise, value is in minutes
-      return (hour - sunTimes.sunriseHour) * 60;
-    }
-    case 'hold_start':
-    case 'hold_end':
-      // Absolute hour
-      return hour;
+  if (isRelative && anchor) {
+    const base = anchor === 'sunset' ? sunTimes.sunsetHour : sunTimes.sunriseHour;
+    return (hour - base) * 60;
   }
+  return hour;
 }
 
 /** Clamp a Y-value to [minValue, maxValue] and snap to integer. */

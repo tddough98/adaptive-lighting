@@ -3,9 +3,13 @@ import type {
   CurveDefinition,
   CurveSet,
   CurveSetAction,
+  ExtremePoint,
+  SunAnchor,
   SunTimes,
+  TimingPoint,
   TimingPointType,
 } from '../types/curves';
+import { resolveTime, resolveExtremeTime } from '../utils/curvemath';
 
 /** Map TimingPointType to CurveDefinition field key. */
 const POINT_FIELD: Record<TimingPointType, keyof CurveDefinition> = {
@@ -122,8 +126,8 @@ function mirrorTimingToColorTemp(state: CurveSet): CurveDefinition {
     holdStart: { ...b.holdStart, id: ct.holdStart.id, yValue: ct.holdStart.yValue },
     holdEnd: { ...b.holdEnd, id: ct.holdEnd.id, yValue: ct.holdEnd.yValue },
     transitionEnd: { ...b.transitionEnd, id: ct.transitionEnd.id, yValue: ct.transitionEnd.yValue },
-    peak: { ...ct.peak, hour: b.peak.hour },
-    valley: { ...ct.valley, hour: b.valley.hour },
+    peak: { ...ct.peak, hour: b.peak.hour, isRelative: b.peak.isRelative, anchor: b.peak.anchor, offsetMinutes: b.peak.offsetMinutes },
+    valley: { ...ct.valley, hour: b.valley.hour, isRelative: b.valley.isRelative, anchor: b.valley.anchor, offsetMinutes: b.valley.offsetMinutes },
   };
 }
 
@@ -136,6 +140,49 @@ export function resolveColorModeBoundaries(
     startHour: config.colorTempStartHour ?? sunTimes.sunriseHour,
     endHour: config.colorTempEndHour ?? sunTimes.sunsetHour,
   };
+}
+
+/** Pick the nearest sun anchor for a given hour. */
+function pickAnchor(hour: number, sunTimes: SunTimes): SunAnchor {
+  // If hour is between sunrise and sunset → sunrise, else → sunset
+  if (hour >= sunTimes.sunriseHour && hour <= sunTimes.sunsetHour) {
+    return 'sunrise';
+  }
+  return 'sunset';
+}
+
+/** Toggle a TimingPoint between absolute and relative mode. */
+function toggleTimingPointLock(
+  point: TimingPoint,
+  sunTimes: SunTimes,
+): TimingPoint {
+  if (point.isRelative) {
+    // Relative → Absolute: resolve to absolute hour
+    const absoluteHour = resolveTime(point, sunTimes);
+    return { ...point, isRelative: false, value: absoluteHour, anchor: undefined };
+  }
+  // Absolute → Relative: compute offset from nearest anchor
+  const anchor = pickAnchor(point.value, sunTimes);
+  const base = anchor === 'sunset' ? sunTimes.sunsetHour : sunTimes.sunriseHour;
+  const offsetMinutes = (point.value - base) * 60;
+  return { ...point, isRelative: true, anchor, value: offsetMinutes };
+}
+
+/** Toggle an ExtremePoint between absolute and relative mode. */
+function toggleExtremePointLock(
+  point: ExtremePoint,
+  sunTimes: SunTimes,
+): ExtremePoint {
+  if (point.isRelative) {
+    // Relative → Absolute: resolve to absolute hour
+    const absoluteHour = resolveExtremeTime(point, sunTimes);
+    return { ...point, isRelative: false, hour: absoluteHour, anchor: undefined, offsetMinutes: undefined };
+  }
+  // Absolute → Relative: compute offset from nearest anchor
+  const anchor = pickAnchor(point.hour, sunTimes);
+  const base = anchor === 'sunset' ? sunTimes.sunsetHour : sunTimes.sunriseHour;
+  const offsetMinutes = (point.hour - base) * 60;
+  return { ...point, isRelative: true, anchor, offsetMinutes };
 }
 
 export function curveSetReducer(
@@ -172,36 +219,79 @@ export function curveSetReducer(
 
     case 'UPDATE_PEAK': {
       const curve = state[action.curveName];
+      const existingPeak = curve.peak;
+      let newPeak: ExtremePoint;
+      if (existingPeak.isRelative && existingPeak.anchor) {
+        const base = existingPeak.anchor === 'sunset' ? action.sunTimes.sunsetHour : action.sunTimes.sunriseHour;
+        newPeak = { ...existingPeak, hour: action.newHour, value: action.newValue, offsetMinutes: (action.newHour - base) * 60 };
+      } else {
+        newPeak = { ...existingPeak, hour: action.newHour, value: action.newValue };
+      }
       const updated = enforceYConstraintCascade(
-        { ...curve, peak: { hour: action.newHour, value: action.newValue } },
+        { ...curve, peak: newPeak },
         'peak',
       );
       const next = { ...state, [action.curveName]: updated };
 
       if (state.linked && action.curveName === 'brightness') {
-        // Mirror hour only, preserve colorTemp's own peak value
-        next.colorTemp = {
-          ...state.colorTemp,
-          peak: { ...state.colorTemp.peak, hour: action.newHour },
-        };
+        const ctPeak = { ...state.colorTemp.peak, hour: action.newHour, isRelative: newPeak.isRelative, anchor: newPeak.anchor, offsetMinutes: newPeak.offsetMinutes };
+        next.colorTemp = { ...state.colorTemp, peak: ctPeak };
       }
       return next;
     }
 
     case 'UPDATE_VALLEY': {
       const curve = state[action.curveName];
+      const existingValley = curve.valley;
+      let newValley: ExtremePoint;
+      if (existingValley.isRelative && existingValley.anchor) {
+        const base = existingValley.anchor === 'sunset' ? action.sunTimes.sunsetHour : action.sunTimes.sunriseHour;
+        newValley = { ...existingValley, hour: action.newHour, value: action.newValue, offsetMinutes: (action.newHour - base) * 60 };
+      } else {
+        newValley = { ...existingValley, hour: action.newHour, value: action.newValue };
+      }
       const updated = enforceYConstraintCascade(
-        { ...curve, valley: { hour: action.newHour, value: action.newValue } },
+        { ...curve, valley: newValley },
         'valley',
       );
       const next = { ...state, [action.curveName]: updated };
 
       if (state.linked && action.curveName === 'brightness') {
-        // Mirror hour only, preserve colorTemp's own valley value
-        next.colorTemp = {
-          ...state.colorTemp,
-          valley: { ...state.colorTemp.valley, hour: action.newHour },
-        };
+        const ctValley = { ...state.colorTemp.valley, hour: action.newHour, isRelative: newValley.isRelative, anchor: newValley.anchor, offsetMinutes: newValley.offsetMinutes };
+        next.colorTemp = { ...state.colorTemp, valley: ctValley };
+      }
+      return next;
+    }
+
+    case 'TOGGLE_TIME_LOCK': {
+      const { curveName, pointId, sunTimes } = action;
+      const curve = state[curveName];
+      let updatedCurve: CurveDefinition;
+
+      if (pointId === 'peak') {
+        updatedCurve = { ...curve, peak: toggleExtremePointLock(curve.peak, sunTimes) };
+      } else if (pointId === 'valley') {
+        updatedCurve = { ...curve, valley: toggleExtremePointLock(curve.valley, sunTimes) };
+      } else {
+        const field = POINT_FIELD[pointId];
+        const point = curve[field] as TimingPoint;
+        updatedCurve = { ...curve, [field]: toggleTimingPointLock(point, sunTimes) };
+      }
+
+      const next = { ...state, [curveName]: updatedCurve };
+
+      if (state.linked && curveName === 'brightness') {
+        const ctCurve = state.colorTemp;
+        if (pointId === 'peak') {
+          next.colorTemp = { ...ctCurve, peak: { ...ctCurve.peak, isRelative: updatedCurve.peak.isRelative, anchor: updatedCurve.peak.anchor, offsetMinutes: updatedCurve.peak.offsetMinutes } };
+        } else if (pointId === 'valley') {
+          next.colorTemp = { ...ctCurve, valley: { ...ctCurve.valley, isRelative: updatedCurve.valley.isRelative, anchor: updatedCurve.valley.anchor, offsetMinutes: updatedCurve.valley.offsetMinutes } };
+        } else {
+          const field = POINT_FIELD[pointId];
+          const bPoint = updatedCurve[field] as TimingPoint;
+          const ctPoint = ctCurve[field] as TimingPoint;
+          next.colorTemp = { ...ctCurve, [field]: { ...ctPoint, isRelative: bPoint.isRelative, anchor: bPoint.anchor, value: bPoint.value } };
+        }
       }
       return next;
     }
