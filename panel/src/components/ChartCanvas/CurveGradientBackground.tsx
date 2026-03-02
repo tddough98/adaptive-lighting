@@ -12,8 +12,6 @@ interface CurveGradientBackgroundProps {
   opacity?: number;
 }
 
-const NUM_STOPS = 50;
-
 export function CurveGradientBackground({
   samples,
   width,
@@ -25,9 +23,8 @@ export function CurveGradientBackground({
 }: CurveGradientBackgroundProps) {
   const stops = useMemo(() => {
     if (samples.length === 0) return [];
-    const step = Math.max(1, Math.floor(samples.length / NUM_STOPS));
     const result: { offset: string; color: string }[] = [];
-    for (let i = 0; i < samples.length; i += step) {
+    for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       const pct = (xScale(s.hour) / width) * 100;
       result.push({

@@ -19,8 +19,6 @@ const BAR_HEIGHT = 24;
 const HANDLE_WIDTH = 6;
 const MIN_GAP_HOURS = 0.5;
 const SNAP_MINUTES = 15;
-const NUM_STOPS = 50;
-
 function snapTo15Min(hour: number): number {
   const totalMinutes = hour * 60;
   return Math.round(totalMinutes / SNAP_MINUTES) * SNAP_MINUTES / 60;
@@ -45,9 +43,8 @@ export function ColorModeBar({
 
   const stops = useMemo(() => {
     if (samples.length === 0) return [];
-    const step = Math.max(1, Math.floor(samples.length / NUM_STOPS));
     const result: { offset: string; color: string }[] = [];
-    for (let i = 0; i < samples.length; i += step) {
+    for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       const pct = (xScale(s.hour) / innerWidth) * 100;
       result.push({
