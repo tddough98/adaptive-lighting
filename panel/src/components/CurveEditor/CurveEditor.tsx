@@ -6,6 +6,8 @@ import { brightnessToColor, kelvinToRgb, kelvinToRgbTuple } from '../../utils/co
 import { lerpColorHsv, rgbTupleToString } from '../../utils/colorInterpolation';
 import { isInArc } from '../../utils/curvemath';
 import { resolveColorModeBoundaries } from '../../hooks/useCurveSetReducer';
+import { getSunElevationSamples } from '../../utils/sunElevation';
+import { MONTVALE_COORDS } from '../../data/defaults';
 import { SingleCurvePanel } from './SingleCurvePanel';
 import { LinkedToggle } from './LinkedToggle';
 import { ColorModeBar } from '../ChartCanvas/ColorModeBar';
@@ -15,6 +17,7 @@ interface CurveEditorProps {
   data: CurveData;
   curveSet: CurveSet;
   sunTimes: SunTimes;
+  currentDate: Date;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
   onToggleLinked: () => void;
@@ -26,7 +29,7 @@ const BRIGHTNESS_Y_TICKS = [0, 25, 50, 75, 100];
 
 // Must match SingleCurvePanel layout
 const CHART_WIDTH = 540;
-const CHART_MARGINS = { top: 16, right: 20, bottom: 36, left: 50 };
+const CHART_MARGINS = { top: 16, right: 46, bottom: 36, left: 50 };
 const INNER_WIDTH = CHART_WIDTH - CHART_MARGINS.left - CHART_MARGINS.right;
 
 const formatBrightnessTickCb = (d: number) => `${d}%`;
@@ -38,6 +41,7 @@ export function CurveEditor({
   data,
   curveSet,
   sunTimes,
+  currentDate,
   onPointDrag,
   onPointDragEnd,
   onToggleLinked,
@@ -45,6 +49,11 @@ export function CurveEditor({
 }: CurveEditorProps) {
   const effectiveDrag = readOnly ? NOOP : onPointDrag;
   const effectiveDragEnd = readOnly ? NOOP : onPointDragEnd;
+
+  const sunElevationSamples = useMemo(
+    () => getSunElevationSamples(currentDate, MONTVALE_COORDS.lat, MONTVALE_COORDS.lng),
+    [currentDate],
+  );
   const { startHour, endHour } = resolveColorModeBoundaries(curveSet.colorMode, sunTimes);
   const { sleepRgbColor } = curveSet.colorMode;
   const minK = curveSet.colorTemp.minValue;
@@ -131,6 +140,7 @@ export function CurveEditor({
           onPointDrag={effectiveDrag}
           onPointDragEnd={effectiveDragEnd}
           readOnly={readOnly}
+          sunElevationSamples={sunElevationSamples}
         />
         <div className="curve-editor-linked-row">
           <LinkedToggle linked={curveSet.linked} onToggle={onToggleLinked} readOnly={readOnly} />
@@ -156,6 +166,7 @@ export function CurveEditor({
           onPointDragEnd={effectiveDragEnd}
           readOnly={readOnly}
           className="single-curve-panel--flat-bottom"
+          sunElevationSamples={sunElevationSamples}
           tickDrag={readOnly ? undefined : {
             domain: colorTempYDomain,
             onDrag: onPointDrag,

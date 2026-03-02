@@ -39,6 +39,7 @@ export default function App() {
         data={curveData}
         curveSet={curveSet}
         sunTimes={simState.effectiveSunTimes}
+        currentDate={simState.currentDate}
         onPointDrag={handlePointDrag}
         onPointDragEnd={handlePointDragEnd}
         onToggleLinked={handleToggleLinked}

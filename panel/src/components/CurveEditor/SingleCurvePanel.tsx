@@ -14,6 +14,7 @@ import { ChartCanvas } from '../ChartCanvas/ChartCanvas';
 import { CurveGradientBackground } from '../ChartCanvas/CurveGradientBackground';
 import { GridLines } from '../ChartCanvas/GridLines';
 import { SunEventMarkers } from '../ChartCanvas/SunEventMarkers';
+import { SunElevationOverlay } from '../ChartCanvas/SunElevationOverlay';
 import { CurvePath } from '../ChartCanvas/CurvePath';
 import { SingleCurveTimeIndicator } from '../ChartCanvas/SingleCurveTimeIndicator';
 import { TimePointMarkers } from '../ChartCanvas/TimePointMarkers';
@@ -21,10 +22,12 @@ import { ExtremePointMarkers } from '../ChartCanvas/ExtremePointMarkers';
 import { XAxisLabels } from '../XAxisLabels';
 import { YAxisLabels } from '../YAxisLabels';
 import { YAxisColorbar } from '../ChartCanvas/YAxisColorbar';
+import { RightYAxisLabels } from '../ChartCanvas/RightYAxisLabels';
+import { SUN_ELEVATION_DOMAIN, SUN_ELEVATION_TICKS } from '../../utils/sunElevation';
 
 const WIDTH = 540;
 const HEIGHT = 310;
-const MARGINS: ChartMargins = { top: 16, right: 20, bottom: 36, left: 50 };
+const MARGINS: ChartMargins = { top: 16, right: 46, bottom: 36, left: 50 };
 
 interface SingleCurvePanelProps {
   curveName: CurveName;
@@ -54,6 +57,7 @@ interface SingleCurvePanelProps {
     constrainRange: (newMin: number, newMax: number) => [number, number];
     makeAction: (newMin: number, newMax: number) => CurveSetAction;
   };
+  sunElevationSamples?: CurveSample[];
 }
 
 export function SingleCurvePanel({
@@ -78,6 +82,7 @@ export function SingleCurvePanel({
   readOnly,
   className,
   tickDrag,
+  sunElevationSamples,
 }: SingleCurvePanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const innerWidth = WIDTH - MARGINS.left - MARGINS.right;
@@ -97,6 +102,11 @@ export function SingleCurvePanel({
   const yScale = useMemo(
     () => scaleLinear().domain(yDomain).range([innerHeight, 0]),
     [innerHeight, yDomain],
+  );
+
+  const sunYScale = useMemo(
+    () => scaleLinear().domain(SUN_ELEVATION_DOMAIN).range([innerHeight, 0]),
+    [innerHeight],
   );
 
   return (
@@ -130,6 +140,14 @@ export function SingleCurvePanel({
           height={innerHeight}
           xScale={xScale}
         />
+        {sunElevationSamples && (
+          <SunElevationOverlay
+            samples={sunElevationSamples}
+            xScale={xScale}
+            sunYScale={sunYScale}
+            innerWidth={innerWidth}
+          />
+        )}
         <CurvePath
           samples={samples}
           xScale={xScale}
@@ -195,6 +213,13 @@ export function SingleCurvePanel({
             ...tickDrag,
           } satisfies TickDragConfig : undefined}
         />
+        {sunElevationSamples && (
+          <RightYAxisLabels
+            sunYScale={sunYScale}
+            innerWidth={innerWidth}
+            ticks={SUN_ELEVATION_TICKS}
+          />
+        )}
       </ChartCanvas>
     </div>
   );
