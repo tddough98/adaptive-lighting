@@ -2,9 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { scaleLinear } from 'd3';
 import type { CurveSet, CurveSetAction, SunTimes } from '../../types/curves';
 import type { CurveData } from '../../hooks/useCurveData';
-import { brightnessToColor, kelvinToRgb, kelvinToRgbTuple } from '../../utils/colormap';
-import { lerpColorHsv, rgbTupleToString } from '../../utils/colorInterpolation';
-import { isInArc } from '../../utils/curvemath';
+import { brightnessToColor, kelvinToRgb } from '../../utils/colormap';
 import { resolveColorModeBoundaries } from '../../hooks/useCurveSetReducer';
 import { getSunElevationSamples } from '../../utils/sunElevation';
 import { MONTVALE_COORDS } from '../../data/defaults';
@@ -55,29 +53,23 @@ export function CurveEditor({
     [currentDate],
   );
   const { startHour, endHour } = resolveColorModeBoundaries(curveSet.colorMode, sunTimes);
-  const { sleepRgbColor } = curveSet.colorMode;
   const minK = curveSet.colorTemp.minValue;
   const maxK = curveSet.colorTemp.maxValue;
-
-  const minRgb = useMemo(() => kelvinToRgbTuple(minK), [minK]);
 
   const mapBrightnessColor = useCallback(
     (value: number, _hour: number) => brightnessToColor(value),
     [],
   );
 
-  const mapColorTempModeAware = useCallback(
-    (value: number, hour: number) => {
-      if (isInArc(hour, startHour, endHour)) {
-        return kelvinToRgb(value);
-      }
-      // Nighttime: HSV lerp toward sleepRgbColor
-      const t = maxK > minK ? 1 - (value - minK) / (maxK - minK) : 0;
-      const clamped = Math.max(0, Math.min(1, t));
-      return rgbTupleToString(lerpColorHsv(minRgb, sleepRgbColor, clamped));
-    },
-    [startHour, endHour, minK, maxK, minRgb, sleepRgbColor],
+  // Chart background: always pure Kelvin colors (no RGB/CT zone distinction)
+  const mapColorTempKelvinOnly = useCallback(
+    (value: number, _hour: number) => kelvinToRgb(value),
+    [],
   );
+
+  // NOTE: Mode-aware color mapping (HSV lerp toward sleepRgbColor outside CT window)
+  // was removed here. See git history for mapColorTempModeAware — will be restored
+  // when users can choose arbitrary RGB sleep colors.
 
   // Pure Kelvin colors for Y-axis (always daytime/color_temp mode)
   const mapColorTempValueOnly = useCallback(
@@ -160,7 +152,7 @@ export function CurveEditor({
           curveColor="var(--accent-colortemp)"
           dashArray="6 3"
           gradientId="bg-gradient-colortemp"
-          mapValueToColor={mapColorTempModeAware}
+          mapValueToColor={mapColorTempKelvinOnly}
           mapValueOnly={mapColorTempValueOnly}
           onPointDrag={effectiveDrag}
           onPointDragEnd={effectiveDragEnd}
@@ -180,8 +172,8 @@ export function CurveEditor({
           innerWidth={INNER_WIDTH}
           colorTempStartHour={startHour}
           colorTempEndHour={endHour}
-          samples={data.colorTempSamples}
-          mapSampleToColor={mapColorTempModeAware}
+          minK={minK}
+          maxK={maxK}
           margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
           onBoundaryDrag={effectiveDrag}
           onBoundaryDragEnd={effectiveDragEnd}
