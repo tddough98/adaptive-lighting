@@ -47,6 +47,7 @@ interface SingleCurvePanelProps {
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
   readOnly?: boolean;
+  className?: string;
   tickDrag?: {
     domain: [number, number];
     onDrag: (action: CurveSetAction) => void;
@@ -76,6 +77,7 @@ export function SingleCurvePanel({
   onPointDrag,
   onPointDragEnd,
   readOnly,
+  className,
   tickDrag,
 }: SingleCurvePanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -99,7 +101,7 @@ export function SingleCurvePanel({
   );
 
   return (
-    <div className="single-curve-panel">
+    <div className={`single-curve-panel${className ? ` ${className}` : ''}`}>
       <div className="single-curve-panel-title" style={{ color: curveColor }}>
         {title}
       </div>

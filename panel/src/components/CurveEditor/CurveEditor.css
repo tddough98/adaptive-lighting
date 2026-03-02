@@ -1,39 +1,38 @@
 .curve-editor-layout {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .curve-editor-linked-row {
   display: flex;
   justify-content: center;
   flex-shrink: 0;
+  margin: 6px 0;
 }
 
 .curve-editor-panels {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
 .single-curve-panel {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
   border-radius: 12px;
-  padding: 4px 12px 8px;
 }
 
 .single-curve-panel > svg {
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  height: auto;
 }
 
 .single-curve-panel-title {
@@ -42,6 +41,13 @@
   margin-bottom: 2px;
   text-align: center;
   flex-shrink: 0;
+  padding: 4px 12px 0;
+}
+
+.single-curve-panel--flat-bottom {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
 }
 
 .linked-toggle {
@@ -69,27 +75,15 @@
   cursor: default;
 }
 
-.color-temp-panel-with-bar {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.color-temp-panel-with-bar .single-curve-panel {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  padding-bottom: 2px;
-}
-
 .color-mode-bar-svg {
   flex-shrink: 0;
+  width: 100%;
+  height: auto;
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
   border-top: none;
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
-  padding: 0 12px 4px 12px;
   display: block;
 }
 

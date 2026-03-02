@@ -135,47 +135,46 @@ export function CurveEditor({
         <div className="curve-editor-linked-row">
           <LinkedToggle linked={curveSet.linked} onToggle={onToggleLinked} readOnly={readOnly} />
         </div>
-        <div className="color-temp-panel-with-bar">
-          <SingleCurvePanel
-            curveName="colorTemp"
-            title="Color Temperature"
-            samples={data.colorTempSamples}
-            resolved={data.resolvedColorTemp}
-            curveSet={curveSet}
-            sunTimes={sunTimes}
-            currentHour={data.currentHour}
-            yDomain={colorTempYDomain}
-            yTicks={colorTempYTicks}
-            yAxisLabel="Color Temp (K)"
-            yTickFormat={formatColorTempTickCb}
-            curveColor="var(--accent-colortemp)"
-            dashArray="6 3"
-            gradientId="bg-gradient-colortemp"
-            mapValueToColor={mapColorTempModeAware}
-            mapValueOnly={mapColorTempValueOnly}
-            onPointDrag={effectiveDrag}
-            onPointDragEnd={effectiveDragEnd}
-            readOnly={readOnly}
-            tickDrag={readOnly ? undefined : {
-              domain: colorTempYDomain,
-              onDrag: onPointDrag,
-              onDragEnd: onPointDragEnd,
-              constrainRange: constrainColorTempRange,
-              makeAction: makeColorTempAction,
-            }}
-          />
-          <ColorModeBar
-            xScale={barXScale}
-            innerWidth={INNER_WIDTH}
-            colorTempStartHour={startHour}
-            colorTempEndHour={endHour}
-            samples={data.colorTempSamples}
-            mapSampleToColor={mapColorTempModeAware}
-            margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
-            onBoundaryDrag={effectiveDrag}
-            onBoundaryDragEnd={effectiveDragEnd}
-          />
-        </div>
+        <SingleCurvePanel
+          curveName="colorTemp"
+          title="Color Temperature"
+          samples={data.colorTempSamples}
+          resolved={data.resolvedColorTemp}
+          curveSet={curveSet}
+          sunTimes={sunTimes}
+          currentHour={data.currentHour}
+          yDomain={colorTempYDomain}
+          yTicks={colorTempYTicks}
+          yAxisLabel="Color Temp (K)"
+          yTickFormat={formatColorTempTickCb}
+          curveColor="var(--accent-colortemp)"
+          dashArray="6 3"
+          gradientId="bg-gradient-colortemp"
+          mapValueToColor={mapColorTempModeAware}
+          mapValueOnly={mapColorTempValueOnly}
+          onPointDrag={effectiveDrag}
+          onPointDragEnd={effectiveDragEnd}
+          readOnly={readOnly}
+          className="single-curve-panel--flat-bottom"
+          tickDrag={readOnly ? undefined : {
+            domain: colorTempYDomain,
+            onDrag: onPointDrag,
+            onDragEnd: onPointDragEnd,
+            constrainRange: constrainColorTempRange,
+            makeAction: makeColorTempAction,
+          }}
+        />
+        <ColorModeBar
+          xScale={barXScale}
+          innerWidth={INNER_WIDTH}
+          colorTempStartHour={startHour}
+          colorTempEndHour={endHour}
+          samples={data.colorTempSamples}
+          mapSampleToColor={mapColorTempModeAware}
+          margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
+          onBoundaryDrag={effectiveDrag}
+          onBoundaryDragEnd={effectiveDragEnd}
+        />
       </div>
     </div>
   );

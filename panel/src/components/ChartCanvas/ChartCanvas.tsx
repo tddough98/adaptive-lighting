@@ -15,7 +15,6 @@ export function ChartCanvas({ width, height, margins, children, ref }: ChartCanv
       ref={ref}
       viewBox={`0 0 ${width} ${height}`}
       width="100%"
-      height="100%"
       style={{ display: 'block' }}
     >
       <defs>

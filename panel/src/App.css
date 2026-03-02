@@ -24,10 +24,11 @@ body {
 }
 
 .app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 12px 16px;
-  height: 100dvh;
+  aspect-ratio: 5 / 8;
+  max-width: 100%;
+  max-height: 100dvh;
+  margin: auto;
+  padding: 4px 16px 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
