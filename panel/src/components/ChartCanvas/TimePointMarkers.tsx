@@ -31,6 +31,7 @@ interface TimePointMarkersProps {
   curveName: CurveName;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
+  readOnly?: boolean;
 }
 
 const LABELS: Record<TimingPointType, string> = {
@@ -52,6 +53,7 @@ export function TimePointMarkers({
   curveName,
   onPointDrag,
   onPointDragEnd,
+  readOnly,
 }: TimePointMarkersProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -150,12 +152,13 @@ export function TimePointMarkers({
               strokeWidth={2}
               strokeDasharray={pt.isRelative ? '3 2' : undefined}
               style={{
-                cursor: 'move',
+                cursor: readOnly ? 'default' : 'move',
                 transform: `scale(${scale})`,
                 transition: isDragging ? 'none' : 'transform 0.15s ease',
+                opacity: readOnly ? 0.7 : 1,
               }}
               filter={isDragging ? 'url(#drag-glow)' : undefined}
-              onMouseDown={startDrag(pt.type, makeConstrainFn(pt.type))}
+              onMouseDown={readOnly ? undefined : startDrag(pt.type, makeConstrainFn(pt.type))}
               onMouseEnter={() => setHoveredId(pt.type)}
               onMouseLeave={() => setHoveredId(null)}
             />

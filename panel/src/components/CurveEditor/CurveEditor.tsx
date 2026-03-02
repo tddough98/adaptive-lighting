@@ -18,6 +18,7 @@ interface CurveEditorProps {
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
   onToggleLinked: () => void;
+  readOnly?: boolean;
 }
 
 const BRIGHTNESS_Y_DOMAIN: [number, number] = [0, 100];
@@ -31,6 +32,8 @@ const INNER_WIDTH = CHART_WIDTH - CHART_MARGINS.left - CHART_MARGINS.right;
 const formatBrightnessTickCb = (d: number) => `${d}%`;
 const formatColorTempTickCb = (d: number) => `${d}K`;
 
+const NOOP = () => {};
+
 export function CurveEditor({
   data,
   curveSet,
@@ -38,7 +41,10 @@ export function CurveEditor({
   onPointDrag,
   onPointDragEnd,
   onToggleLinked,
+  readOnly = false,
 }: CurveEditorProps) {
+  const effectiveDrag = readOnly ? NOOP : onPointDrag;
+  const effectiveDragEnd = readOnly ? NOOP : onPointDragEnd;
   const { startHour, endHour } = resolveColorModeBoundaries(curveSet.colorMode, sunTimes);
   const { sleepRgbColor } = curveSet.colorMode;
   const minK = curveSet.colorTemp.minValue;
@@ -106,9 +112,11 @@ export function CurveEditor({
 
   return (
     <div className="curve-editor-layout">
-      <div className="curve-editor-header">
-        <LinkedToggle linked={curveSet.linked} onToggle={onToggleLinked} />
-      </div>
+      {!readOnly && (
+        <div className="curve-editor-header">
+          <LinkedToggle linked={curveSet.linked} onToggle={onToggleLinked} />
+        </div>
+      )}
       <div className="curve-editor-panels">
         <SingleCurvePanel
           curveName="brightness"
@@ -125,8 +133,9 @@ export function CurveEditor({
           curveColor="var(--accent-brightness)"
           gradientId="bg-gradient-brightness"
           mapValueToColor={mapBrightnessColor}
-          onPointDrag={onPointDrag}
-          onPointDragEnd={onPointDragEnd}
+          onPointDrag={effectiveDrag}
+          onPointDragEnd={effectiveDragEnd}
+          readOnly={readOnly}
         />
         <div className="color-temp-panel-with-bar">
           <SingleCurvePanel
@@ -146,9 +155,10 @@ export function CurveEditor({
             gradientId="bg-gradient-colortemp"
             mapValueToColor={mapColorTempModeAware}
             mapValueOnly={mapColorTempValueOnly}
-            onPointDrag={onPointDrag}
-            onPointDragEnd={onPointDragEnd}
-            tickDrag={{
+            onPointDrag={effectiveDrag}
+            onPointDragEnd={effectiveDragEnd}
+            readOnly={readOnly}
+            tickDrag={readOnly ? undefined : {
               domain: colorTempYDomain,
               onDrag: onPointDrag,
               onDragEnd: onPointDragEnd,
@@ -164,8 +174,8 @@ export function CurveEditor({
             samples={data.colorTempSamples}
             mapSampleToColor={mapColorTempModeAware}
             margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
-            onBoundaryDrag={onPointDrag}
-            onBoundaryDragEnd={onPointDragEnd}
+            onBoundaryDrag={effectiveDrag}
+            onBoundaryDragEnd={effectiveDragEnd}
           />
         </div>
       </div>

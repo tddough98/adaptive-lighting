@@ -19,6 +19,7 @@ interface SharpnessPointMarkersProps {
   accentColor?: string;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
+  readOnly?: boolean;
 }
 
 /** Midpoint hour between two times, handling midnight wrap. */
@@ -38,6 +39,7 @@ export function SharpnessPointMarkers({
   accentColor = 'var(--accent-colortemp)',
   onPointDrag,
   onPointDragEnd,
+  readOnly,
 }: SharpnessPointMarkersProps) {
   const { p1, p2, p4, p5, eveningSharpness, morningSharpness, p1Value, p2Value, p4Value, p5Value } = resolved;
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -112,12 +114,13 @@ export function SharpnessPointMarkers({
               stroke="var(--bg-card)"
               strokeWidth={1.5}
               style={{
-                cursor: 'ns-resize',
+                cursor: readOnly ? 'default' : 'ns-resize',
                 transform: `scale(${scale})`,
                 transition: isDragging ? 'none' : 'transform 0.15s ease',
+                opacity: readOnly ? 0.7 : 1,
               }}
               filter={isDragging ? 'url(#drag-glow)' : undefined}
-              onMouseDown={startDrag(m.id, makeConstrainFn(m.id))}
+              onMouseDown={readOnly ? undefined : startDrag(m.id, makeConstrainFn(m.id))}
               onMouseEnter={() => setHoveredId(m.id)}
               onMouseLeave={() => setHoveredId(null)}
             />

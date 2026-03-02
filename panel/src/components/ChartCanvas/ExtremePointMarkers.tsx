@@ -23,6 +23,7 @@ interface ExtremePointMarkersProps {
   curveName: CurveName;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
+  readOnly?: boolean;
 }
 
 /** Clamp hour within [min, max], handling midnight wrap for arcs. */
@@ -54,6 +55,7 @@ export function ExtremePointMarkers({
   curveName,
   onPointDrag,
   onPointDragEnd,
+  readOnly,
 }: ExtremePointMarkersProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -148,12 +150,13 @@ export function ExtremePointMarkers({
               stroke="var(--bg-card)"
               strokeWidth={1.5}
               style={{
-                cursor: 'move',
+                cursor: readOnly ? 'default' : 'move',
                 transform: `scale(${scale})`,
                 transition: isDragging ? 'none' : 'transform 0.15s ease',
+                opacity: readOnly ? 0.7 : 1,
               }}
               filter={isDragging ? 'url(#drag-glow)' : undefined}
-              onMouseDown={startDrag(m.id, m.constrainFn)}
+              onMouseDown={readOnly ? undefined : startDrag(m.id, m.constrainFn)}
               onMouseEnter={() => setHoveredId(m.id)}
               onMouseLeave={() => setHoveredId(null)}
             />

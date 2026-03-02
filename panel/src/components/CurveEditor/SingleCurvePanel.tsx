@@ -46,6 +46,7 @@ interface SingleCurvePanelProps {
   mapValueOnly?: (value: number) => string;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
+  readOnly?: boolean;
   tickDrag?: {
     domain: [number, number];
     onDrag: (action: CurveSetAction) => void;
@@ -74,6 +75,7 @@ export function SingleCurvePanel({
   mapValueOnly,
   onPointDrag,
   onPointDragEnd,
+  readOnly,
   tickDrag,
 }: SingleCurvePanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -154,6 +156,7 @@ export function SingleCurvePanel({
           curveName={curveName}
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
+          readOnly={readOnly}
         />
         <SharpnessPointMarkers
           resolved={resolved}
@@ -165,6 +168,7 @@ export function SingleCurvePanel({
           accentColor={curveColor}
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
+          readOnly={readOnly}
         />
         <ExtremePointMarkers
           resolved={resolved}
@@ -175,6 +179,7 @@ export function SingleCurvePanel({
           curveName={curveName}
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
+          readOnly={readOnly}
         />
         <XAxisLabels
           xScale={xScale}

@@ -1,16 +1,19 @@
 import { useCallback, useReducer } from 'react';
 import { getMockData } from './data/dataProvider';
 import { useCurveData } from './hooks/useCurveData';
+import { useYearSimulation } from './hooks/useYearSimulation';
 import { curveSetReducer } from './hooks/useCurveSetReducer';
 import { CurveEditor } from './components/CurveEditor/CurveEditor';
+import { YearSimulator } from './components/YearSimulator/YearSimulator';
 import type { CurveSetAction } from './types/curves';
 import './App.css';
 
-const { curveSet: initialCurveSet, sunTimes, currentHour } = getMockData();
+const { curveSet: initialCurveSet, currentHour } = getMockData();
 
 export default function App() {
   const [curveSet, dispatch] = useReducer(curveSetReducer, initialCurveSet);
-  const curveData = useCurveData(curveSet, sunTimes, currentHour);
+  const [simState, simControls] = useYearSimulation();
+  const curveData = useCurveData(curveSet, simState.effectiveSunTimes, currentHour);
 
   const handlePointDrag = useCallback(
     (action: CurveSetAction) => dispatch(action),
@@ -35,11 +38,13 @@ export default function App() {
       <CurveEditor
         data={curveData}
         curveSet={curveSet}
-        sunTimes={sunTimes}
+        sunTimes={simState.effectiveSunTimes}
         onPointDrag={handlePointDrag}
         onPointDragEnd={handlePointDragEnd}
         onToggleLinked={handleToggleLinked}
+        readOnly={simState.isPlaying}
       />
+      <YearSimulator state={simState} controls={simControls} />
     </div>
   );
 }

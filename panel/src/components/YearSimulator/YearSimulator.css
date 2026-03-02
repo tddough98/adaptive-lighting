@@ -1,0 +1,158 @@
+.year-simulator {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.year-simulator-bar {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.year-simulator-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Transport buttons */
+.year-sim-transport {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.year-sim-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.year-sim-btn:hover {
+  background: var(--bg-card-border);
+}
+
+.year-sim-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Scrubber */
+.year-sim-scrubber {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  user-select: none;
+}
+
+.year-sim-track {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.year-sim-ticks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.year-sim-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.year-sim-handle {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 1;
+}
+
+.year-sim-handle:active {
+  cursor: grabbing;
+}
+
+.year-sim-month-labels {
+  position: relative;
+  height: 12px;
+}
+
+.year-sim-month-label {
+  position: absolute;
+  font-size: 9px;
+  color: var(--text-secondary);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* Speed buttons */
+.year-sim-speeds {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.year-sim-speed-btn {
+  padding: 3px 7px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.year-sim-speed-btn:hover {
+  background: var(--bg-card-border);
+}
+
+.year-sim-speed-btn.active {
+  background: var(--accent-sun);
+  color: white;
+}
+
+/* Date label */
+.year-sim-date {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 90px;
+  text-align: right;
+}
