@@ -39,8 +39,6 @@ export function resolveCurve(
     peakValue: curve.peak.value,
     valleyHour: curve.valley.hour,
     valleyValue: curve.valley.value,
-    eveningSharpness: curve.eveningSharpness,
-    morningSharpness: curve.morningSharpness,
     minValue: curve.minValue,
     maxValue: curve.maxValue,
   };
@@ -70,49 +68,14 @@ export function getPhase(
   return 'descent_from_peak';
 }
 
-/**
- * Interpolate between start and end values with adjustable sharpness.
- *
- * Sharpness controls both the transition shape AND where the curve is
- * at the midpoint (progress=0.5):
- *   sharpness=0 → value ≈ startVal at midpoint (transition happens late)
- *   sharpness=0.5 → value = (startVal+endVal)/2 (symmetric S-curve)
- *   sharpness=1 → value ≈ endVal at midpoint (transition happens early)
- *
- * Uses a biased tanh S-curve: the sigmoid center shifts so the curve
- * passes through the sharpness-determined value at progress=0.5, with
- * adaptive steepness to ensure endpoints are reached.
- */
-export function interpolateWithSharpness(
-  progress: number,
-  sharpness: number,
-  startVal: number,
-  endVal: number,
-): number {
-  // Clamp to avoid atanh(±1) singularity
-  const s = Math.max(0.01, Math.min(0.99, sharpness));
-  const u = 2 * s - 1;
-  const halfArg = Math.atanh(u);
-
-  // Adaptive k: base steepness of 5, increased for extreme biases
-  // to ensure the curve still reaches ~0/1 at both endpoints.
-  const k = Math.max(5, 5 + 2 * Math.abs(halfArg));
-
-  // Bias: shift the sigmoid center so that at progress=0.5, t = s
-  const b = 0.5 - halfArg / k;
-
-  const t = (Math.tanh((progress - b) * k) + 1) / 2;
-  return startVal + (endVal - startVal) * t;
-}
-
-/** Cosine interpolation for smooth zero-derivative joins. */
-export function cosineInterpolate(
-  progress: number,
-  startVal: number,
-  endVal: number,
-): number {
-  const t = (1 - Math.cos(progress * Math.PI)) / 2;
-  return startVal + (endVal - startVal) * t;
+/** Uniform Catmull-Rom spline evaluation at parameter t ∈ [0,1] using 4 control point values. */
+export function catmullRom(t: number, p0: number, p1: number, p2: number, p3: number): number {
+  return 0.5 * (
+    (2 * p1) +
+    (-p0 + p2) * t +
+    (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t +
+    (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t
+  );
 }
 
 /** Helper: elapsed hours between two times, handling midnight wrap. */
@@ -129,51 +92,53 @@ export function calculateValueAtHour(
     p1, p2, p4, p5,
     p1Value, p2Value, p4Value, p5Value,
     peakHour, peakValue, valleyHour, valleyValue,
+    minValue, maxValue,
   } = resolved;
 
   const phase = getPhase(hour, p1, p2, valleyHour, p4, p5, peakHour);
 
+  // Cyclic Catmull-Rom: each segment uses 4 surrounding point values
+  // Points in order: P1, P2, Valley, P4, P5, Peak (wrapping cyclically)
+  let raw: number;
   switch (phase) {
     case 'evening_transition': {
       const duration = elapsedHours(p1, p2);
-      const elapsed = elapsedHours(p1, hour);
-      const progress = duration > 0 ? elapsed / duration : 0;
-      return interpolateWithSharpness(progress, resolved.eveningSharpness, p1Value, p2Value);
+      const t = duration > 0 ? elapsedHours(p1, hour) / duration : 0;
+      raw = catmullRom(t, peakValue, p1Value, p2Value, valleyValue);
+      break;
     }
-
     case 'descent_to_valley': {
       const duration = elapsedHours(p2, valleyHour);
-      const elapsed = elapsedHours(p2, hour);
-      const progress = duration > 0 ? elapsed / duration : 0;
-      return cosineInterpolate(progress, p2Value, valleyValue);
+      const t = duration > 0 ? elapsedHours(p2, hour) / duration : 0;
+      raw = catmullRom(t, p1Value, p2Value, valleyValue, p4Value);
+      break;
     }
-
     case 'ascent_from_valley': {
       const duration = elapsedHours(valleyHour, p4);
-      const elapsed = elapsedHours(valleyHour, hour);
-      const progress = duration > 0 ? elapsed / duration : 0;
-      return cosineInterpolate(progress, valleyValue, p4Value);
+      const t = duration > 0 ? elapsedHours(valleyHour, hour) / duration : 0;
+      raw = catmullRom(t, p2Value, valleyValue, p4Value, p5Value);
+      break;
     }
-
     case 'morning_transition': {
       const duration = elapsedHours(p4, p5);
-      const elapsed = elapsedHours(p4, hour);
-      const progress = duration > 0 ? elapsed / duration : 0;
-      return interpolateWithSharpness(progress, resolved.morningSharpness, p4Value, p5Value);
+      const t = duration > 0 ? elapsedHours(p4, hour) / duration : 0;
+      raw = catmullRom(t, valleyValue, p4Value, p5Value, peakValue);
+      break;
     }
-
     case 'ascent_to_peak': {
       const duration = elapsedHours(p5, peakHour);
-      const elapsed = elapsedHours(p5, hour);
-      const progress = duration > 0 ? elapsed / duration : 0;
-      return cosineInterpolate(progress, p5Value, peakValue);
+      const t = duration > 0 ? elapsedHours(p5, hour) / duration : 0;
+      raw = catmullRom(t, p4Value, p5Value, peakValue, p1Value);
+      break;
     }
-
     case 'descent_from_peak': {
       const duration = elapsedHours(peakHour, p1);
-      const elapsed = elapsedHours(peakHour, hour);
-      const progress = duration > 0 ? elapsed / duration : 0;
-      return cosineInterpolate(progress, peakValue, p1Value);
+      const t = duration > 0 ? elapsedHours(peakHour, hour) / duration : 0;
+      raw = catmullRom(t, p5Value, peakValue, p1Value, p2Value);
+      break;
     }
   }
+
+  // Clamp to prevent Catmull-Rom overshoot beyond valid range
+  return Math.max(minValue, Math.min(maxValue, raw));
 }

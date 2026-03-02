@@ -112,17 +112,6 @@ function updateTimingValue(
   };
 }
 
-function updateSharpness(
-  curve: CurveDefinition,
-  which: 'evening' | 'morning',
-  newSharpness: number,
-): CurveDefinition {
-  if (which === 'evening') {
-    return { ...curve, eveningSharpness: newSharpness };
-  }
-  return { ...curve, morningSharpness: newSharpness };
-}
-
 /** Copy brightness timing points to colorTemp (preserving colorTemp's own ids, yValues, min/maxValue, and peak/valley values). */
 function mirrorTimingToColorTemp(state: CurveSet): CurveDefinition {
   const b = state.brightness;
@@ -133,8 +122,6 @@ function mirrorTimingToColorTemp(state: CurveSet): CurveDefinition {
     holdStart: { ...b.holdStart, id: ct.holdStart.id, yValue: ct.holdStart.yValue },
     holdEnd: { ...b.holdEnd, id: ct.holdEnd.id, yValue: ct.holdEnd.yValue },
     transitionEnd: { ...b.transitionEnd, id: ct.transitionEnd.id, yValue: ct.transitionEnd.yValue },
-    eveningSharpness: b.eveningSharpness,
-    morningSharpness: b.morningSharpness,
     peak: { ...ct.peak, hour: b.peak.hour },
     valley: { ...ct.valley, hour: b.valley.hour },
   };
@@ -177,25 +164,6 @@ export function curveSetReducer(
           action.pointType,
           action.newValue,
           ctYValue,
-        );
-        next.colorTemp = ct;
-      }
-      return next;
-    }
-
-    case 'UPDATE_SHARPNESS': {
-      const updated = updateSharpness(
-        state[action.curveName],
-        action.which,
-        action.newSharpness,
-      );
-      const next = { ...state, [action.curveName]: updated };
-
-      if (state.linked && action.curveName === 'brightness') {
-        const ct = updateSharpness(
-          state.colorTemp,
-          action.which,
-          action.newSharpness,
         );
         next.colorTemp = ct;
       }

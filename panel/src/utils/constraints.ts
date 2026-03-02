@@ -86,12 +86,6 @@ export function absoluteHourToTimingValue(
   }
 }
 
-/** Clamp sharpness to [0, 1] and snap to 0.05 increments. */
-export function constrainSharpness(raw: number): number {
-  const clamped = Math.max(0, Math.min(1, raw));
-  return Math.round(clamped / 0.05) * 0.05;
-}
-
 /** Clamp a Y-value to [minValue, maxValue] and snap to integer. */
 export function constrainYValue(raw: number, minValue: number, maxValue: number): number {
   return Math.max(minValue, Math.min(maxValue, Math.round(raw)));

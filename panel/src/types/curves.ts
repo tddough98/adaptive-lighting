@@ -25,8 +25,6 @@ export interface CurveDefinition {
   holdStart: TimingPoint;        // P2
   holdEnd: TimingPoint;          // P4
   transitionEnd: TimingPoint;    // P5
-  eveningSharpness: number;      // 0.0–1.0
-  morningSharpness: number;      // 0.0–1.0
   minValue: number;
   maxValue: number;
   peak: ExtremePoint;            // Daytime maximum between P5→P1
@@ -64,8 +62,6 @@ export interface ResolvedCurve {
   peakValue: number;
   valleyHour: number;
   valleyValue: number;
-  eveningSharpness: number;
-  morningSharpness: number;
   minValue: number;
   maxValue: number;
 }
@@ -99,12 +95,6 @@ export type CurveSetAction =
       pointType: TimingPointType;
       newValue: number;
       newYValue: number;
-    }
-  | {
-      type: 'UPDATE_SHARPNESS';
-      curveName: CurveName;
-      which: 'evening' | 'morning';
-      newSharpness: number;
     }
   | {
       type: 'UPDATE_PEAK';

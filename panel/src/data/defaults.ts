@@ -36,8 +36,6 @@ const SHARED_TIMING = {
     anchor: 'sunrise' as const,
     yValue: 100,          // Brightness: 100%
   },
-  eveningSharpness: 0.5,
-  morningSharpness: 0.5,
 };
 
 export const DEFAULT_CURVE_SET: CurveSet = {

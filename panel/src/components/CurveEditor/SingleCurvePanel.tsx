@@ -17,7 +17,6 @@ import { SunEventMarkers } from '../ChartCanvas/SunEventMarkers';
 import { CurvePath } from '../ChartCanvas/CurvePath';
 import { SingleCurveTimeIndicator } from '../ChartCanvas/SingleCurveTimeIndicator';
 import { TimePointMarkers } from '../ChartCanvas/TimePointMarkers';
-import { SharpnessPointMarkers } from '../ChartCanvas/SharpnessPointMarkers';
 import { ExtremePointMarkers } from '../ChartCanvas/ExtremePointMarkers';
 import { XAxisLabels } from '../XAxisLabels';
 import { YAxisLabels } from '../YAxisLabels';
@@ -156,18 +155,6 @@ export function SingleCurvePanel({
           sunTimes={sunTimes}
           curveSet={curveSet}
           curveName={curveName}
-          onPointDrag={onPointDrag}
-          onPointDragEnd={onPointDragEnd}
-          readOnly={readOnly}
-        />
-        <SharpnessPointMarkers
-          resolved={resolved}
-          xScale={xScale}
-          yScale={yScale}
-          svgRef={svgRef}
-          margins={MARGINS}
-          curveName={curveName}
-          accentColor={curveColor}
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
           readOnly={readOnly}
