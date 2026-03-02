@@ -1,39 +1,54 @@
 .curve-editor-layout {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
-.curve-editor-header {
+.curve-editor-linked-row {
   display: flex;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .curve-editor-panels {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .single-curve-panel {
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
   border-radius: 12px;
-  padding: 12px;
+  padding: 4px 12px 8px;
+}
+
+.single-curve-panel > svg {
+  flex: 1;
+  min-height: 0;
 }
 
 .single-curve-panel-title {
   font-size: 13px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .linked-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 4px 12px;
   border: 1px solid var(--bg-card-border);
   border-radius: 20px;
   background: var(--bg-card);
@@ -44,13 +59,19 @@
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.linked-toggle:hover {
+.linked-toggle:hover:not(:disabled) {
   background: var(--bg-card-border);
   border-color: var(--text-secondary);
 }
 
+.linked-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .color-temp-panel-with-bar {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -58,25 +79,20 @@
 .color-temp-panel-with-bar .single-curve-panel {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-  padding-bottom: 4px;
+  padding-bottom: 2px;
 }
 
 .color-mode-bar-svg {
+  flex-shrink: 0;
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
   border-top: none;
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
-  padding: 0 12px 8px 12px;
+  padding: 0 12px 4px 12px;
   display: block;
 }
 
 .color-mode-handle:hover rect {
   fill: rgba(255, 255, 255, 1);
-}
-
-@media (max-width: 800px) {
-  .curve-editor-panels {
-    flex-direction: column;
-  }
 }

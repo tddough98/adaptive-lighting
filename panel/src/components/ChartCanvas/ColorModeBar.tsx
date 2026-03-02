@@ -118,8 +118,8 @@ export function ColorModeBar({
   return (
     <svg
       ref={svgRef}
-      width={totalWidth}
-      height={svgHeight}
+      viewBox={`0 0 ${totalWidth} ${svgHeight}`}
+      width="100%"
       className="color-mode-bar-svg"
     >
       <g transform={`translate(${margins.left}, 0)`}>

@@ -112,11 +112,6 @@ export function CurveEditor({
 
   return (
     <div className="curve-editor-layout">
-      {!readOnly && (
-        <div className="curve-editor-header">
-          <LinkedToggle linked={curveSet.linked} onToggle={onToggleLinked} />
-        </div>
-      )}
       <div className="curve-editor-panels">
         <SingleCurvePanel
           curveName="brightness"
@@ -137,6 +132,9 @@ export function CurveEditor({
           onPointDragEnd={effectiveDragEnd}
           readOnly={readOnly}
         />
+        <div className="curve-editor-linked-row">
+          <LinkedToggle linked={curveSet.linked} onToggle={onToggleLinked} readOnly={readOnly} />
+        </div>
         <div className="color-temp-panel-with-bar">
           <SingleCurvePanel
             curveName="colorTemp"

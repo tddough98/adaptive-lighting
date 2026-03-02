@@ -1,6 +1,7 @@
 interface LinkedToggleProps {
   linked: boolean;
   onToggle: () => void;
+  readOnly?: boolean;
 }
 
 const LINK_ICON = (
@@ -18,15 +19,16 @@ const UNLINK_ICON = (
   </svg>
 );
 
-export function LinkedToggle({ linked, onToggle }: LinkedToggleProps) {
+export function LinkedToggle({ linked, onToggle, readOnly = false }: LinkedToggleProps) {
   return (
     <button
       className="linked-toggle"
       onClick={onToggle}
+      disabled={readOnly}
       title={linked ? 'Timing is linked — click to unlink' : 'Timing is independent — click to link'}
     >
       {linked ? LINK_ICON : UNLINK_ICON}
-      <span>{linked ? 'Linked' : 'Unlinked'}</span>
+      <span>{linked ? 'Link Times' : 'Unlink Times'}</span>
     </button>
   );
 }

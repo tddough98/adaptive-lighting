@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { YearSimulationState, YearSimulationControls } from '../../hooks/useYearSimulation';
 import './YearSimulator.css';
 
@@ -8,7 +8,9 @@ interface YearSimulatorProps {
 }
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_LETTERS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 const SPEEDS = [0.5, 1, 2, 4];
+const NARROW_THRESHOLD = 220;
 
 // Approximate day-of-year for the start of each month (non-leap)
 const MONTH_START_DAYS = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
@@ -73,7 +75,23 @@ function ResetIcon() {
 
 export function YearSimulator({ state, controls }: YearSimulatorProps) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const scrubberRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
+  const [narrow, setNarrow] = useState(false);
+
+  useEffect(() => {
+    const el = scrubberRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setNarrow(entry.contentRect.width < NARROW_THRESHOLD);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const monthLabels = narrow ? MONTH_LETTERS : MONTH_LABELS;
 
   const dayToPercent = (day: number) => (day / (state.daysInYear - 1)) * 100;
 
@@ -131,7 +149,7 @@ export function YearSimulator({ state, controls }: YearSimulatorProps) {
           </div>
 
           {/* Scrubber */}
-          <div className="year-sim-scrubber">
+          <div className="year-sim-scrubber" ref={scrubberRef}>
             <div
               className="year-sim-track"
               ref={trackRef}
@@ -157,11 +175,11 @@ export function YearSimulator({ state, controls }: YearSimulatorProps) {
               />
             </div>
             <div className="year-sim-month-labels">
-              {MONTH_LABELS.map((label, i) => {
+              {monthLabels.map((label, i) => {
                 const labelPercent = (MONTH_START_DAYS[i] / (state.daysInYear - 1)) * 100;
                 return (
                   <span
-                    key={label}
+                    key={i}
                     className="year-sim-month-label"
                     style={{ left: `${labelPercent}%` }}
                   >
