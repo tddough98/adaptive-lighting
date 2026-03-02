@@ -22,8 +22,6 @@ interface CurveEditorProps {
 
 const BRIGHTNESS_Y_DOMAIN: [number, number] = [0, 100];
 const BRIGHTNESS_Y_TICKS = [0, 25, 50, 75, 100];
-const COLOR_TEMP_Y_DOMAIN: [number, number] = [2000, 5500];
-const COLOR_TEMP_Y_TICKS = [2000, 2875, 3750, 4625, 5500];
 
 // Must match SingleCurvePanel layout
 const CHART_WIDTH = 540;
@@ -77,6 +75,35 @@ export function CurveEditor({
     [],
   );
 
+  const colorTempYDomain: [number, number] = useMemo(
+    () => [minK, maxK],
+    [minK, maxK],
+  );
+
+  const colorTempYTicks = useMemo(() => {
+    const [min, max] = colorTempYDomain;
+    return Array.from({ length: 5 }, (_, i) =>
+      Math.round((min + (i / 4) * (max - min)) / 50) * 50,
+    );
+  }, [colorTempYDomain]);
+
+  const MIN_KELVIN = 1500, MAX_KELVIN = 6500, MIN_GAP = 200;
+
+  const constrainColorTempRange = useCallback(
+    (newMin: number, newMax: number): [number, number] => {
+      const cMin = Math.max(MIN_KELVIN, Math.min(MAX_KELVIN - MIN_GAP, newMin));
+      const cMax = Math.max(cMin + MIN_GAP, Math.min(MAX_KELVIN, newMax));
+      return [cMin, cMax];
+    },
+    [],
+  );
+
+  const makeColorTempAction = useCallback(
+    (newMin: number, newMax: number): CurveSetAction =>
+      ({ type: 'UPDATE_COLOR_TEMP_RANGE', newMin, newMax }),
+    [],
+  );
+
   return (
     <div className="curve-editor-layout">
       <div className="curve-editor-header">
@@ -110,8 +137,8 @@ export function CurveEditor({
             curveSet={curveSet}
             sunTimes={sunTimes}
             currentHour={data.currentHour}
-            yDomain={COLOR_TEMP_Y_DOMAIN}
-            yTicks={COLOR_TEMP_Y_TICKS}
+            yDomain={colorTempYDomain}
+            yTicks={colorTempYTicks}
             yAxisLabel="Color Temp (K)"
             yTickFormat={formatColorTempTickCb}
             curveColor="var(--accent-colortemp)"
@@ -121,6 +148,13 @@ export function CurveEditor({
             mapValueOnly={mapColorTempValueOnly}
             onPointDrag={onPointDrag}
             onPointDragEnd={onPointDragEnd}
+            tickDrag={{
+              domain: colorTempYDomain,
+              onDrag: onPointDrag,
+              onDragEnd: onPointDragEnd,
+              constrainRange: constrainColorTempRange,
+              makeAction: makeColorTempAction,
+            }}
           />
           <ColorModeBar
             xScale={barXScale}

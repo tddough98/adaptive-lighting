@@ -258,5 +258,23 @@ export function curveSetReducer(
         colorMode: { ...state.colorMode, [key]: action.newHour },
       };
     }
+
+    case 'UPDATE_COLOR_TEMP_RANGE': {
+      const curve = state.colorTemp;
+      const { newMin, newMax } = action;
+      const clampY = (v: number) => Math.max(newMin, Math.min(newMax, v));
+      const updated: CurveDefinition = {
+        ...curve,
+        minValue: newMin,
+        maxValue: newMax,
+        peak: { ...curve.peak, value: clampY(curve.peak.value) },
+        valley: { ...curve.valley, value: clampY(curve.valley.value) },
+        transitionStart: { ...curve.transitionStart, yValue: clampY(curve.transitionStart.yValue) },
+        holdStart: { ...curve.holdStart, yValue: clampY(curve.holdStart.yValue) },
+        holdEnd: { ...curve.holdEnd, yValue: clampY(curve.holdEnd.yValue) },
+        transitionEnd: { ...curve.transitionEnd, yValue: clampY(curve.transitionEnd.yValue) },
+      };
+      return { ...state, colorTemp: updated };
+    }
   }
 }

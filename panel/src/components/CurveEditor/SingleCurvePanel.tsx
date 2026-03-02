@@ -9,6 +9,7 @@ import type {
   ResolvedCurve,
   SunTimes,
 } from '../../types/curves';
+import type { TickDragConfig } from '../YAxisLabels';
 import { ChartCanvas } from '../ChartCanvas/ChartCanvas';
 import { CurveGradientBackground } from '../ChartCanvas/CurveGradientBackground';
 import { GridLines } from '../ChartCanvas/GridLines';
@@ -45,6 +46,13 @@ interface SingleCurvePanelProps {
   mapValueOnly?: (value: number) => string;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
+  tickDrag?: {
+    domain: [number, number];
+    onDrag: (action: CurveSetAction) => void;
+    onDragEnd: (action: CurveSetAction) => void;
+    constrainRange: (newMin: number, newMax: number) => [number, number];
+    makeAction: (newMin: number, newMax: number) => CurveSetAction;
+  };
 }
 
 export function SingleCurvePanel({
@@ -66,6 +74,7 @@ export function SingleCurvePanel({
   mapValueOnly,
   onPointDrag,
   onPointDragEnd,
+  tickDrag,
 }: SingleCurvePanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const innerWidth = WIDTH - MARGINS.left - MARGINS.right;
@@ -179,10 +188,16 @@ export function SingleCurvePanel({
         />
         <YAxisLabels
           yScale={yScale}
+          yTicks={yTicks}
           label={yAxisLabel}
           accentColor={curveColor}
           tickFormat={yTickFormat}
           mapValueToColor={yAxisColorFn}
+          tickDrag={tickDrag ? {
+            svgRef,
+            margins: MARGINS,
+            ...tickDrag,
+          } satisfies TickDragConfig : undefined}
         />
       </ChartCanvas>
     </div>

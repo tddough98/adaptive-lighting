@@ -119,4 +119,5 @@ export type CurveSetAction =
       newValue: number;
     }
   | { type: 'TOGGLE_LINKED' }
-  | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number };
+  | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number }
+  | { type: 'UPDATE_COLOR_TEMP_RANGE'; newMin: number; newMax: number };

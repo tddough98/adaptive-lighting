@@ -85,3 +85,17 @@ export function kelvinToRgbTuple(kelvin: number): [number, number, number] {
     Math.max(0, Math.min(255, Math.round(b))),
   ];
 }
+
+/** Return '#000' or '#fff' for best contrast against the given rgb() color. */
+export function contrastTextColor(rgbStr: string): string {
+  const m = rgbStr.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if (!m) return '#fff';
+  const r = parseInt(m[1], 10) / 255;
+  const g = parseInt(m[2], 10) / 255;
+  const b = parseInt(m[3], 10) / 255;
+  const rl = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+  const gl = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+  const bl = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+  const luminance = 0.2126 * rl + 0.7152 * gl + 0.0722 * bl;
+  return luminance > 0.179 ? '#000' : '#fff';
+}
