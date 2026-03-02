@@ -1,7 +1,7 @@
 # System Architecture Overview
 
-> **Version**: 1.0
-> **Last Updated**: 2025-02-03
+> **Version**: 2.0
+> **Last Updated**: 2026-03-02
 
 ---
 
@@ -13,25 +13,21 @@
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                     REACT CUSTOM PANEL                               │   │
 │  │  ┌─────────────────────────────────────────────────────────────┐    │   │
-│  │  │ CurveEditor                                                  │    │   │
-│  │  │  • SVG chart with draggable points                          │    │   │
-│  │  │  • Real-time curve rendering                                │    │   │
-│  │  │  • Current time indicator                                   │    │   │
+│  │  │ CurveEditor                                   ✅ Implemented │    │   │
+│  │  │  • Two stacked SingleCurvePanels (brightness + colorTemp)  │    │   │
+│  │  │  • 5 types of draggable control points                     │    │   │
+│  │  │  • ColorModeBar with HSV interpolation                     │    │   │
+│  │  │  • LinkedToggle for curve coupling                         │    │   │
 │  │  └─────────────────────────────────────────────────────────────┘    │   │
 │  │  ┌─────────────────────────────────────────────────────────────┐    │   │
-│  │  │ ProfileManager                                               │    │   │
-│  │  │  • Layer tabs (Base, Hardware, Schedule)                    │    │   │
-│  │  │  • Change highlighting                                      │    │   │
-│  │  │  • Effective result preview                                 │    │   │
+│  │  │ ProfileManager                            ⏳ Not yet built   │    │   │
 │  │  └─────────────────────────────────────────────────────────────┘    │   │
 │  │  ┌─────────────────────────────────────────────────────────────┐    │   │
-│  │  │ YearSlider                                                   │    │   │
-│  │  │  • Date selection for seasonal preview                      │    │   │
-│  │  │  • Sunrise/sunset info display                              │    │   │
+│  │  │ YearSlider                                ⏳ Not yet built   │    │   │
 │  │  └─────────────────────────────────────────────────────────────┘    │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                        │
-│                            WebSocket API                                    │
+│                       ⏳ WebSocket API (not yet connected)                  │
 │                                    │                                        │
 └────────────────────────────────────┼────────────────────────────────────────┘
                                      │
@@ -39,359 +35,204 @@
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          HOME ASSISTANT CORE                                │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                 ADAPTIVE LIGHTING COMPONENT                          │   │
-│  │                                                                      │   │
-│  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │   │
-│  │  │  Switch Entity   │  │  ProfileManager  │  │ EnhancedTiming   │   │   │
-│  │  │  (switch.py)     │  │  (profiles.py)   │  │ (enhanced_       │   │   │
-│  │  │                  │  │                  │  │  timing.py)      │   │   │
-│  │  │ • Main control   │  │ • Layer storage  │  │ • Calculation    │   │   │
-│  │  │ • State attrs    │  │ • Merge logic    │  │ • Interpolation  │   │   │
-│  │  │ • Light calls    │  │ • Active layers  │  │ • Sun integration│   │   │
-│  │  └──────────────────┘  └──────────────────┘  └──────────────────┘   │   │
-│  │           │                     │                     │              │   │
-│  │           └─────────────────────┴─────────────────────┘              │   │
-│  │                                 │                                    │   │
-│  │                         Config Entry                                 │   │
-│  │                    (persistent storage)                              │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                    │                                        │
-│                              Service Calls                                  │
-│                                    │                                        │
-│                                    ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                          LIGHT ENTITIES                              │   │
-│  │  light.bedroom_main    light.bedroom_lamp    light.living_room      │   │
+│  │           ADAPTIVE LIGHTING COMPONENT (upstream fork, unmodified)    │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+The panel currently runs **standalone with mock data**. No WebSocket connection to HA exists yet.
+
 ---
 
-## Data Flow
-
-### 1. Initial Load
+## Current Data Flow (Mock Data)
 
 ```
-Panel loads
-    │
-    ▼
-Request current state via WebSocket
-    │
-    ├──► Entity states (switch.adaptive_lighting_*)
-    │    └──► Current brightness, color_temp, config
-    │
-    └──► Profile config via custom command
-         └──► Layers, active selections, overrides
-    │
-    ▼
-Render curve editor with current values
+App.tsx
+  │
+  ├── DEFAULT_CURVE_SET (from data/defaults.ts)
+  │   └── Initial state for useReducer
+  │
+  ├── useReducer(curveSetReducer, initialState)
+  │   └── Returns [curveSet, dispatch]
+  │
+  ├── useCurveData(curveSet, sunTimes)
+  │   ├── resolveCurve(brightness, sunTimes) → resolvedBrightness
+  │   ├── resolveCurve(colorTemp, sunTimes) → resolvedColorTemp
+  │   ├── generateSamples(resolvedBrightness) → brightnessSamples
+  │   ├── generateSamples(resolvedColorTemp) → colorTempSamples
+  │   └── currentHour (from system clock)
+  │
+  └── <CurveEditor
+        data={curveData}
+        curveSet={curveSet}
+        sunTimes={sunTimes}
+        onPointDrag={dispatch}
+        onPointDragEnd={dispatch}
+        onToggleLinked={() => dispatch({ type: 'TOGGLE_LINKED' })}
+      />
 ```
 
-### 2. User Drags a Point
+### Drag Interaction Flow
 
 ```
-User drags time point P2 (hold_start)
+User drags a point (e.g., TimePointMarker for P2)
     │
     ▼
-Throttled drag handler (60fps max)
+Pointer event → svgCoords.ts converts to chart coordinates
     │
     ▼
-Local state update (instant visual feedback)
+Component creates CurveSetAction:
+  { type: 'UPDATE_TIME_POINT', curveName: 'brightness',
+    pointType: 'hold_start', newValue: 22.5, newYValue: 5 }
     │
     ▼
-Debounced service call (300ms after drag ends)
+onPointDrag(action) → dispatch(action) → curveSetReducer
     │
-    ├──► adaptive_lighting.change_switch_settings
-    │    └──► hold_start_time: "23:30:00"
-    │
-    └──► adaptive_lighting/update_profile (if editing layer)
-         └──► Updates profile config in HA storage
-    │
-    ▼
-HA processes change
+    ├── Updates the target TimingPoint
+    ├── Enforces Y-value constraint cascade
+    │     peak >= p1,p5 >= p2,p4 >= valley
+    └── If linked, mirrors timing to colorTemp
     │
     ▼
-Entity state updates
+New curveSet state → useCurveData recomputes samples
     │
     ▼
+React re-renders all affected components
+```
+
+### Aspirational: WebSocket Flow
+
+*Not yet implemented. When connected to HA:*
+
+```
+Panel loads → WebSocket subscribe to entity states
+User drags → local dispatch (instant feedback)
+              + debounced service call to HA
+HA processes → entity state update
 Panel receives state change via subscription
-    │
-    ▼
-Confirm local state matches server state
-```
-
-### 3. External Change (Automation)
-
-```
-Automation fires (e.g., bed presence detected)
-    │
-    ▼
-Calls adaptive_lighting.set_active_layers
-    │
-    ├──► schedule_layer: "sched-early-morning"
-    │
-    ▼
-ProfileManager recalculates effective settings
-    │
-    ▼
-EnhancedTiming receives new config
-    │
-    ▼
-Entity attributes update
-    │
-    ▼
-Panel receives state change via subscription
-    │
-    ▼
-CurveEditor re-renders with new curve
-    │
-    ▼
-ProfileManager highlights changes
+Reconcile local state with server state
 ```
 
 ---
 
 ## Component Responsibilities
 
-### Frontend (React Panel)
+### Frontend — Components (18 files)
 
-| Component | Responsibility |
-|-----------|---------------|
-| `App.tsx` | Root component, HA connection provider |
-| `CurveEditor.tsx` | Interactive SVG chart |
-| `DraggablePoint.tsx` | Individual draggable point logic |
-| `ProfileManager.tsx` | Layer tabs and management |
-| `YearSlider.tsx` | Seasonal date selector |
-| `useAdaptiveLighting.ts` | HA state subscription hook |
-| `useDrag.ts` | Reusable drag interaction hook |
-| `sunCalc.ts` | Sunrise/sunset calculations |
+| Component | File | Responsibility |
+|-----------|------|---------------|
+| `App` | `App.tsx` | Root: useReducer, mock sun times, renders CurveEditor |
+| `CurveEditor` | `CurveEditor/CurveEditor.tsx` | Composes LinkedToggle + 2 SingleCurvePanels + ColorModeBar |
+| `SingleCurvePanel` | `CurveEditor/SingleCurvePanel.tsx` | One chart: SVG container with all sub-components |
+| `LinkedToggle` | `CurveEditor/LinkedToggle.tsx` | Toggle button for linked/unlinked mode |
+| `ChartCanvas` | `ChartCanvas/ChartCanvas.tsx` | SVG wrapper with margin transform |
+| `CurveGradientBackground` | `ChartCanvas/CurveGradientBackground.tsx` | Value-colored vertical strips under the curve |
+| `GridLines` | `ChartCanvas/GridLines.tsx` | Horizontal + vertical grid lines |
+| `SunEventMarkers` | `ChartCanvas/SunEventMarkers.tsx` | Sunrise/sunset vertical indicator lines |
+| `CurvePath` | `ChartCanvas/CurvePath.tsx` | SVG path from samples using D3 line generator |
+| `SingleCurveTimeIndicator` | `ChartCanvas/SingleCurveTimeIndicator.tsx` | "NOW" vertical line + dot on curve |
+| `TimePointMarkers` | `ChartCanvas/TimePointMarkers.tsx` | Draggable P1/P2/P4/P5 (2D) |
+| `SharpnessPointMarkers` | `ChartCanvas/SharpnessPointMarkers.tsx` | Draggable sharpness controls (vertical) |
+| `ExtremePointMarkers` | `ChartCanvas/ExtremePointMarkers.tsx` | Draggable peak/valley points (2D) |
+| `YAxisColorbar` | `ChartCanvas/YAxisColorbar.tsx` | Vertical color gradient strip on Y-axis |
+| `ColorModeBar` | `ChartCanvas/ColorModeBar.tsx` | Horizontal bar showing color mode regions |
+| `XAxisLabels` | `XAxisLabels.tsx` | Hour labels along bottom |
+| `YAxisLabels` | `YAxisLabels.tsx` | Value labels + draggable ticks (color temp) |
 
-### Backend (Python Component)
+### Frontend — Hooks (3 files)
+
+| Hook | File | Responsibility |
+|------|------|---------------|
+| `useCurveSetReducer` | `hooks/useCurveSetReducer.ts` | Reducer with constraint cascade + linked mirroring |
+| `useCurveData` | `hooks/useCurveData.ts` | Resolves curves + generates samples + tracks current hour |
+| `useDrag` | `hooks/useDrag.ts` | Reusable pointer-event drag logic |
+
+### Frontend — Utilities (7 files)
+
+| Utility | File | Responsibility |
+|---------|------|---------------|
+| `curvemath` | `utils/curvemath.ts` | resolveTime, resolveCurve, getPhase, interpolation functions, calculateValueAtHour |
+| `pathgen` | `utils/pathgen.ts` | Generates CurveSample[] arrays from ResolvedCurve |
+| `colormap` | `utils/colormap.ts` | kelvinToRgb, brightnessToColor, kelvinToRgbTuple |
+| `colorInterpolation` | `utils/colorInterpolation.ts` | HSV conversion, lerpColorHsv for night-mode blending |
+| `svgCoords` | `utils/svgCoords.ts` | Pointer event → SVG coordinate conversion |
+| `constraints` | `utils/constraints.ts` | Drag constraint helpers |
+| `timeformat` | `utils/timeformat.ts` | Hour formatting utilities |
+
+### Frontend — Data (3 files)
+
+| File | Responsibility |
+|------|---------------|
+| `data/defaults.ts` | DEFAULT_CURVE_SET, MONTVALE_COORDS |
+| `data/mockSunTimes.ts` | Mock sunrise/sunset for standalone dev |
+| `data/dataProvider.ts` | Data provider abstraction |
+
+### Frontend — Types (1 file)
+
+| File | Responsibility |
+|------|---------------|
+| `types/curves.ts` | All TypeScript interfaces (TimingPoint, CurveDefinition, CurveSet, CurveSetAction, etc.) |
+
+### Backend (Python — Upstream Fork, Unmodified)
 
 | Module | Responsibility |
 |--------|---------------|
-| `__init__.py` | Integration setup, WebSocket registration |
+| `__init__.py` | Integration setup |
 | `switch.py` | Main entity (`AdaptiveSwitch`), orchestrates everything |
-| `color_and_brightness.py` | Core calculations (`SunEvents`, `SunLightSettings` — both frozen dataclasses). To be extended with enhanced mode. |
+| `color_and_brightness.py` | Core calculations (`SunEvents`, `SunLightSettings` — frozen dataclasses) |
 | `adaptation_utils.py` | Light adaptation helpers |
 | `hass_utils.py` | HA utility functions |
 | `helpers.py` | General helpers (clamp, color_difference, etc.) |
 | `const.py` | All constants and defaults |
-| `services.yaml` | Service definitions (to be extended) |
-| `enhanced_timing.py` | New timing model calculations (to be created) |
-| `profiles.py` | Profile layer storage and merging (to be created) |
+| `config_flow.py` | Config flow for HA UI setup |
+| `services.yaml` | Service definitions |
+
+*Planned but not yet created: `enhanced_timing.py`, `profiles.py`*
 
 ---
 
 ## State Management
 
-### Frontend State
+### Current Pattern (Panel)
 
 ```typescript
-// Global state (via Context)
-interface AppState {
-  hass: HomeAssistant;           // HA connection
-  entities: HassEntities;         // All entity states
-  profiles: ProfileConfig;        // Profile configuration
-  selectedDate: Date;             // Year slider selection
-}
-
-// Local component state
-interface CurveEditorState {
-  isDragging: boolean;
-  draggedPoint: string | null;
-  localCurve: CurveSet;          // Optimistic updates during drag
-}
+// App.tsx — single useReducer, no Context
+const [curveSet, dispatch] = useReducer(curveSetReducer, DEFAULT_CURVE_SET);
 ```
 
-### Backend State
+All state lives in `App.tsx` and is passed down as props. There is no React Context, no global store, and no WebSocket connection.
 
-```python
-# In switch.py (current)
-class AdaptiveSwitch(SwitchEntity, RestoreEntity):
-    _sun_light_settings: SunLightSettings  # Calculation engine (frozen dataclass)
-    # Will be extended with:
-    # _profile_manager: ProfileManager
-    # _active_hardware_layer: str | None
-    # _active_schedule_layer: str | None
+The reducer (`curveSetReducer`) handles 7 action types and enforces:
+- Y-value constraint cascade (peak >= p1,p5 >= p2,p4 >= valley)
+- Linked mirroring (brightness timing → colorTemp timing, preserving yValues)
+- Color temp range clamping (all yValues stay within min/maxValue)
 
-# In profiles.py (to be created)
-class ProfileManager:
-    _base_layer: ProfileLayer
-    _hardware_layers: list[ProfileLayer]
-    _schedule_layers: list[ProfileLayer]
+### Aspirational: HA-Connected State
 
-    def get_effective_config(self) -> CurveSet:
-        """Merge all active layers and return effective config."""
-```
+*Not yet implemented.*
 
----
-
-## Storage
-
-### Config Entry (Persistent)
-
-Stored in `.storage/core.config_entries`:
-
-```json
-{
-  "data": {
-    "min_brightness": 1,
-    "max_brightness": 100,
-    "brightness_mode": "enhanced",
-    "profiles": {
-      "version": 1,
-      "base_layer": { ... },
-      "hardware_layers": [ ... ],
-      "schedule_layers": [ ... ],
-      "active_hardware_layer": "hw-strips",
-      "active_schedule_layer": "sched-late-night"
-    }
-  }
-}
-```
-
-### Entity Attributes (Runtime)
-
-Exposed on `switch.adaptive_lighting_*`:
-
-```yaml
-state: "on"
-attributes:
-  brightness_pct: 45
-  color_temp_kelvin: 2800
-  # Enhanced timing
-  transition_start_resolved: "17:02"
-  hold_start: "23:00"
-  hold_end: "05:30"
-  transition_end_resolved: "07:32"
-  evening_sharpness: 0.5
-  morning_sharpness: 0.5
-  current_phase: "evening_transition"
-  # Profiles
-  active_hardware_layer: "hw-strips"
-  active_schedule_layer: "sched-late-night"
-  effective_min_brightness: 15
-```
-
----
-
-## Error Handling
-
-### Frontend
-
-```typescript
-// WebSocket errors
-function handleConnectionError(error: Error) {
-  if (error.code === ERR_CONNECTION_LOST) {
-    setConnectionStatus('reconnecting');
-    // HA handles reconnection automatically
-  } else {
-    setError(error.message);
-    toast.error(`Connection error: ${error.message}`);
-  }
-}
-
-// Service call errors
-async function safeCallService(domain: string, service: string, data: object) {
-  try {
-    await hass.callService(domain, service, data);
-  } catch (error) {
-    // Revert optimistic update
-    revertLocalState();
-    toast.error(`Failed to update: ${error.message}`);
-  }
-}
-```
-
-### Backend
-
-```python
-# In services
-async def async_set_active_layers(call: ServiceCall) -> None:
-    """Set active profile layers."""
-    try:
-        hardware = call.data.get(CONF_HARDWARE_LAYER)
-        schedule = call.data.get(CONF_SCHEDULE_LAYER)
-        
-        # Validate layer IDs exist
-        if hardware and hardware not in self._get_hardware_layer_ids():
-            raise ValueError(f"Unknown hardware layer: {hardware}")
-        
-        await self._set_active_layers(hardware, schedule)
-        
-    except Exception as err:
-        _LOGGER.error("Failed to set active layers: %s", err)
-        raise HomeAssistantError(f"Failed to set layers: {err}") from err
-```
-
----
-
-## Testing Strategy
-
-### Unit Tests (Python)
-
-```python
-# test_enhanced_timing.py
-def test_brightness_during_hold_period():
-    """Brightness should be at minimum during hold period."""
-    
-def test_overnight_hold_detection():
-    """Should detect hold period that crosses midnight."""
-    
-def test_sharpness_interpolation():
-    """Sharpness=0 should be linear, sharpness=1 should be sharp."""
-
-# test_profiles.py
-def test_layer_merge_order():
-    """Later layers should override earlier layers."""
-    
-def test_partial_override():
-    """Unset values should inherit from base."""
-```
-
-### Integration Tests (Python + HA)
-
-```python
-# test_integration.py
-async def test_full_flow(hass):
-    """Test setting layers via service and checking entity state."""
-    
-async def test_websocket_commands(hass, hass_ws_client):
-    """Test custom WebSocket commands."""
-```
-
-### Component Tests (React)
-
-```typescript
-// CurveEditor.test.tsx
-it('should update curve when point is dragged');
-it('should call service after drag ends');
-it('should show correct current time marker');
-
-// ProfileManager.test.tsx
-it('should highlight changed fields when switching layers');
-it('should merge layers correctly');
-```
+Would add:
+- WebSocket subscription to entity states
+- Optimistic local updates during drag
+- Debounced service calls on drag end
+- State reconciliation between local and server
 
 ---
 
 ## Security Considerations
 
-1. **Authentication**: Panel requires HA login (handled by HA)
+1. **Authentication**: Panel will require HA login (handled by HA)
 2. **Authorization**: Uses HA's permission system
-3. **Input Validation**: All service inputs validated
+3. **Input Validation**: All service inputs will be validated
 4. **No External Calls**: Panel only talks to local HA instance
 
 ---
 
-## Performance Targets
+## Performance
 
-| Metric | Target |
-|--------|--------|
-| Panel initial load | < 500ms |
-| Curve render | < 16ms (60fps) |
-| Drag responsiveness | < 50ms latency |
-| Service call + UI update | < 500ms |
-| Year slider scrubbing | Smooth 30fps |
+| Metric | Target | Current Status |
+|--------|--------|----------------|
+| Curve render | < 16ms (60fps) | Achieved via memoized D3 scales + React reconciliation |
+| Drag responsiveness | < 50ms latency | Achieved via pointer events + immediate dispatch |
+| Panel initial load | < 500ms | Achieved (standalone, no network) |
+| Service call + UI update | < 500ms | N/A (no WebSocket yet) |

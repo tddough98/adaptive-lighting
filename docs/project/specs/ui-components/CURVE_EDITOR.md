@@ -1,231 +1,203 @@
 # Curve Editor UI Specification
 
-> **Version**: 1.0
-> **Status**: Final
-> **Rendering**: D3.js (for SVG curve rendering and drag interactions)
+> **Version**: 2.0
+> **Status**: Implemented (`panel/src/components/`)
+> **Rendering**: React SVG with D3 for scales only (`scaleLinear`, `line` generator)
 
 ---
 
 ## Overview
 
-The curve editor is the centerpiece of the panel UI. It displays brightness and color temperature curves over a 24-hour period with draggable control points. Curves are rendered using D3.js for SVG path generation, scales, and drag behavior.
+The curve editor displays brightness and color temperature curves over a 24-hour period using **two stacked chart panels**, each with its own Y-axis, gradient background, and draggable control points. A color mode bar sits below the color temperature panel.
+
+Source of truth: `panel/src/components/CurveEditor/`, `panel/src/components/ChartCanvas/`
 
 ---
 
 ## Visual Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ ┌─ Y-Axis (Brightness) ─┐                    ┌─ Y-Axis (Color Temp) ─┐     │
-│ │ 100% ─────────────────│────────────────────│───────────────── 6500K │     │
-│ │                       │                    │                        │     │
-│ │  75% ─────────────────│─╲                ╱─│───────────────── 5000K │     │
-│ │                       │  ╲              ╱  │                        │     │
-│ │  50% ─────────────────│───●────────────●───│───────────────── 3500K │     │
-│ │                       │    ╲          ╱    │                        │     │
-│ │  25% ─────────────────│─────╲________╱─────│───────────────── 2500K │     │
-│ │                       │                    │                        │     │
-│ │   1% ─────────────────│────────────────────│───────────────── 2000K │     │
-│ └───────────────────────┴────────────────────┴────────────────────────┘     │
-│                                                                             │
-│   ┌──●──────────────●────────────────●──────────────●──────────────●──┐    │
-│   │  P1             P2              MID             P4              P5 │    │
-│   └───────────────────────────────────────────────────────────────────┘    │
-│   │                                                                    │    │
-│   12:00          sunset          00:00          sunrise           12:00    │
-│   ├──────────────┼───────────────┼───────────────┼──────────────────┤     │
-│                  ▲               ▲               ▲                          │
-│              ~17:30          ~23:00          ~06:00                         │
-│            (seasonal)       (fixed)         (fixed)                        │
-│                                                                             │
-│   ━━ Brightness    ─ ─ Color Temp    ● Draggable Point    NOW ▼            │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  [🔗 Linked]                                                      │
+│                                                                    │
+│  ┌─ Brightness ──────────────────────────────────────────────┐   │
+│  │ YAxisColorbar │                                    │ 100% │   │
+│  │ (gradient)    │  ━━━━Peak━━━●━━━━━━━━━━━━━━━━━━━━ │      │   │
+│  │               │           ╱   ╲                    │  75% │   │
+│  │               │   ●P5   ╱       ╲  P1●            │      │   │
+│  │               │       ╱    cos      ╲  tanh       │  50% │   │
+│  │               │     ╱                  ╲          │      │   │
+│  │               │   ●P4                    ●P2      │  25% │   │
+│  │               │     ╲                  ╱          │      │   │
+│  │               │       ╲  Valley  ●  ╱             │   1% │   │
+│  │               │────────────────────────────────────│      │   │
+│  │               │ 12  15  18  21  0  3  6  9  12    │      │   │
+│  └───────────────┴────────────────────────────────────┴──────┘   │
+│                                                                    │
+│  ┌─ Color Temperature ───────────────────────────────────────┐   │
+│  │ YAxisColorbar │                                    │5500K │   │
+│  │ (blackbody    │  ━━━━Peak━━━●━━━━━━━━━━━━━━━━━━━━ │      │   │
+│  │  gradient)    │           ╱   ╲                    │      │   │
+│  │               │  ─ ─ ─ ╱ ─ ─ ─ ╲ ─ ─ ─ ─ ─ ─ ─ │      │   │
+│  │               │      ╱              ╲             │      │   │
+│  │               │    ╱                   ╲          │      │   │
+│  │               │  ●                       ●        │      │   │
+│  │               │    ╲     Valley  ●     ╱          │2000K │   │
+│  │               │────────────────────────────────────│      │   │
+│  │               │ 12  15  18  21  0  3  6  9  12    │      │   │
+│  └───────────────┴────────────────────────────────────┴──────┘   │
+│  ┌─ ColorModeBar ────────────────────────────────────────────┐   │
+│  │  ▓▓▓▓▓▓▓│color_temp mode│▓▓▓▓▓▓▓▓▓▓▓│ sleep RGB │▓▓▓▓▓▓ │   │
+│  │         ↑start          ↑end                               │   │
+│  └────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────┘
 ```
+
+Key differences from v1.0:
+- **Two separate panels** instead of one dual-axis chart
+- **Per-point Y-values** — each timing point sits at its own Y height
+- **Peak and Valley markers** — draggable extreme points
+- **Gradient backgrounds** — fill under curve colored by value
+- **Y-axis colorbar** — vertical gradient strip showing the value-to-color mapping
+- **ColorModeBar** — shows daytime/nighttime color mode regions
+- **Y-axis tick drag** — color temp Y-axis ticks are draggable to adjust range
 
 ---
 
-## Component Structure
+## Component Hierarchy
+
+```
+CurveEditor
+├── LinkedToggle
+├── SingleCurvePanel (brightness)
+│   └── ChartCanvas (SVG container with margins)
+│       ├── CurveGradientBackground
+│       ├── GridLines
+│       ├── SunEventMarkers
+│       ├── CurvePath
+│       ├── SingleCurveTimeIndicator
+│       ├── TimePointMarkers (P1, P2, P4, P5)
+│       ├── SharpnessPointMarkers (evening, morning)
+│       ├── ExtremePointMarkers (peak, valley)
+│       ├── XAxisLabels
+│       ├── YAxisColorbar
+│       └── YAxisLabels
+├── SingleCurvePanel (colorTemp)
+│   └── ChartCanvas
+│       └── (same sub-components, with tickDrag on YAxisLabels)
+└── ColorModeBar
+```
+
+### File Locations
+
+| Component | File |
+|-----------|------|
+| `CurveEditor` | `components/CurveEditor/CurveEditor.tsx` |
+| `SingleCurvePanel` | `components/CurveEditor/SingleCurvePanel.tsx` |
+| `LinkedToggle` | `components/CurveEditor/LinkedToggle.tsx` |
+| `ChartCanvas` | `components/ChartCanvas/ChartCanvas.tsx` |
+| `CurveGradientBackground` | `components/ChartCanvas/CurveGradientBackground.tsx` |
+| `GridLines` | `components/ChartCanvas/GridLines.tsx` |
+| `SunEventMarkers` | `components/ChartCanvas/SunEventMarkers.tsx` |
+| `CurvePath` | `components/ChartCanvas/CurvePath.tsx` |
+| `SingleCurveTimeIndicator` | `components/ChartCanvas/SingleCurveTimeIndicator.tsx` |
+| `TimePointMarkers` | `components/ChartCanvas/TimePointMarkers.tsx` |
+| `SharpnessPointMarkers` | `components/ChartCanvas/SharpnessPointMarkers.tsx` |
+| `ExtremePointMarkers` | `components/ChartCanvas/ExtremePointMarkers.tsx` |
+| `YAxisColorbar` | `components/ChartCanvas/YAxisColorbar.tsx` |
+| `ColorModeBar` | `components/ChartCanvas/ColorModeBar.tsx` |
+| `XAxisLabels` | `components/XAxisLabels.tsx` |
+| `YAxisLabels` | `components/YAxisLabels.tsx` |
+
+---
+
+## Chart Dimensions
 
 ```typescript
-// Main component hierarchy
-<CurveEditor>
-  <ChartCanvas>
-    <GridLines />
-    <SunEventMarkers />       // Sunrise/sunset vertical lines
-    <CurvePath type="brightness" />
-    <CurvePath type="colorTemp" />
-    <CurrentTimeIndicator />  // "NOW" marker
-    <DraggableTimePoints />   // P1, P2, P4, P5 (horizontal drag)
-    <DraggableSharpnessPoints /> // Midpoint controls (vertical drag)
-  </ChartCanvas>
-  <XAxisLabels />             // Time labels
-  <YAxisLabels side="left" /> // Brightness %
-  <YAxisLabels side="right" />// Color temp K
-  <Legend />
-</CurveEditor>
+// SingleCurvePanel.tsx
+const WIDTH = 540;
+const HEIGHT = 310;
+const MARGINS: ChartMargins = { top: 16, right: 20, bottom: 36, left: 50 };
+// Inner drawing area: 470 × 258
 ```
+
+Both panels use the same dimensions. The X-axis spans 0–24 hours mapped to `innerWidth` (470px). Y-axis domains differ: brightness uses [0, 100], color temp uses [minK, maxK] (default [2000, 5500]).
 
 ---
 
-## Draggable Points
+## Draggable Elements
 
-### Time Points (Horizontal Drag)
+There are 5 types of draggable elements, each dispatching `CurveSetAction` events:
 
-| Point | ID | Initial Position | Drag Constraints |
-|-------|-----|------------------|------------------|
-| P1 | `point-transition-start` | sunset - 30min | Min: sunset - 180min, Max: P2 - 15min |
-| P2 | `point-hold-start` | 23:00 | Min: P1 + 15min, Max: 23:59 |
-| P4 | `point-hold-end` | 05:30 | Min: 00:00, Max: P5 - 15min |
-| P5 | `point-transition-end` | sunrise + 30min | Min: P4 + 15min, Max: sunrise + 180min |
+### 1. TimePointMarkers (2D Drag)
 
-**Visual Style:**
-```css
-.time-point {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #4ade80;
-  cursor: ew-resize;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
+P1, P2, P4, P5 — draggable in both X (time) and Y (yValue).
 
-.time-point:hover {
-  transform: scale(1.2);
-  border-color: #22c55e;
-}
+| Point | Default Position | Drag Behavior |
+|-------|------------------|---------------|
+| P1 (transition_start) | sunset - 30min, yValue=max | X: hours, Y: curve value |
+| P2 (hold_start) | 23:00, yValue=min | X: hours, Y: curve value |
+| P4 (hold_end) | 05:30, yValue=min | X: hours, Y: curve value |
+| P5 (transition_end) | sunrise + 30min, yValue=max | X: hours, Y: curve value |
 
-.time-point.dragging {
-  border-color: #16a34a;
-  box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.3);
-}
+Dispatches: `{ type: 'UPDATE_TIME_POINT', curveName, pointType, newValue, newYValue }`
 
-.time-point.relative {
-  border-style: dashed;  /* Visual indicator that it moves with sun */
-}
-```
+### 2. SharpnessPointMarkers (Vertical Only)
 
-### Sharpness Points (Vertical Drag)
+Positioned at the X-midpoint of their transition segment, Y-position maps to sharpness 0–1.
 
-| Point | ID | Position | Drag Constraints |
-|-------|-----|----------|------------------|
-| Evening | `sharpness-evening` | Midpoint of P1↔P2 segment | Y: 0% to 100% of transition height |
-| Morning | `sharpness-morning` | Midpoint of P4↔P5 segment | Y: 0% to 100% of transition height |
+| Point | Segment | Dispatch |
+|-------|---------|----------|
+| Evening sharpness | P1↔P2 midpoint | `{ type: 'UPDATE_SHARPNESS', curveName, which: 'evening', newSharpness }` |
+| Morning sharpness | P4↔P5 midpoint | `{ type: 'UPDATE_SHARPNESS', curveName, which: 'morning', newSharpness }` |
 
-**Visual Style:**
-```css
-.sharpness-point {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #f97316;
-  border: 2px solid #fff;
-  cursor: ns-resize;
-}
+### 3. ExtremePointMarkers (2D Drag)
 
-.sharpness-point:hover {
-  transform: scale(1.3);
-}
-```
+Peak and valley points — draggable in X (hour) and Y (value).
 
-**Y-Position Mapping:**
-- Top of curve area (at max value line) = sharpness 0.0 (linear, gentle)
-- Bottom of curve area (at min value line) = sharpness 1.0 (sharp)
+| Point | Default | Dispatch |
+|-------|---------|----------|
+| Peak | hour: 13.0, value: max | `{ type: 'UPDATE_PEAK', curveName, newHour, newValue }` |
+| Valley | hour: 2.0, value: min | `{ type: 'UPDATE_VALLEY', curveName, newHour, newValue }` |
 
----
+### 4. Y-Axis Tick Drag (Color Temp Only)
 
-## Interaction States
+The top and bottom Y-axis ticks on the color temp panel are draggable vertically to adjust the color temperature range (minValue/maxValue). Constrained to 1500–6500K with minimum 200K gap. Grid lines freeze at drag-start positions for visual stability.
 
-### Idle State
-- All points visible at normal size
-- Curves drawn with appropriate colors
-- Current time indicator visible
+Dispatches: `{ type: 'UPDATE_COLOR_TEMP_RANGE', newMin, newMax }`
 
-### Hover State
-- Hovered point scales up 20%
-- Tooltip shows current value
-- Connected curve segment highlights
+### 5. ColorModeBar Boundary Handles
 
-### Dragging State
-- Dragged point has glow effect
-- Curve updates in real-time as point moves
-- Tooltip shows live value
-- Other points remain interactive (can start new drag)
+Start and end hour handles on the bar below the color temp panel.
 
-### Linked Mode
-- Single sharpness point (instead of two)
-- Time points shared between curves
-- Color temp curve mirrors brightness curve shape
-
-### Unlinked Mode
-- Two separate sharpness points (one per curve)
-- Curves can have different shapes
-- Time points still shared (only sharpness differs)
+Dispatches: `{ type: 'UPDATE_COLOR_MODE_BOUNDARY', boundary: 'start' | 'end', newHour }`
 
 ---
 
 ## Event Handling
 
-```typescript
-interface CurveEditorEvents {
-  // Emitted during drag (for live preview)
-  onPointDrag: (point: PointUpdate) => void;
-  
-  // Emitted when drag ends (for persistence)
-  onPointDragEnd: (point: PointUpdate) => void;
-  
-  // Emitted when linked toggle changes
-  onLinkedChange: (linked: boolean) => void;
-}
-
-interface PointUpdate {
-  pointId: string;
-  type: 'time' | 'sharpness';
-  value: number;  // Hours for time, 0-1 for sharpness
-  isRelative?: boolean;
-  anchor?: 'sunset' | 'sunrise';
-}
-```
-
-### Drag Implementation
+All drag interactions flow through a reducer-action system:
 
 ```typescript
-function handleTimePointDrag(
-  pointId: string,
-  clientX: number,
-  chartBounds: DOMRect,
-  constraints: DragConstraints
-) {
-  // Convert pixel position to hour
-  const relativeX = (clientX - chartBounds.left) / chartBounds.width;
-  let hour = relativeX * 24;
-  
-  // Apply constraints
-  hour = Math.max(constraints.min, Math.min(constraints.max, hour));
-  
-  // Snap to 5-minute increments
-  hour = Math.round(hour * 12) / 12;
-  
-  return hour;
-}
-
-function handleSharpnessPointDrag(
-  pointId: string,
-  clientY: number,
-  chartBounds: DOMRect,
-  curveRange: { top: number; bottom: number }
-) {
-  // Convert pixel position to sharpness (inverted: top = 0, bottom = 1)
-  const relativeY = (clientY - chartBounds.top - curveRange.top) / 
-                    (curveRange.bottom - curveRange.top);
-  
-  // Clamp to valid range
-  const sharpness = Math.max(0, Math.min(1, relativeY));
-  
-  // Snap to 0.05 increments
-  return Math.round(sharpness * 20) / 20;
-}
+// CurveSetAction union type (panel/src/types/curves.ts)
+type CurveSetAction =
+  | { type: 'UPDATE_TIME_POINT'; curveName: CurveName; pointType: TimingPointType; newValue: number; newYValue: number }
+  | { type: 'UPDATE_SHARPNESS'; curveName: CurveName; which: 'evening' | 'morning'; newSharpness: number }
+  | { type: 'UPDATE_PEAK'; curveName: CurveName; newHour: number; newValue: number }
+  | { type: 'UPDATE_VALLEY'; curveName: CurveName; newHour: number; newValue: number }
+  | { type: 'TOGGLE_LINKED' }
+  | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number }
+  | { type: 'UPDATE_COLOR_TEMP_RANGE'; newMin: number; newMax: number }
 ```
+
+Components receive two callbacks:
+- `onPointDrag(action)` — called continuously during drag (live preview)
+- `onPointDragEnd(action)` — called once when drag finishes (for persistence, when implemented)
+
+The reducer (`curveSetReducer` in `useCurveSetReducer.ts`) handles:
+1. Updating the target field
+2. Enforcing Y-value constraint cascade
+3. Mirroring to colorTemp when linked (timing + sharpness only, not yValues)
 
 ---
 
@@ -233,151 +205,67 @@ function handleSharpnessPointDrag(
 
 ### Path Generation
 
+`panel/src/utils/pathgen.ts` samples the curve at regular intervals to produce `CurveSample[]`:
+
 ```typescript
-function generateCurvePath(
-  curve: ResolvedCurve,
-  chartBounds: ChartBounds,
-  samples: number = 200
-): string {
-  const points: [number, number][] = [];
-  
-  for (let i = 0; i <= samples; i++) {
-    const hour = (i / samples) * 24;
-    const value = calculateValueAtHour(hour, curve);
-    
-    const x = (hour / 24) * chartBounds.width;
-    const y = chartBounds.height - 
-              ((value - curve.minValue) / (curve.maxValue - curve.minValue)) * 
-              chartBounds.height;
-    
-    points.push([x, y]);
-  }
-  
-  // Generate smooth SVG path
-  return `M ${points.map(p => p.join(',')).join(' L ')}`;
+interface CurveSample {
+  hour: number;
+  value: number;
 }
 ```
 
-### Curve Styles
+### CurvePath
 
-```css
-.curve-brightness {
-  stroke: #4ade80;
-  stroke-width: 2.5;
-  fill: none;
-}
+Uses D3's `line()` generator with `xScale` and `yScale` to convert samples to an SVG `<path>` element. Brightness uses a solid stroke; color temp uses a dashed stroke (`dashArray="6 3"`).
 
-.curve-brightness-fill {
-  fill: url(#gradient-brightness);
-  opacity: 0.2;
-}
+### CurveGradientBackground
 
-.curve-colortemp {
-  stroke: #f97316;
-  stroke-width: 2;
-  stroke-dasharray: 8, 4;
-  fill: none;
-}
-```
+Renders vertical strips under the curve, each colored by the value-to-color mapping function. For brightness, this maps value → grayscale. For color temp, this maps value + hour → blackbody RGB (daytime) or HSV-lerped sleep color (nighttime).
+
+### YAxisColorbar
+
+A narrow vertical gradient strip to the left of the chart area showing the Y-axis color mapping (brightness grayscale or blackbody spectrum).
 
 ---
 
-## Special Markers
+## ColorModeBar
 
-### Current Time Indicator
+Renders below the color temp panel. Shows a horizontal bar divided into:
+- **Daytime region** (colorTempStartHour to colorTempEndHour): colored by the color temp curve samples using blackbody colors
+- **Nighttime region**: colored using the HSV-interpolated sleep RGB mode
 
-```typescript
-<line
-  x1={currentTimeX}
-  y1={0}
-  x2={currentTimeX}
-  y2={chartHeight}
-  stroke="#fff"
-  strokeWidth={2}
-/>
-<text
-  x={currentTimeX}
-  y={-8}
-  textAnchor="middle"
-  fill="#fff"
-  fontSize={10}
->
-  NOW
-</text>
-<circle
-  cx={currentTimeX}
-  cy={brightnessValueY}
-  r={6}
-  fill="#4ade80"
-  stroke="#fff"
-  strokeWidth={2}
-/>
-```
-
-### Sun Event Markers
-
-```typescript
-// Sunset marker
-<line
-  x1={sunsetX}
-  y1={0}
-  x2={sunsetX}
-  y2={chartHeight}
-  stroke="#ffa500"
-  strokeWidth={1}
-  strokeDasharray="4, 4"
-/>
-<text x={sunsetX} y={-8} fill="#ffa500" fontSize={10}>🌅</text>
-
-// Sunrise marker
-<line
-  x1={sunriseX}
-  y1={0}
-  x2={sunriseX}
-  y2={chartHeight}
-  stroke="#fbbf24"
-  strokeWidth={1}
-  strokeDasharray="4, 4"
-/>
-<text x={sunriseX} y={-8} fill="#fbbf24" fontSize={10}>🌄</text>
-```
+Two draggable boundary handles allow adjusting the start/end hours.
 
 ---
 
-## Responsive Behavior
+## Linked vs Unlinked Mode
 
-| Viewport Width | Behavior |
-|----------------|----------|
-| < 600px | Stack Y-axes below chart, reduce point size |
-| 600-900px | Standard layout |
-| > 900px | Increase chart height, larger touch targets |
+Controlled by `LinkedToggle` at the top of the editor.
 
----
+**Linked** (`curveSet.linked === true`):
+- Dragging brightness time points mirrors X-position to colorTemp
+- Sharpness changes mirror to colorTemp
+- Peak/valley hour changes mirror to colorTemp
+- Each curve keeps independent yValues, peak/valley values, and min/maxValues
 
-## Accessibility
-
-- All draggable points are focusable (`tabIndex={0}`)
-- Arrow keys adjust values (left/right for time, up/down for sharpness)
-- Screen reader labels describe current values
-- High contrast mode increases line widths and point sizes
-
-```typescript
-<circle
-  role="slider"
-  aria-label={`Hold start time: ${formatTime(holdStart)}`}
-  aria-valuemin={minConstraint}
-  aria-valuemax={maxConstraint}
-  aria-valuenow={holdStart}
-  tabIndex={0}
-  onKeyDown={handleKeyboardAdjust}
-/>
-```
+**Unlinked** (`curveSet.linked === false`):
+- Each panel's points are fully independent
+- No mirroring of any kind
 
 ---
 
-## Performance Considerations
+## Aspirational Features (Not Yet Implemented)
 
-1. **Throttle drag events** to 60fps max
-2. **Use requestAnimationFrame** for curve re-rendering
-3. **Memoize path calculations** when only sharpness changes (time points same)
-4. **Debounce HA service calls** to 300ms after drag ends
+- **Keyboard accessibility**: Arrow key adjustment of draggable points
+- **Responsive behavior**: Layout adaptation for different viewport sizes
+- **Touch optimization**: Larger touch targets on mobile
+- **HA WebSocket sync**: Real-time bidirectional communication with the backend
+
+---
+
+## Performance
+
+- Drag events use pointer events with `svgCoords.ts` for coordinate conversion
+- D3 scales are memoized with `useMemo`
+- Color mapping functions use `useCallback` to prevent child re-renders
+- Curve sampling happens in the `useCurveData` hook, recomputed only when inputs change
