@@ -30,6 +30,7 @@ interface TimePointMarkersProps {
   sunTimes: SunTimes;
   curveSet: CurveSet;
   curveName: CurveName;
+  curveColor: string;
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
   readOnly?: boolean;
@@ -62,6 +63,7 @@ export function TimePointMarkers({
   sunTimes,
   curveSet,
   curveName,
+  curveColor,
   onPointDrag,
   onPointDragEnd,
   readOnly,
@@ -190,12 +192,8 @@ export function TimePointMarkers({
 
         return (
           <g key={label} transform={`translate(${cx},${cy})`}>
-            {/* Mode icon + label with time */}
+            {/* Time label */}
             <g transform="translate(0,-14)">
-              {pt.isRelative
-                ? <SunModeIcon x={-18} y={0} />
-                : <ClockModeIcon x={-18} y={0} />
-              }
               <text
                 x={0}
                 y={0}
@@ -204,16 +202,11 @@ export function TimePointMarkers({
                 fill="var(--text-secondary)"
                 fontSize={8}
               >
-                {label} {timeLabel}
+                {timeLabel}
               </text>
             </g>
-            {/* Circle marker */}
-            <circle
-              r={8}
-              fill="var(--bg-card)"
-              stroke="var(--accent-brightness)"
-              strokeWidth={2}
-              strokeDasharray={pt.isRelative ? '3 2' : undefined}
+            {/* Circle marker with mode icon inside */}
+            <g
               style={{
                 cursor: readOnly ? 'default' : 'move',
                 transform: `scale(${scale})`,
@@ -224,7 +217,18 @@ export function TimePointMarkers({
               onMouseDown={readOnly ? undefined : (e) => handleMouseDown(pt.type, e)}
               onMouseEnter={() => setHoveredId(pt.type)}
               onMouseLeave={() => setHoveredId(null)}
-            />
+            >
+              <circle
+                r={8}
+                fill="var(--bg-card)"
+                stroke={curveColor}
+                strokeWidth={2}
+              />
+              {pt.isRelative
+                ? <SunModeIcon x={0} y={0} />
+                : <ClockModeIcon x={0} y={0} />
+              }
+            </g>
           </g>
         );
       })}

@@ -50,6 +50,9 @@ export function SunEventMarkers({ sunTimes, height, xScale }: SunEventMarkersPro
               fill="var(--accent-sun)"
               fontSize={9}
               opacity={0.8}
+              stroke="white"
+              strokeWidth={3}
+              paintOrder="stroke"
             >
               {formatHour(e.hour)}
             </text>

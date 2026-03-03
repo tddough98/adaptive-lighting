@@ -150,7 +150,6 @@ export function CurveEditor({
           yAxisLabel="Color Temp (K)"
           yTickFormat={formatColorTempTickCb}
           curveColor="var(--accent-colortemp)"
-          dashArray="6 3"
           gradientId="bg-gradient-colortemp"
           mapValueToColor={mapColorTempKelvinOnly}
           mapValueOnly={mapColorTempValueOnly}

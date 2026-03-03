@@ -205,12 +205,8 @@ export function ExtremePointMarkers({
 
         return (
           <g key={m.id} transform={`translate(${cx},${cy})`}>
-            {/* Label with mode icon and time */}
+            {/* Label with time */}
             <g transform={`translate(0,${m.labelYOffset})`}>
-              {m.isRelative
-                ? <SunModeIcon x={-22} y={0} />
-                : <ClockModeIcon x={-22} y={0} />
-              }
               <text
                 x={0}
                 y={0}
@@ -222,12 +218,8 @@ export function ExtremePointMarkers({
                 {m.label} {timeLabel}
               </text>
             </g>
-            <path
-              d={m.path}
-              fill={m.fill}
-              stroke="var(--bg-card)"
-              strokeWidth={1.5}
-              strokeDasharray={m.isRelative ? '3 2' : undefined}
+            {/* Triangle marker with mode icon inside */}
+            <g
               style={{
                 cursor: readOnly ? 'default' : 'move',
                 transform: `scale(${scale})`,
@@ -238,7 +230,18 @@ export function ExtremePointMarkers({
               onMouseDown={readOnly ? undefined : (e) => handleMouseDown(m.id, m.constrainFn, e)}
               onMouseEnter={() => setHoveredId(m.id)}
               onMouseLeave={() => setHoveredId(null)}
-            />
+            >
+              <path
+                d={m.path}
+                fill={m.fill}
+                stroke="var(--bg-card)"
+                strokeWidth={1.5}
+              />
+              {m.isRelative
+                ? <SunModeIcon x={0} y={0} />
+                : <ClockModeIcon x={0} y={0} />
+              }
+            </g>
           </g>
         );
       })}

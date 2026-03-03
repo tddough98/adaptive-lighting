@@ -129,11 +129,8 @@ export function SingleCurvePanel({
           mapValueToColor={mapValueToColor}
         />
         <GridLines
-          width={innerWidth}
           height={innerHeight}
           xScale={xScale}
-          yScale={yScale}
-          yTicks={yTicks}
         />
         <SunEventMarkers
           sunTimes={sunTimes}
@@ -173,6 +170,7 @@ export function SingleCurvePanel({
           sunTimes={sunTimes}
           curveSet={curveSet}
           curveName={curveName}
+          curveColor={curveColor}
           onPointDrag={onPointDrag}
           onPointDragEnd={onPointDragEnd}
           readOnly={readOnly}

@@ -30,9 +30,9 @@ export function RightYAxisLabels({
         </g>
       ))}
       <text
-        transform="rotate(90)"
-        x={midY}
-        y={-(innerWidth + 40)}
+        transform="rotate(-90)"
+        x={-midY}
+        y={innerWidth + 34}
         textAnchor="middle"
         fill="rgba(255, 180, 0, 0.5)"
         fontSize={10}

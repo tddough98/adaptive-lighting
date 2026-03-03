@@ -178,9 +178,12 @@ export function ColorModeBar({
             dominantBaseline="central"
             fontSize={9}
             fontWeight={600}
-            fill="rgba(255,255,255,0.7)"
           >
-            RGB
+            <tspan fill="#ff4444">R</tspan>
+            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
+            <tspan fill="#44ff44">G</tspan>
+            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
+            <tspan fill="#4444ff">B</tspan>
           </text>
         )}
         {endX - startX > 30 && (
@@ -191,7 +194,10 @@ export function ColorModeBar({
             dominantBaseline="central"
             fontSize={9}
             fontWeight={600}
-            fill="rgba(255,255,255,0.7)"
+            fill="url(#cmb-kelvin-gradient)"
+            stroke="rgba(0,0,0,0.5)"
+            strokeWidth={0.3}
+            paintOrder="stroke"
           >
             Kelvin
           </text>
@@ -204,9 +210,12 @@ export function ColorModeBar({
             dominantBaseline="central"
             fontSize={9}
             fontWeight={600}
-            fill="rgba(255,255,255,0.7)"
           >
-            RGB
+            <tspan fill="#ff4444">R</tspan>
+            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
+            <tspan fill="#44ff44">G</tspan>
+            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
+            <tspan fill="#4444ff">B</tspan>
           </text>
         )}
 

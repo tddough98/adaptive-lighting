@@ -111,6 +111,10 @@ export function YAxisLabels({
     displayTicks = yTicks;
   }
 
+  const maxPillWidth = Math.max(
+    ...displayTicks.map((t) => tickFormat(t).length * CHAR_WIDTH + PILL_X_PAD * 2),
+  );
+
   return (
     <>
       {displayTicks.map((tickValue) => {
@@ -118,7 +122,6 @@ export function YAxisLabels({
         const formatted = tickFormat(tickValue);
         const bgColor = mapValueToColor(tickValue);
         const textColor = contrastTextColor(bgColor);
-        const pillWidth = formatted.length * CHAR_WIDTH + PILL_X_PAD * 2;
 
         return (
           <g
@@ -128,9 +131,9 @@ export function YAxisLabels({
             onMouseDown={drag ? wrappedStartDrag(`tick-${tickValue}`, makeConstrainFn(tickValue)) : undefined}
           >
             <rect
-              x={-pillWidth - 2}
+              x={-maxPillWidth - 2}
               y={-PILL_HEIGHT / 2}
-              width={pillWidth}
+              width={maxPillWidth}
               height={PILL_HEIGHT}
               rx={3}
               fill={bgColor}
@@ -152,7 +155,7 @@ export function YAxisLabels({
       <text
         transform="rotate(-90)"
         x={-midY}
-        y={-44}
+        y={-38}
         textAnchor="middle"
         fill={accentColor}
         fontSize={10}

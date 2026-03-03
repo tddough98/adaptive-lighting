@@ -39,9 +39,14 @@ export function SunElevationOverlay({
       <path
         d={pathD}
         fill="none"
-        stroke="rgba(255, 180, 0, 0.35)"
+        stroke="white"
+        strokeWidth={3.5}
+      />
+      <path
+        d={pathD}
+        fill="none"
+        stroke="black"
         strokeWidth={1.5}
-        strokeDasharray="4 3"
       />
     </g>
   );
