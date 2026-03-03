@@ -116,18 +116,16 @@ function updateTimingValue(
   };
 }
 
-/** Copy brightness timing points to colorTemp (preserving colorTemp's own ids, yValues, min/maxValue, and peak/valley values). */
-function mirrorTimingToColorTemp(state: CurveSet): CurveDefinition {
-  const b = state.brightness;
-  const ct = state.colorTemp;
+/** Copy timing from source curve to target curve (preserving target's own ids, yValues, min/maxValue, and peak/valley values). */
+function mirrorTiming(source: CurveDefinition, target: CurveDefinition): CurveDefinition {
   return {
-    ...ct,
-    transitionStart: { ...b.transitionStart, id: ct.transitionStart.id, yValue: ct.transitionStart.yValue },
-    holdStart: { ...b.holdStart, id: ct.holdStart.id, yValue: ct.holdStart.yValue },
-    holdEnd: { ...b.holdEnd, id: ct.holdEnd.id, yValue: ct.holdEnd.yValue },
-    transitionEnd: { ...b.transitionEnd, id: ct.transitionEnd.id, yValue: ct.transitionEnd.yValue },
-    peak: { ...ct.peak, hour: b.peak.hour, isRelative: b.peak.isRelative, anchor: b.peak.anchor, offsetMinutes: b.peak.offsetMinutes },
-    valley: { ...ct.valley, hour: b.valley.hour, isRelative: b.valley.isRelative, anchor: b.valley.anchor, offsetMinutes: b.valley.offsetMinutes },
+    ...target,
+    transitionStart: { ...source.transitionStart, id: target.transitionStart.id, yValue: target.transitionStart.yValue },
+    holdStart: { ...source.holdStart, id: target.holdStart.id, yValue: target.holdStart.yValue },
+    holdEnd: { ...source.holdEnd, id: target.holdEnd.id, yValue: target.holdEnd.yValue },
+    transitionEnd: { ...source.transitionEnd, id: target.transitionEnd.id, yValue: target.transitionEnd.yValue },
+    peak: { ...target.peak, hour: source.peak.hour, isRelative: source.peak.isRelative, anchor: source.peak.anchor, offsetMinutes: source.peak.offsetMinutes },
+    valley: { ...target.valley, hour: source.valley.hour, isRelative: source.valley.isRelative, anchor: source.valley.anchor, offsetMinutes: source.valley.offsetMinutes },
   };
 }
 
@@ -206,17 +204,16 @@ export function curveSetReducer(
       );
       const next = { ...state, [action.curveName]: updated };
 
-      if (state.linked && action.curveName === 'brightness') {
-        // Mirror timing but preserve colorTemp's own yValue
-        const ctPoint = state.colorTemp[POINT_FIELD[action.pointType]];
-        const ctYValue = typeof ctPoint === 'object' && 'yValue' in ctPoint ? ctPoint.yValue : 0;
-        const ct = updateTimingValue(
-          state.colorTemp,
+      if (state.linked) {
+        const other = action.curveName === 'brightness' ? 'colorTemp' : 'brightness';
+        const otherPoint = state[other][POINT_FIELD[action.pointType]];
+        const otherYValue = typeof otherPoint === 'object' && 'yValue' in otherPoint ? otherPoint.yValue : 0;
+        next[other] = updateTimingValue(
+          state[other],
           action.pointType,
           action.newValue,
-          ctYValue,
+          otherYValue,
         );
-        next.colorTemp = ct;
       }
       return next;
     }
@@ -237,9 +234,10 @@ export function curveSetReducer(
       );
       const next = { ...state, [action.curveName]: updated };
 
-      if (state.linked && action.curveName === 'brightness') {
-        const ctPeak = { ...state.colorTemp.peak, hour: action.newHour, isRelative: newPeak.isRelative, anchor: newPeak.anchor, offsetMinutes: newPeak.offsetMinutes };
-        next.colorTemp = { ...state.colorTemp, peak: ctPeak };
+      if (state.linked) {
+        const other = action.curveName === 'brightness' ? 'colorTemp' : 'brightness';
+        const otherPeak = { ...state[other].peak, hour: action.newHour, isRelative: newPeak.isRelative, anchor: newPeak.anchor, offsetMinutes: newPeak.offsetMinutes };
+        next[other] = { ...state[other], peak: otherPeak };
       }
       return next;
     }
@@ -260,9 +258,10 @@ export function curveSetReducer(
       );
       const next = { ...state, [action.curveName]: updated };
 
-      if (state.linked && action.curveName === 'brightness') {
-        const ctValley = { ...state.colorTemp.valley, hour: action.newHour, isRelative: newValley.isRelative, anchor: newValley.anchor, offsetMinutes: newValley.offsetMinutes };
-        next.colorTemp = { ...state.colorTemp, valley: ctValley };
+      if (state.linked) {
+        const other = action.curveName === 'brightness' ? 'colorTemp' : 'brightness';
+        const otherValley = { ...state[other].valley, hour: action.newHour, isRelative: newValley.isRelative, anchor: newValley.anchor, offsetMinutes: newValley.offsetMinutes };
+        next[other] = { ...state[other], valley: otherValley };
       }
       return next;
     }
@@ -284,17 +283,18 @@ export function curveSetReducer(
 
       const next = { ...state, [curveName]: updatedCurve };
 
-      if (state.linked && curveName === 'brightness') {
-        const ctCurve = state.colorTemp;
+      if (state.linked) {
+        const other = curveName === 'brightness' ? 'colorTemp' : 'brightness';
+        const otherCurve = state[other];
         if (pointId === 'peak') {
-          next.colorTemp = { ...ctCurve, peak: { ...ctCurve.peak, isRelative: updatedCurve.peak.isRelative, anchor: updatedCurve.peak.anchor, offsetMinutes: updatedCurve.peak.offsetMinutes } };
+          next[other] = { ...otherCurve, peak: { ...otherCurve.peak, isRelative: updatedCurve.peak.isRelative, anchor: updatedCurve.peak.anchor, offsetMinutes: updatedCurve.peak.offsetMinutes } };
         } else if (pointId === 'valley') {
-          next.colorTemp = { ...ctCurve, valley: { ...ctCurve.valley, isRelative: updatedCurve.valley.isRelative, anchor: updatedCurve.valley.anchor, offsetMinutes: updatedCurve.valley.offsetMinutes } };
+          next[other] = { ...otherCurve, valley: { ...otherCurve.valley, isRelative: updatedCurve.valley.isRelative, anchor: updatedCurve.valley.anchor, offsetMinutes: updatedCurve.valley.offsetMinutes } };
         } else {
           const field = POINT_FIELD[pointId];
-          const bPoint = updatedCurve[field] as TimingPoint;
-          const ctPoint = ctCurve[field] as TimingPoint;
-          next.colorTemp = { ...ctCurve, [field]: { ...ctPoint, isRelative: bPoint.isRelative, anchor: bPoint.anchor, value: bPoint.value } };
+          const srcPoint = updatedCurve[field] as TimingPoint;
+          const dstPoint = otherCurve[field] as TimingPoint;
+          next[other] = { ...otherCurve, [field]: { ...dstPoint, isRelative: srcPoint.isRelative, anchor: srcPoint.anchor, value: srcPoint.value } };
         }
       }
       return next;
@@ -307,7 +307,7 @@ export function curveSetReducer(
         return {
           ...state,
           linked,
-          colorTemp: mirrorTimingToColorTemp(state),
+          colorTemp: mirrorTiming(state.brightness, state.colorTemp),
         };
       }
       return { ...state, linked };

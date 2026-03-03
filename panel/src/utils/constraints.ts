@@ -28,26 +28,26 @@ export function getTimePointConstraints(
   switch (pointType) {
     case 'transition_start': // P1
       return {
-        minHour: sunTimes.sunsetHour - 3, // sunset − 180min
+        minHour: Math.max(sunTimes.sunsetHour - 3, resolved.peakHour + MIN_GAP_HOURS),
         maxHour: resolved.p2 - MIN_GAP_HOURS,
         snapMinutes: 5,
       };
     case 'hold_start': // P2
       return {
         minHour: resolved.p1 + MIN_GAP_HOURS,
-        maxHour: 24 - 1 / 60, // 23:59
+        maxHour: Math.min(24 - 1 / 60, resolved.valleyHour - MIN_GAP_HOURS),
         snapMinutes: 5,
       };
     case 'hold_end': // P4
       return {
-        minHour: 0,
+        minHour: Math.max(0, resolved.valleyHour + MIN_GAP_HOURS),
         maxHour: resolved.p5 - MIN_GAP_HOURS,
         snapMinutes: 5,
       };
     case 'transition_end': // P5
       return {
         minHour: resolved.p4 + MIN_GAP_HOURS,
-        maxHour: sunTimes.sunriseHour + 3, // sunrise + 180min
+        maxHour: Math.min(sunTimes.sunriseHour + 3, resolved.peakHour - MIN_GAP_HOURS),
         snapMinutes: 5,
       };
   }
