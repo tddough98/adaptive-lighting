@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import type { ScaleLinear } from 'd3';
-import type { CurveSetAction } from '../../types/curves';
+import type { CurveSetAction, CurveSample } from '../../types/curves';
 import { kelvinToRgb } from '../../utils/colormap';
 import { useDrag } from '../../hooks/useDrag';
 
@@ -9,8 +9,7 @@ interface ColorModeBarProps {
   innerWidth: number;
   colorTempStartHour: number;
   colorTempEndHour: number;
-  minK: number;
-  maxK: number;
+  colorTempSamples: CurveSample[];
   margins: { left: number; right: number };
   onBoundaryDrag: (action: CurveSetAction) => void;
   onBoundaryDragEnd: (action: CurveSetAction) => void;
@@ -25,16 +24,17 @@ function snapTo15Min(hour: number): number {
   return Math.round(totalMinutes / SNAP_MINUTES) * SNAP_MINUTES / 60;
 }
 
-/** Number of color stops for the Kelvin gradient */
-const KELVIN_STOPS = 8;
+/** Number of evenly-spaced stops for the full-bar curve gradient */
+const CURVE_STOPS = 24;
+/** Number of stops for the Kelvin text label gradient */
+const LABEL_STOPS = 8;
 
 export function ColorModeBar({
   xScale,
   innerWidth,
   colorTempStartHour,
   colorTempEndHour,
-  minK,
-  maxK,
+  colorTempSamples,
   margins,
   onBoundaryDrag,
   onBoundaryDragEnd,
@@ -43,16 +43,40 @@ export function ColorModeBar({
   const totalWidth = innerWidth + margins.left + margins.right;
   const svgHeight = BAR_HEIGHT + 8; // bar + bottom padding
 
-  // Kelvin zone gradient stops (warm → cool)
-  const kelvinStops = useMemo(() => {
+  // Full-bar gradient stops from actual curve values (0→24h)
+  const curveStops = useMemo(() => {
+    if (colorTempSamples.length === 0) return [];
     const stops: { offset: string; color: string }[] = [];
-    for (let i = 0; i <= KELVIN_STOPS; i++) {
-      const t = i / KELVIN_STOPS;
+    for (let i = 0; i <= CURVE_STOPS; i++) {
+      const t = i / CURVE_STOPS;
+      const hour = t * 24;
+      let closest = colorTempSamples[0];
+      for (const s of colorTempSamples) {
+        if (Math.abs(s.hour - hour) < Math.abs(closest.hour - hour)) {
+          closest = s;
+        }
+      }
+      stops.push({ offset: `${(t * 100).toFixed(1)}%`, color: kelvinToRgb(closest.value) });
+    }
+    return stops;
+  }, [colorTempSamples]);
+
+  // Separate gradient for "Kelvin" text label: full minK→maxK range
+  const kelvinLabelStops = useMemo(() => {
+    if (colorTempSamples.length === 0) return [];
+    let minK = Infinity, maxK = -Infinity;
+    for (const s of colorTempSamples) {
+      if (s.value < minK) minK = s.value;
+      if (s.value > maxK) maxK = s.value;
+    }
+    const stops: { offset: string; color: string }[] = [];
+    for (let i = 0; i <= LABEL_STOPS; i++) {
+      const t = i / LABEL_STOPS;
       const k = minK + t * (maxK - minK);
       stops.push({ offset: `${(t * 100).toFixed(1)}%`, color: kelvinToRgb(k) });
     }
     return stops;
-  }, [minK, maxK]);
+  }, [colorTempSamples]);
 
   // Drag for start handle
   const startConstrainFn = useCallback(
@@ -112,15 +136,15 @@ export function ColorModeBar({
     >
       <g transform={`translate(${margins.left}, 0)`}>
         <defs>
-          {/* RGB rainbow gradient for nighttime zones */}
-          <linearGradient id="cmb-rgb-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ff0000" />
-            <stop offset="50%" stopColor="#00ff00" />
-            <stop offset="100%" stopColor="#0000ff" />
+          {/* Full-bar gradient from actual curve values */}
+          <linearGradient id="cmb-curve-gradient" gradientUnits="userSpaceOnUse" x1={0} y1={0} x2={innerWidth} y2={0}>
+            {curveStops.map((s, i) => (
+              <stop key={i} offset={s.offset} stopColor={s.color} />
+            ))}
           </linearGradient>
-          {/* Kelvin gradient for daytime zone */}
-          <linearGradient id="cmb-kelvin-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            {kelvinStops.map((s, i) => (
+          {/* Kelvin label gradient: full min→max range */}
+          <linearGradient id="cmb-kelvin-label-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            {kelvinLabelStops.map((s, i) => (
               <stop key={i} offset={s.offset} stopColor={s.color} />
             ))}
           </linearGradient>
@@ -129,31 +153,14 @@ export function ColorModeBar({
           </clipPath>
         </defs>
 
-        {/* Clipped zone rectangles */}
+        {/* Clipped bar filled with curve-derived gradient */}
         <g clipPath="url(#cmb-clip)">
-          {/* Left RGB zone (0 → startX) */}
           <rect
             x={0}
             y={0}
-            width={startX}
+            width={innerWidth}
             height={BAR_HEIGHT}
-            fill="url(#cmb-rgb-gradient)"
-          />
-          {/* Kelvin zone (startX → endX) */}
-          <rect
-            x={startX}
-            y={0}
-            width={endX - startX}
-            height={BAR_HEIGHT}
-            fill="url(#cmb-kelvin-gradient)"
-          />
-          {/* Right RGB zone (endX → innerWidth) */}
-          <rect
-            x={endX}
-            y={0}
-            width={innerWidth - endX}
-            height={BAR_HEIGHT}
-            fill="url(#cmb-rgb-gradient)"
+            fill="url(#cmb-curve-gradient)"
           />
         </g>
 
@@ -176,13 +183,14 @@ export function ColorModeBar({
             y={BAR_HEIGHT / 2}
             textAnchor="middle"
             dominantBaseline="central"
-            fontSize={9}
+            fontSize={11}
             fontWeight={600}
+            stroke="rgba(0,0,0,0.5)"
+            strokeWidth={1}
+            paintOrder="stroke"
           >
             <tspan fill="#ff4444">R</tspan>
-            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
             <tspan fill="#44ff44">G</tspan>
-            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
             <tspan fill="#4444ff">B</tspan>
           </text>
         )}
@@ -192,11 +200,11 @@ export function ColorModeBar({
             y={BAR_HEIGHT / 2}
             textAnchor="middle"
             dominantBaseline="central"
-            fontSize={9}
+            fontSize={11}
             fontWeight={600}
-            fill="url(#cmb-kelvin-gradient)"
+            fill="url(#cmb-kelvin-label-gradient)"
             stroke="rgba(0,0,0,0.5)"
-            strokeWidth={0.3}
+            strokeWidth={1}
             paintOrder="stroke"
           >
             Kelvin
@@ -208,13 +216,14 @@ export function ColorModeBar({
             y={BAR_HEIGHT / 2}
             textAnchor="middle"
             dominantBaseline="central"
-            fontSize={9}
+            fontSize={11}
             fontWeight={600}
+            stroke="rgba(0,0,0,0.5)"
+            strokeWidth={1}
+            paintOrder="stroke"
           >
             <tspan fill="#ff4444">R</tspan>
-            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
             <tspan fill="#44ff44">G</tspan>
-            <tspan fill="rgba(255,255,255,0.7)">/</tspan>
             <tspan fill="#4444ff">B</tspan>
           </text>
         )}

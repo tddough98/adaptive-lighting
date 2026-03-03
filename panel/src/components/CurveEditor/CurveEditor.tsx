@@ -171,8 +171,7 @@ export function CurveEditor({
           innerWidth={INNER_WIDTH}
           colorTempStartHour={startHour}
           colorTempEndHour={endHour}
-          minK={minK}
-          maxK={maxK}
+          colorTempSamples={data.colorTempSamples}
           margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
           onBoundaryDrag={effectiveDrag}
           onBoundaryDragEnd={effectiveDragEnd}
