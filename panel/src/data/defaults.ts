@@ -59,8 +59,10 @@ export const DEFAULT_CURVE_SET: CurveSet = {
   },
   linked: true,
   colorMode: {
-    colorTempStartHour: null,   // null = follow sunriseHour
-    colorTempEndHour: null,     // null = follow sunsetHour
-    sleepRgbColor: [255, 56, 0],  // Matches Shiny DEFAULT_SLEEP_RGB_COLOR
+    colorTempStartHour: null,      // null = relative to sunrise
+    colorTempEndHour: null,        // null = relative to sunset
+    startOffsetMinutes: 0,         // exact sunrise
+    endOffsetMinutes: 0,           // exact sunset
+    sleepRgbColor: [255, 56, 0],   // Matches Shiny DEFAULT_SLEEP_RGB_COLOR
   },
 };

@@ -87,6 +87,6 @@
   display: block;
 }
 
-.color-mode-handle:hover rect {
+.color-mode-handle:hover circle {
   fill: rgba(255, 255, 255, 1);
 }

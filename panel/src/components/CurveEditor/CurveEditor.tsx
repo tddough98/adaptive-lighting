@@ -175,6 +175,12 @@ export function CurveEditor({
           margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
           onBoundaryDrag={effectiveDrag}
           onBoundaryDragEnd={effectiveDragEnd}
+          startIsRelative={curveSet.colorMode.colorTempStartHour === null}
+          endIsRelative={curveSet.colorMode.colorTempEndHour === null}
+          startOffsetMinutes={curveSet.colorMode.startOffsetMinutes}
+          endOffsetMinutes={curveSet.colorMode.endOffsetMinutes}
+          sunTimes={sunTimes}
+          readOnly={readOnly}
         />
       </div>
     </div>

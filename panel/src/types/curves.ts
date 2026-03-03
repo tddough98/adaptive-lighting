@@ -35,8 +35,10 @@ export interface CurveDefinition {
 }
 
 export interface ColorModeConfig {
-  colorTempStartHour: number | null; // null = follow sunriseHour
-  colorTempEndHour: number | null;   // null = follow sunsetHour
+  colorTempStartHour: number | null; // null = relative to sunrise
+  colorTempEndHour: number | null;   // null = relative to sunset
+  startOffsetMinutes: number;        // offset from sunrise when null
+  endOffsetMinutes: number;          // offset from sunset when null
   sleepRgbColor: [number, number, number];
 }
 
@@ -120,5 +122,6 @@ export type CurveSetAction =
       sunTimes: SunTimes;
     }
   | { type: 'TOGGLE_LINKED' }
-  | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number }
+  | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number; sunTimes: SunTimes }
+  | { type: 'TOGGLE_COLOR_MODE_BOUNDARY_LOCK'; boundary: 'start' | 'end'; sunTimes: SunTimes }
   | { type: 'UPDATE_COLOR_TEMP_RANGE'; newMin: number; newMax: number };

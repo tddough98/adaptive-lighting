@@ -1,8 +1,10 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { ScaleLinear } from 'd3';
-import type { CurveSetAction, CurveSample } from '../../types/curves';
+import type { CurveSetAction, CurveSample, SunTimes } from '../../types/curves';
 import { kelvinToRgb } from '../../utils/colormap';
+import { formatHour, formatRelativeOffset } from '../../utils/timeformat';
 import { useDrag } from '../../hooks/useDrag';
+import { SunModeIcon, ClockModeIcon } from './ModeIcons';
 
 interface ColorModeBarProps {
   xScale: ScaleLinear<number, number>;
@@ -13,13 +15,24 @@ interface ColorModeBarProps {
   margins: { left: number; right: number };
   onBoundaryDrag: (action: CurveSetAction) => void;
   onBoundaryDragEnd: (action: CurveSetAction) => void;
+  startIsRelative: boolean;
+  endIsRelative: boolean;
+  startOffsetMinutes: number;
+  endOffsetMinutes: number;
+  sunTimes: SunTimes;
+  readOnly?: boolean;
 }
 
 const BAR_HEIGHT = 24;
-const HANDLE_WIDTH = 6;
+const HANDLE_RADIUS = 8;
+const HANDLE_TOP = 16; // vertical space above bar for labels
 const MIN_GAP_HOURS = 0.5;
-const SNAP_MINUTES = 15;
-function snapTo15Min(hour: number): number {
+const SNAP_MINUTES = 1;
+const DOUBLE_CLICK_MS = 300;
+const DOUBLE_CLICK_RADIUS = 5;
+const HANDLE_STROKE = '#ea580c';
+
+function snapToMinute(hour: number): number {
   const totalMinutes = hour * 60;
   return Math.round(totalMinutes / SNAP_MINUTES) * SNAP_MINUTES / 60;
 }
@@ -38,12 +51,21 @@ export function ColorModeBar({
   margins,
   onBoundaryDrag,
   onBoundaryDragEnd,
+  startIsRelative,
+  endIsRelative,
+  startOffsetMinutes,
+  endOffsetMinutes,
+  sunTimes,
+  readOnly = false,
 }: ColorModeBarProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const totalWidth = innerWidth + margins.left + margins.right;
-  const svgHeight = BAR_HEIGHT + 8; // bar + bottom padding
+  const svgHeight = HANDLE_TOP + BAR_HEIGHT + 8; // label space + bar + bottom padding
 
-  // Full-bar gradient stops from actual curve values (0→24h)
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const lastMouseDown = useRef<{ pointId: string; time: number; x: number; y: number } | null>(null);
+
+  // Full-bar gradient stops from actual curve values (0->24h)
   const curveStops = useMemo(() => {
     if (colorTempSamples.length === 0) return [];
     const stops: { offset: string; color: string }[] = [];
@@ -61,7 +83,7 @@ export function ColorModeBar({
     return stops;
   }, [colorTempSamples]);
 
-  // Separate gradient for "Kelvin" text label: full minK→maxK range
+  // Separate gradient for "Kelvin" text label: full minK->maxK range
   const kelvinLabelStops = useMemo(() => {
     if (colorTempSamples.length === 0) return [];
     let minK = Infinity, maxK = -Infinity;
@@ -78,46 +100,76 @@ export function ColorModeBar({
     return stops;
   }, [colorTempSamples]);
 
-  // Drag for start handle
+  // Constraint functions for drag
   const startConstrainFn = useCallback(
-    (svgX: number): CurveSetAction => {
+    (svgX: number, _svgY: number): CurveSetAction => {
       const rawHour = xScale.invert(svgX - margins.left);
-      const snapped = snapTo15Min(Math.max(0, Math.min(24, rawHour)));
+      const snapped = snapToMinute(Math.max(0, Math.min(24, rawHour)));
       const clamped = Math.min(snapped, colorTempEndHour - MIN_GAP_HOURS);
       return {
         type: 'UPDATE_COLOR_MODE_BOUNDARY',
         boundary: 'start',
         newHour: Math.max(0, clamped),
+        sunTimes,
       };
     },
-    [xScale, margins.left, colorTempEndHour],
+    [xScale, margins.left, colorTempEndHour, sunTimes],
   );
 
   const endConstrainFn = useCallback(
-    (svgX: number): CurveSetAction => {
+    (svgX: number, _svgY: number): CurveSetAction => {
       const rawHour = xScale.invert(svgX - margins.left);
-      const snapped = snapTo15Min(Math.max(0, Math.min(24, rawHour)));
+      const snapped = snapToMinute(Math.max(0, Math.min(24, rawHour)));
       const clamped = Math.max(snapped, colorTempStartHour + MIN_GAP_HOURS);
       return {
         type: 'UPDATE_COLOR_MODE_BOUNDARY',
         boundary: 'end',
         newHour: Math.min(24, clamped),
+        sunTimes,
       };
     },
-    [xScale, margins.left, colorTempStartHour],
+    [xScale, margins.left, colorTempStartHour, sunTimes],
   );
 
-  const { startDrag: startDragStart } = useDrag<CurveSetAction>({
+  // Single unified useDrag instance
+  const { dragState, startDrag } = useDrag<CurveSetAction>({
     svgRef,
     onDrag: onBoundaryDrag,
     onDragEnd: onBoundaryDragEnd,
   });
 
-  const { startDrag: startDragEnd } = useDrag<CurveSetAction>({
-    svgRef,
-    onDrag: onBoundaryDrag,
-    onDragEnd: onBoundaryDragEnd,
-  });
+  // Double-click-aware mousedown handler (same pattern as TimePointMarkers)
+  const handleMouseDown = useCallback(
+    (boundary: 'start' | 'end', e: React.MouseEvent) => {
+      if (readOnly) return;
+      const pointId = `color-mode-${boundary}`;
+      const now = Date.now();
+      const prev = lastMouseDown.current;
+
+      if (
+        prev &&
+        prev.pointId === pointId &&
+        now - prev.time < DOUBLE_CLICK_MS &&
+        Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < DOUBLE_CLICK_RADIUS
+      ) {
+        // Double-click detected - toggle lock mode
+        lastMouseDown.current = null;
+        e.preventDefault();
+        e.stopPropagation();
+        onBoundaryDragEnd({
+          type: 'TOGGLE_COLOR_MODE_BOUNDARY_LOCK',
+          boundary,
+          sunTimes,
+        });
+        return;
+      }
+
+      lastMouseDown.current = { pointId, time: now, x: e.clientX, y: e.clientY };
+      const constrainFn = boundary === 'start' ? startConstrainFn : endConstrainFn;
+      startDrag(pointId, constrainFn)(e);
+    },
+    [readOnly, sunTimes, onBoundaryDragEnd, startDrag, startConstrainFn, endConstrainFn],
+  );
 
   const startX = xScale(colorTempStartHour);
   const endX = xScale(colorTempEndHour);
@@ -126,6 +178,27 @@ export function ColorModeBar({
   const nightLeftCenter = startX / 2;
   const dayCenter = (startX + endX) / 2;
   const nightRightCenter = (endX + innerWidth) / 2;
+
+  // Handle center Y is at the bar's vertical center (shifted down by HANDLE_TOP)
+  const handleCY = HANDLE_TOP + BAR_HEIGHT / 2;
+
+  // Time labels for each handle
+  const startTimeLabel = startIsRelative
+    ? formatRelativeOffset(startOffsetMinutes, 'sunrise')
+    : formatHour(colorTempStartHour);
+  const endTimeLabel = endIsRelative
+    ? formatRelativeOffset(endOffsetMinutes, 'sunset')
+    : formatHour(colorTempEndHour);
+
+  const handles: Array<{
+    id: 'start' | 'end';
+    cx: number;
+    isRelative: boolean;
+    timeLabel: string;
+  }> = [
+    { id: 'start', cx: startX, isRelative: startIsRelative, timeLabel: startTimeLabel },
+    { id: 'end', cx: endX, isRelative: endIsRelative, timeLabel: endTimeLabel },
+  ];
 
   return (
     <svg
@@ -142,22 +215,32 @@ export function ColorModeBar({
               <stop key={i} offset={s.offset} stopColor={s.color} />
             ))}
           </linearGradient>
-          {/* Kelvin label gradient: full min→max range */}
+          {/* Kelvin label gradient: full min->max range */}
           <linearGradient id="cmb-kelvin-label-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
             {kelvinLabelStops.map((s, i) => (
               <stop key={i} offset={s.offset} stopColor={s.color} />
             ))}
           </linearGradient>
           <clipPath id="cmb-clip">
-            <rect x={0} y={0} width={innerWidth} height={BAR_HEIGHT} rx={4} />
+            <rect x={0} y={HANDLE_TOP} width={innerWidth} height={BAR_HEIGHT} rx={4} />
           </clipPath>
+          {/* Drag glow filter for active handle */}
+          <filter id="cmb-drag-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feFlood floodColor={HANDLE_STROKE} floodOpacity="0.4" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* Clipped bar filled with curve-derived gradient */}
+        {/* Clipped bar filled with curve-derived gradient (shifted down) */}
         <g clipPath="url(#cmb-clip)">
           <rect
             x={0}
-            y={0}
+            y={HANDLE_TOP}
             width={innerWidth}
             height={BAR_HEIGHT}
             fill="url(#cmb-curve-gradient)"
@@ -167,7 +250,7 @@ export function ColorModeBar({
         {/* Border */}
         <rect
           x={0}
-          y={0}
+          y={HANDLE_TOP}
           width={innerWidth}
           height={BAR_HEIGHT}
           fill="none"
@@ -180,7 +263,7 @@ export function ColorModeBar({
         {startX > 40 && (
           <text
             x={nightLeftCenter}
-            y={BAR_HEIGHT / 2}
+            y={HANDLE_TOP + BAR_HEIGHT / 2}
             textAnchor="middle"
             dominantBaseline="central"
             fontSize={11}
@@ -197,7 +280,7 @@ export function ColorModeBar({
         {endX - startX > 30 && (
           <text
             x={dayCenter}
-            y={BAR_HEIGHT / 2}
+            y={HANDLE_TOP + BAR_HEIGHT / 2}
             textAnchor="middle"
             dominantBaseline="central"
             fontSize={11}
@@ -213,7 +296,7 @@ export function ColorModeBar({
         {innerWidth - endX > 40 && (
           <text
             x={nightRightCenter}
-            y={BAR_HEIGHT / 2}
+            y={HANDLE_TOP + BAR_HEIGHT / 2}
             textAnchor="middle"
             dominantBaseline="central"
             fontSize={11}
@@ -228,53 +311,53 @@ export function ColorModeBar({
           </text>
         )}
 
-        {/* Start handle */}
-        <g
-          className="color-mode-handle"
-          onMouseDown={startDragStart('color-mode-start', startConstrainFn)}
-          style={{ cursor: 'ew-resize' }}
-        >
-          <rect
-            x={startX - HANDLE_WIDTH / 2}
-            y={0}
-            width={HANDLE_WIDTH}
-            height={BAR_HEIGHT}
-            fill="rgba(255,255,255,0.9)"
-            rx={2}
-          />
-          <line
-            x1={startX}
-            y1={3}
-            x2={startX}
-            y2={BAR_HEIGHT - 3}
-            stroke="rgba(0,0,0,0.3)"
-            strokeWidth={1}
-          />
-        </g>
+        {/* Circular handle markers */}
+        {handles.map((h) => {
+          const isDragging = dragState.isDragging && dragState.activePointId === `color-mode-${h.id}`;
+          const isHovered = hoveredId === h.id;
+          const scale = isDragging || isHovered ? 1.2 : 1;
 
-        {/* End handle */}
-        <g
-          className="color-mode-handle"
-          onMouseDown={startDragEnd('color-mode-end', endConstrainFn)}
-          style={{ cursor: 'ew-resize' }}
-        >
-          <rect
-            x={endX - HANDLE_WIDTH / 2}
-            y={0}
-            width={HANDLE_WIDTH}
-            height={BAR_HEIGHT}
-            fill="rgba(255,255,255,0.9)"
-            rx={2}
-          />
-          <line
-            x1={endX}
-            y1={3}
-            x2={endX}
-            y2={BAR_HEIGHT - 3}
-            stroke="rgba(0,0,0,0.3)"
-            strokeWidth={1}
-          />
-        </g>
+          return (
+            <g key={h.id} transform={`translate(${h.cx},${handleCY})`}>
+              {/* Time label above handle */}
+              <text
+                x={0}
+                y={-BAR_HEIGHT / 2 - HANDLE_RADIUS - 2}
+                textAnchor="middle"
+                dominantBaseline="auto"
+                fill="var(--text-secondary)"
+                fontSize={8}
+              >
+                {h.timeLabel}
+              </text>
+              {/* Circle marker with mode icon */}
+              <g
+                className="color-mode-handle"
+                style={{
+                  cursor: readOnly ? 'default' : 'ew-resize',
+                  transform: `scale(${scale})`,
+                  transition: isDragging ? 'none' : 'transform 0.15s ease',
+                  opacity: readOnly ? 0.7 : 1,
+                }}
+                filter={isDragging ? 'url(#cmb-drag-glow)' : undefined}
+                onMouseDown={(e) => handleMouseDown(h.id, e)}
+                onMouseEnter={() => setHoveredId(h.id)}
+                onMouseLeave={() => setHoveredId(null)}
+              >
+                <circle
+                  r={HANDLE_RADIUS}
+                  fill="var(--bg-card)"
+                  stroke={HANDLE_STROKE}
+                  strokeWidth={2}
+                />
+                {h.isRelative
+                  ? <SunModeIcon x={0} y={0} />
+                  : <ClockModeIcon x={0} y={0} />
+                }
+              </g>
+            </g>
+          );
+        })}
       </g>
     </svg>
   );

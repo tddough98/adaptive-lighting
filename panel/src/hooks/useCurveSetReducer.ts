@@ -131,14 +131,18 @@ function mirrorTimingToColorTemp(state: CurveSet): CurveDefinition {
   };
 }
 
-/** Resolve null boundaries to sun times. Returns the color_temp active range. */
+/** Resolve null boundaries to sun times (with offset). Returns the color_temp active range. */
 export function resolveColorModeBoundaries(
   config: ColorModeConfig,
   sunTimes: SunTimes,
 ): { startHour: number; endHour: number } {
   return {
-    startHour: config.colorTempStartHour ?? sunTimes.sunriseHour,
-    endHour: config.colorTempEndHour ?? sunTimes.sunsetHour,
+    startHour: config.colorTempStartHour !== null
+      ? config.colorTempStartHour
+      : sunTimes.sunriseHour + config.startOffsetMinutes / 60,
+    endHour: config.colorTempEndHour !== null
+      ? config.colorTempEndHour
+      : sunTimes.sunsetHour + config.endOffsetMinutes / 60,
   };
 }
 
@@ -310,11 +314,46 @@ export function curveSetReducer(
     }
 
     case 'UPDATE_COLOR_MODE_BOUNDARY': {
-      const key = action.boundary === 'start' ? 'colorTempStartHour' : 'colorTempEndHour';
-      return {
-        ...state,
-        colorMode: { ...state.colorMode, [key]: action.newHour },
-      };
+      const cm = state.colorMode;
+      if (action.boundary === 'start') {
+        if (cm.colorTempStartHour === null) {
+          // Sun-relative: update offset from sunrise
+          const offset = (action.newHour - action.sunTimes.sunriseHour) * 60;
+          return { ...state, colorMode: { ...cm, startOffsetMinutes: offset } };
+        }
+        return { ...state, colorMode: { ...cm, colorTempStartHour: action.newHour } };
+      } else {
+        if (cm.colorTempEndHour === null) {
+          // Sun-relative: update offset from sunset
+          const offset = (action.newHour - action.sunTimes.sunsetHour) * 60;
+          return { ...state, colorMode: { ...cm, endOffsetMinutes: offset } };
+        }
+        return { ...state, colorMode: { ...cm, colorTempEndHour: action.newHour } };
+      }
+    }
+
+    case 'TOGGLE_COLOR_MODE_BOUNDARY_LOCK': {
+      const cm = state.colorMode;
+      const { boundary, sunTimes: st } = action;
+      if (boundary === 'start') {
+        if (cm.colorTempStartHour === null) {
+          // Sun-relative → Absolute: freeze the resolved hour
+          const resolved = st.sunriseHour + cm.startOffsetMinutes / 60;
+          return { ...state, colorMode: { ...cm, colorTempStartHour: resolved } };
+        }
+        // Absolute → Sun-relative: compute offset from sunrise
+        const offset = (cm.colorTempStartHour - st.sunriseHour) * 60;
+        return { ...state, colorMode: { ...cm, colorTempStartHour: null, startOffsetMinutes: offset } };
+      } else {
+        if (cm.colorTempEndHour === null) {
+          // Sun-relative → Absolute: freeze the resolved hour
+          const resolved = st.sunsetHour + cm.endOffsetMinutes / 60;
+          return { ...state, colorMode: { ...cm, colorTempEndHour: resolved } };
+        }
+        // Absolute → Sun-relative: compute offset from sunset
+        const offset = (cm.colorTempEndHour - st.sunsetHour) * 60;
+        return { ...state, colorMode: { ...cm, colorTempEndHour: null, endOffsetMinutes: offset } };
+      }
     }
 
     case 'UPDATE_COLOR_TEMP_RANGE': {
