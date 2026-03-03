@@ -81,10 +81,11 @@ export function ExtremePointMarkers({
     () => {
       return (svgX: number, svgY: number): CurveSetAction => {
         const plotX = svgX - margins.left;
-        const rawHour = xScale.invert(plotX);
+        const rawHour = ((xScale.invert(plotX) % 24) + 24) % 24;
         const { minHour, maxHour } = getPeakConstraints(resolved);
         const clamped = clampHourInArc(rawHour, minHour, maxHour);
-        const snapped = snapToMinutes(clamped, 5);
+        let snapped = snapToMinutes(clamped, 5);
+        if (snapped >= 24) snapped -= 24;
 
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
@@ -106,10 +107,11 @@ export function ExtremePointMarkers({
     () => {
       return (svgX: number, svgY: number): CurveSetAction => {
         const plotX = svgX - margins.left;
-        const rawHour = xScale.invert(plotX);
+        const rawHour = ((xScale.invert(plotX) % 24) + 24) % 24;
         const { minHour, maxHour } = getValleyConstraints(resolved);
         const clamped = clampHourInArc(rawHour, minHour, maxHour);
-        const snapped = snapToMinutes(clamped, 5);
+        let snapped = snapToMinutes(clamped, 5);
+        if (snapped >= 24) snapped -= 24;
 
         const plotY = svgY - margins.top;
         const rawY = yScale.invert(plotY);
