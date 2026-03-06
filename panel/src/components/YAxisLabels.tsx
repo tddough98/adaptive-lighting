@@ -128,7 +128,9 @@ export function YAxisLabels({
             key={tickValue}
             transform={`translate(0, ${y})`}
             cursor={drag ? 'ns-resize' : undefined}
-            onMouseDown={drag ? wrappedStartDrag(`tick-${tickValue}`, makeConstrainFn(tickValue)) : undefined}
+            onMouseDown={drag
+              ? wrappedStartDrag(`tick-${tickValue}`, makeConstrainFn(tickValue))
+              : undefined}
           >
             <rect
               x={-maxPillWidth - 2}

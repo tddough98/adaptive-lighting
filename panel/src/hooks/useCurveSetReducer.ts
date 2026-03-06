@@ -359,17 +359,21 @@ export function curveSetReducer(
     case 'UPDATE_COLOR_TEMP_RANGE': {
       const curve = state.colorTemp;
       const { newMin, newMax } = action;
-      const clampY = (v: number) => Math.max(newMin, Math.min(newMax, v));
+      const oldMin = curve.minValue;
+      const oldMax = curve.maxValue;
+      const oldSpan = oldMax - oldMin;
+      const remap = (v: number) =>
+        oldSpan === 0 ? newMin : newMin + ((v - oldMin) / oldSpan) * (newMax - newMin);
       const updated: CurveDefinition = {
         ...curve,
         minValue: newMin,
         maxValue: newMax,
-        peak: { ...curve.peak, value: clampY(curve.peak.value) },
-        valley: { ...curve.valley, value: clampY(curve.valley.value) },
-        transitionStart: { ...curve.transitionStart, yValue: clampY(curve.transitionStart.yValue) },
-        holdStart: { ...curve.holdStart, yValue: clampY(curve.holdStart.yValue) },
-        holdEnd: { ...curve.holdEnd, yValue: clampY(curve.holdEnd.yValue) },
-        transitionEnd: { ...curve.transitionEnd, yValue: clampY(curve.transitionEnd.yValue) },
+        peak: { ...curve.peak, value: remap(curve.peak.value) },
+        valley: { ...curve.valley, value: remap(curve.valley.value) },
+        transitionStart: { ...curve.transitionStart, yValue: remap(curve.transitionStart.yValue) },
+        holdStart: { ...curve.holdStart, yValue: remap(curve.holdStart.yValue) },
+        holdEnd: { ...curve.holdEnd, yValue: remap(curve.holdEnd.yValue) },
+        transitionEnd: { ...curve.transitionEnd, yValue: remap(curve.transitionEnd.yValue) },
       };
       return { ...state, colorTemp: updated };
     }
