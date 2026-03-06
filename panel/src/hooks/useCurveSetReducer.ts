@@ -146,11 +146,9 @@ export function resolveColorModeBoundaries(
 
 /** Pick the nearest sun anchor for a given hour. */
 function pickAnchor(hour: number, sunTimes: SunTimes): SunAnchor {
-  // If hour is between sunrise and sunset → sunrise, else → sunset
-  if (hour >= sunTimes.sunriseHour && hour <= sunTimes.sunsetHour) {
-    return 'sunrise';
-  }
-  return 'sunset';
+  const dSunrise = Math.abs(hour - sunTimes.sunriseHour);
+  const dSunset = Math.abs(hour - sunTimes.sunsetHour);
+  return dSunrise <= dSunset ? 'sunrise' : 'sunset';
 }
 
 /** Toggle a TimingPoint between absolute and relative mode. */
