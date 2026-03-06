@@ -13,6 +13,7 @@ import type {
 import { formatHour, formatRelativeOffset } from '../../utils/timeformat';
 import {
   absoluteHourToTimingValue,
+  clampHourInArc,
   constrainYValue,
   getTimePointConstraints,
   snapToMinutes,
@@ -81,13 +82,11 @@ export function TimePointMarkers({
     (pointType: TimingPointType) => {
       return (svgX: number, svgY: number): CurveSetAction => {
         const plotX = svgX - margins.left;
-        const rawHour = xScale.invert(plotX);
+        const rawHour = ((xScale.invert(plotX) % 24) + 24) % 24;
         const constraints = getTimePointConstraints(pointType, curveSet, sunTimes, curveName);
-        const clamped = Math.max(
-          constraints.minHour,
-          Math.min(constraints.maxHour, rawHour),
-        );
-        const snapped = snapToMinutes(clamped, constraints.snapMinutes);
+        const clamped = clampHourInArc(rawHour, constraints.minHour, constraints.maxHour);
+        let snapped = snapToMinutes(clamped, constraints.snapMinutes);
+        if (snapped >= 24) snapped -= 24;
         const field = POINT_FIELDS[pointType];
         const point = curveDefinition[field];
         const tp = point as { isRelative: boolean; anchor?: 'sunset' | 'sunrise' };

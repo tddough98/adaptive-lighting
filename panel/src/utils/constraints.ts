@@ -13,8 +13,8 @@ const MIN_GAP_HOURS = MIN_GAP_MINUTES / 60;
 /**
  * Get the allowed hour range for a given timing point.
  * P1: sunset−180min … P2−15min
- * P2: P1+15min … 23:59
- * P4: 00:00 … P5−15min
+ * P2: P1+15min … valley−15min (may wrap past midnight: min > max)
+ * P4: valley+15min … P5−15min (may wrap past midnight: min > max)
  * P5: P4+15min … sunrise+180min
  */
 export function getTimePointConstraints(
@@ -35,12 +35,12 @@ export function getTimePointConstraints(
     case 'hold_start': // P2
       return {
         minHour: resolved.p1 + MIN_GAP_HOURS,
-        maxHour: Math.min(24 - 1 / 60, resolved.valleyHour - MIN_GAP_HOURS),
+        maxHour: resolved.valleyHour - MIN_GAP_HOURS,
         snapMinutes: 5,
       };
     case 'hold_end': // P4
       return {
-        minHour: Math.max(0, resolved.valleyHour + MIN_GAP_HOURS),
+        minHour: resolved.valleyHour + MIN_GAP_HOURS,
         maxHour: resolved.p5 - MIN_GAP_HOURS,
         snapMinutes: 5,
       };
@@ -76,6 +76,16 @@ export function absoluteHourToTimingValue(
     return (hour - base) * 60;
   }
   return hour;
+}
+
+/** Clamp hour within [min, max], handling midnight wrap for arcs. */
+export function clampHourInArc(hour: number, min: number, max: number): number {
+  if (min <= max) return Math.max(min, Math.min(max, hour));
+  // Midnight-wrapping range: min > max means e.g. 18.25→1.75
+  if (hour >= min || hour <= max) return hour;
+  const distToMin = Math.min(Math.abs(hour - min), 24 - Math.abs(hour - min));
+  const distToMax = Math.min(Math.abs(hour - max), 24 - Math.abs(hour - max));
+  return distToMin <= distToMax ? min : max;
 }
 
 /** Clamp a Y-value to [minValue, maxValue] and snap to integer. */

@@ -9,6 +9,7 @@ import type {
   SunTimes,
 } from '../../types/curves';
 import {
+  clampHourInArc,
   constrainYValue,
   getPeakConstraints,
   getValleyConstraints,
@@ -30,21 +31,6 @@ interface ExtremePointMarkersProps {
   onPointDrag: (action: CurveSetAction) => void;
   onPointDragEnd: (action: CurveSetAction) => void;
   readOnly?: boolean;
-}
-
-/** Clamp hour within [min, max], handling midnight wrap for arcs. */
-function clampHourInArc(hour: number, min: number, max: number): number {
-  if (min <= max) {
-    // Same-day range
-    return Math.max(min, Math.min(max, hour));
-  }
-  // Midnight-wrapping range: min > max means e.g. 23.25→5.25
-  // If hour is in the valid arc, keep it; otherwise clamp to nearest bound
-  if (hour >= min || hour <= max) return hour;
-  // Outside the arc — pick the closer bound
-  const distToMin = Math.min(Math.abs(hour - min), 24 - Math.abs(hour - min));
-  const distToMax = Math.min(Math.abs(hour - max), 24 - Math.abs(hour - max));
-  return distToMin <= distToMax ? min : max;
 }
 
 // Triangle path pointing up (peak) — centered at origin
