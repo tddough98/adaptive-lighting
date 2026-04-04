@@ -8,6 +8,7 @@ transition_end, peak.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Literal
 
 CurvePhase = Literal[
@@ -66,3 +67,75 @@ def get_phase(
     if is_in_arc(hour, transition_end, peak_hour):
         return "ascent_to_peak"
     return "descent_from_peak"
+
+
+@dataclass(frozen=True)
+class ResolvedCurve:
+    """All timing points resolved to absolute decimal hours with their values."""
+
+    transition_start: float
+    hold_start: float
+    hold_end: float
+    transition_end: float
+    transition_start_value: float
+    hold_start_value: float
+    hold_end_value: float
+    transition_end_value: float
+    peak_hour: float
+    peak_value: float
+    valley_hour: float
+    valley_value: float
+    min_value: float
+    max_value: float
+
+
+def calculate_value_at_hour(hour: float, resolved: ResolvedCurve) -> float:
+    """Calculate the curve value (brightness % or color temp K) at a given hour.
+
+    Uses cyclic Catmull-Rom interpolation across 6 segments.
+    Points in cyclic order: transition_start, hold_start, valley, hold_end,
+    transition_end, peak.
+    """
+    phase = get_phase(
+        hour,
+        resolved.transition_start,
+        resolved.hold_start,
+        resolved.valley_hour,
+        resolved.hold_end,
+        resolved.transition_end,
+        resolved.peak_hour,
+    )
+
+    ts_val = resolved.transition_start_value
+    hs_val = resolved.hold_start_value
+    he_val = resolved.hold_end_value
+    te_val = resolved.transition_end_value
+    pk_val = resolved.peak_value
+    vl_val = resolved.valley_value
+
+    if phase == "evening_transition":
+        duration = elapsed_hours(resolved.transition_start, resolved.hold_start)
+        t = elapsed_hours(resolved.transition_start, hour) / duration if duration > 0 else 0
+        raw = catmull_rom(t, pk_val, ts_val, hs_val, vl_val)
+    elif phase == "descent_to_valley":
+        duration = elapsed_hours(resolved.hold_start, resolved.valley_hour)
+        t = elapsed_hours(resolved.hold_start, hour) / duration if duration > 0 else 0
+        raw = catmull_rom(t, ts_val, hs_val, vl_val, he_val)
+    elif phase == "ascent_from_valley":
+        duration = elapsed_hours(resolved.valley_hour, resolved.hold_end)
+        t = elapsed_hours(resolved.valley_hour, hour) / duration if duration > 0 else 0
+        raw = catmull_rom(t, hs_val, vl_val, he_val, te_val)
+    elif phase == "morning_transition":
+        duration = elapsed_hours(resolved.hold_end, resolved.transition_end)
+        t = elapsed_hours(resolved.hold_end, hour) / duration if duration > 0 else 0
+        raw = catmull_rom(t, vl_val, he_val, te_val, pk_val)
+    elif phase == "ascent_to_peak":
+        duration = elapsed_hours(resolved.transition_end, resolved.peak_hour)
+        t = elapsed_hours(resolved.transition_end, hour) / duration if duration > 0 else 0
+        raw = catmull_rom(t, he_val, te_val, pk_val, ts_val)
+    else:  # descent_from_peak
+        duration = elapsed_hours(resolved.peak_hour, resolved.transition_start)
+        t = elapsed_hours(resolved.peak_hour, hour) / duration if duration > 0 else 0
+        raw = catmull_rom(t, te_val, pk_val, ts_val, hs_val)
+
+    return max(resolved.min_value, min(resolved.max_value, raw))

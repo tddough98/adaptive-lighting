@@ -1,6 +1,10 @@
 """Tests for enhanced_timing module."""
 
+import pytest
+
 from homeassistant.components.adaptive_lighting.enhanced_timing import (
+    ResolvedCurve,
+    calculate_value_at_hour,
     catmull_rom,
     elapsed_hours,
     get_phase,
@@ -100,3 +104,54 @@ class TestGetPhase:
 
     def test_at_transition_start_boundary(self):
         assert get_phase(18.25, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "evening_transition"
+
+
+DEFAULT_BRIGHTNESS = ResolvedCurve(
+    transition_start=18.25,
+    hold_start=23.0,
+    hold_end=5.5,
+    transition_end=7.0,
+    transition_start_value=100.0,
+    hold_start_value=1.0,
+    hold_end_value=1.0,
+    transition_end_value=100.0,
+    peak_hour=13.0,
+    peak_value=100.0,
+    valley_hour=2.0,
+    valley_value=1.0,
+    min_value=1.0,
+    max_value=100.0,
+)
+
+
+class TestCalculateValueAtHour:
+    def test_at_peak(self):
+        assert calculate_value_at_hour(13.0, DEFAULT_BRIGHTNESS) == 100.0
+
+    def test_at_valley(self):
+        assert calculate_value_at_hour(2.0, DEFAULT_BRIGHTNESS) == 1.0
+
+    def test_at_transition_start(self):
+        assert calculate_value_at_hour(18.25, DEFAULT_BRIGHTNESS) == 100.0
+
+    def test_at_hold_start(self):
+        assert calculate_value_at_hour(23.0, DEFAULT_BRIGHTNESS) == 1.0
+
+    def test_evening_transition_midway(self):
+        result = calculate_value_at_hour(20.0, DEFAULT_BRIGHTNESS)
+        assert 60.0 < result < 75.0
+
+    def test_evening_transition_late(self):
+        result = calculate_value_at_hour(22.0, DEFAULT_BRIGHTNESS)
+        assert 10.0 < result < 25.0
+
+    def test_clamped_to_max(self):
+        assert calculate_value_at_hour(15.0, DEFAULT_BRIGHTNESS) <= 100.0
+
+    def test_clamped_to_min(self):
+        assert calculate_value_at_hour(4.0, DEFAULT_BRIGHTNESS) >= 1.0
+
+    def test_monotonic_evening_transition(self):
+        values = [calculate_value_at_hour(h, DEFAULT_BRIGHTNESS) for h in [18.5, 19.5, 20.5, 21.5, 22.5]]
+        for i in range(len(values) - 1):
+            assert values[i] >= values[i + 1], f"Not monotonic at index {i}: {values}"
