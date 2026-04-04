@@ -19,6 +19,8 @@ from homeassistant.util.color import (
     color_xy_to_hs,
 )
 
+from .enhanced_timing import CurveConfig, calculate_value_at_hour
+
 if TYPE_CHECKING:
     import astral.location
 
@@ -226,10 +228,12 @@ class SunLightSettings:
     max_sunset_time: datetime.time | None
     brightness_mode_time_dark: datetime.timedelta
     brightness_mode_time_light: datetime.timedelta
-    brightness_mode: Literal["default", "linear", "tanh"] = "default"
+    brightness_mode: Literal["default", "linear", "tanh", "enhanced"] = "default"
     sunrise_offset: datetime.timedelta = datetime.timedelta()
     sunset_offset: datetime.timedelta = datetime.timedelta()
     timezone: datetime.tzinfo = UTC
+    enhanced_brightness_curve: CurveConfig | None = None
+    enhanced_color_temp_curve: CurveConfig | None = None
 
     @cached_property
     def sun(self) -> SunEvents:
@@ -285,6 +289,19 @@ class SunLightSettings:
             raise ValueError(msg)
         return clamp(brightness, self.min_brightness, self.max_brightness)
 
+    def _datetime_to_decimal_hour(self, dt: datetime.datetime) -> float:
+        """Convert a datetime to a decimal hour in the user's local timezone."""
+        local = dt.astimezone(self.timezone)
+        return local.hour + local.minute / 60 + local.second / 3600
+
+    def _brightness_pct_enhanced(self, dt: datetime.datetime) -> float:
+        """Calculate brightness using the 6-segment Catmull-Rom model."""
+        sunset_hour = self._datetime_to_decimal_hour(self.sun.sunset(dt))
+        sunrise_hour = self._datetime_to_decimal_hour(self.sun.sunrise(dt))
+        resolved = self.enhanced_brightness_curve.resolve(sunset_hour, sunrise_hour)
+        current_hour = self._datetime_to_decimal_hour(dt)
+        return calculate_value_at_hour(current_hour, resolved)
+
     def _brightness_pct_linear(self, dt: datetime.datetime) -> float:
         event, ts_event = self.sun.closest_event(dt)
         # at ts_event - dt_start, brightness == start_brightness
@@ -316,13 +333,14 @@ class SunLightSettings:
         """Calculate the brightness in %."""
         if is_sleep:
             return self.sleep_brightness
-        assert self.brightness_mode in ("default", "linear", "tanh")
         if self.brightness_mode == "default":
             return self._brightness_pct_default(dt)
         if self.brightness_mode == "linear":
             return self._brightness_pct_linear(dt)
         if self.brightness_mode == "tanh":
             return self._brightness_pct_tanh(dt)
+        if self.brightness_mode == "enhanced":
+            return self._brightness_pct_enhanced(dt)
         return None
 
     def color_temp_kelvin(self, sun_position: float) -> int:
@@ -354,6 +372,19 @@ class SunLightSettings:
         if is_sleep:
             color_temp_kelvin = self.sleep_color_temp
             rgb_color = self.sleep_rgb_color
+        elif (
+            self.brightness_mode == "enhanced"
+            and self.enhanced_color_temp_curve is not None
+        ):
+            sunset_hour = self._datetime_to_decimal_hour(self.sun.sunset(dt))
+            sunrise_hour = self._datetime_to_decimal_hour(self.sun.sunrise(dt))
+            resolved = self.enhanced_color_temp_curve.resolve(sunset_hour, sunrise_hour)
+            current_hour = self._datetime_to_decimal_hour(dt)
+            color_temp_kelvin = 5 * round(
+                calculate_value_at_hour(current_hour, resolved) / 5,
+            )
+            r, g, b = color_temperature_to_rgb(color_temp_kelvin)
+            rgb_color = (round(r), round(g), round(b))
         elif (
             self.sleep_rgb_or_color_temp == "rgb_color"
             and self.adapt_until_sleep

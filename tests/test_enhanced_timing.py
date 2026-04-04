@@ -226,3 +226,113 @@ class TestCurveConfig:
         assert resolved.transition_end_value == 100.0
         assert resolved.peak_value == 100.0
         assert resolved.valley_value == 1.0
+
+
+import datetime as dt
+import zoneinfo
+
+from astral import LocationInfo
+from astral.location import Location
+
+from homeassistant.components.adaptive_lighting.color_and_brightness import (
+    SunLightSettings,
+)
+
+
+def _make_enhanced_settings() -> SunLightSettings:
+    tz = zoneinfo.ZoneInfo("US/Eastern")
+    location = Location(
+        LocationInfo(name="Montvale", region="US", timezone="US/Eastern", latitude=41.0468, longitude=-74.0431),
+    )
+    brightness_curve = CurveConfig(
+        transition_start_offset=-30, transition_start_is_relative=True,
+        transition_start_anchor="sunset", transition_start_value=100.0,
+        hold_start_hour=23.0, hold_start_is_relative=False, hold_start_anchor="", hold_start_value=1.0,
+        hold_end_hour=5.5, hold_end_is_relative=False, hold_end_anchor="", hold_end_value=1.0,
+        transition_end_offset=30, transition_end_is_relative=True,
+        transition_end_anchor="sunrise", transition_end_value=100.0,
+        peak_hour=13.0, peak_value=100.0, valley_hour=2.0, valley_value=1.0,
+        min_value=1.0, max_value=100.0,
+    )
+    color_temp_curve = CurveConfig(
+        transition_start_offset=-30, transition_start_is_relative=True,
+        transition_start_anchor="sunset", transition_start_value=5500.0,
+        hold_start_hour=23.0, hold_start_is_relative=False, hold_start_anchor="", hold_start_value=2000.0,
+        hold_end_hour=5.5, hold_end_is_relative=False, hold_end_anchor="", hold_end_value=2000.0,
+        transition_end_offset=30, transition_end_is_relative=True,
+        transition_end_anchor="sunrise", transition_end_value=5500.0,
+        peak_hour=13.0, peak_value=5500.0, valley_hour=2.0, valley_value=2000.0,
+        min_value=2000.0, max_value=5500.0,
+    )
+    return SunLightSettings(
+        name="test", astral_location=location, adapt_until_sleep=False,
+        max_brightness=100, max_color_temp=5500, min_brightness=1, min_color_temp=2000,
+        sleep_brightness=1, sleep_color_temp=1000, sleep_rgb_color=(255, 56, 0),
+        sleep_rgb_or_color_temp="color_temp",
+        sunrise_time=None, min_sunrise_time=None, max_sunrise_time=None,
+        sunset_time=None, min_sunset_time=None, max_sunset_time=None,
+        brightness_mode_time_dark=dt.timedelta(seconds=900),
+        brightness_mode_time_light=dt.timedelta(seconds=3600),
+        brightness_mode="enhanced", timezone=tz,
+        enhanced_brightness_curve=brightness_curve,
+        enhanced_color_temp_curve=color_temp_curve,
+    )
+
+
+class TestEnhancedSunLightSettings:
+    def test_midday_brightness_is_high(self):
+        settings = _make_enhanced_settings()
+        noon = dt.datetime(2026, 6, 21, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(noon, is_sleep=False)
+        assert result["brightness_pct"] >= 95.0
+
+    def test_midday_color_temp_is_cool(self):
+        settings = _make_enhanced_settings()
+        noon = dt.datetime(2026, 6, 21, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(noon, is_sleep=False)
+        assert result["color_temp_kelvin"] >= 5000
+
+    def test_midnight_brightness_is_low(self):
+        settings = _make_enhanced_settings()
+        midnight = dt.datetime(2026, 6, 21, 2, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(midnight, is_sleep=False)
+        assert result["brightness_pct"] <= 5.0
+
+    def test_midnight_color_temp_is_warm(self):
+        settings = _make_enhanced_settings()
+        midnight = dt.datetime(2026, 6, 21, 2, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(midnight, is_sleep=False)
+        assert result["color_temp_kelvin"] <= 2500
+
+    def test_sleep_mode_overrides_enhanced(self):
+        settings = _make_enhanced_settings()
+        noon = dt.datetime(2026, 6, 21, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(noon, is_sleep=True)
+        assert result["brightness_pct"] == 1
+
+    def test_returns_all_expected_keys(self):
+        settings = _make_enhanced_settings()
+        noon = dt.datetime(2026, 6, 21, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(noon, is_sleep=False)
+        expected_keys = {"brightness_pct", "color_temp_kelvin", "color_temp_mired", "rgb_color", "xy_color", "hs_color", "sun_position", "force_rgb_color"}
+        assert set(result.keys()) == expected_keys
+
+    def test_backward_compatible_without_curves(self):
+        tz = zoneinfo.ZoneInfo("US/Eastern")
+        location = Location(
+            LocationInfo(name="Test", region="US", timezone="US/Eastern", latitude=41.0, longitude=-74.0),
+        )
+        settings = SunLightSettings(
+            name="test", astral_location=location, adapt_until_sleep=False,
+            max_brightness=100, max_color_temp=5500, min_brightness=1, min_color_temp=2000,
+            sleep_brightness=1, sleep_color_temp=1000, sleep_rgb_color=(255, 56, 0),
+            sleep_rgb_or_color_temp="color_temp",
+            sunrise_time=None, min_sunrise_time=None, max_sunrise_time=None,
+            sunset_time=None, min_sunset_time=None, max_sunset_time=None,
+            brightness_mode_time_dark=dt.timedelta(seconds=900),
+            brightness_mode_time_light=dt.timedelta(seconds=3600),
+            brightness_mode="default", timezone=tz,
+        )
+        noon = dt.datetime(2026, 6, 21, 12, 0, 0, tzinfo=tz)
+        result = settings.brightness_and_color(noon, is_sleep=False)
+        assert result["brightness_pct"] == 100
