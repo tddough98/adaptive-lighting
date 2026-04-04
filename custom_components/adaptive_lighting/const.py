@@ -297,6 +297,61 @@ DOCS[CONF_USE_DEFAULTS] = (
     'documented defaults), or "configuration" (reverts to switch config defaults). ⚙️'
 )
 
+# Enhanced timing model constants
+CONF_ENHANCED_BRIGHTNESS_CURVE = "enhanced_brightness_curve"
+CONF_ENHANCED_COLOR_TEMP_CURVE = "enhanced_color_temp_curve"
+
+# Default CurveConfig values (matching panel/src/data/defaults.ts)
+DEFAULT_ENHANCED_BRIGHTNESS_CURVE: dict = {
+    "transition_start_offset": -30,
+    "transition_start_is_relative": True,
+    "transition_start_anchor": "sunset",
+    "transition_start_value": 100,
+    "hold_start_hour": 23.0,
+    "hold_start_is_relative": False,
+    "hold_start_anchor": "",
+    "hold_start_value": 1,
+    "hold_end_hour": 5.5,
+    "hold_end_is_relative": False,
+    "hold_end_anchor": "",
+    "hold_end_value": 1,
+    "transition_end_offset": 30,
+    "transition_end_is_relative": True,
+    "transition_end_anchor": "sunrise",
+    "transition_end_value": 100,
+    "peak_hour": 13.0,
+    "peak_value": 100,
+    "valley_hour": 2.0,
+    "valley_value": 1,
+    "min_value": 1,
+    "max_value": 100,
+}
+
+DEFAULT_ENHANCED_COLOR_TEMP_CURVE: dict = {
+    "transition_start_offset": -30,
+    "transition_start_is_relative": True,
+    "transition_start_anchor": "sunset",
+    "transition_start_value": 5500,
+    "hold_start_hour": 23.0,
+    "hold_start_is_relative": False,
+    "hold_start_anchor": "",
+    "hold_start_value": 2000,
+    "hold_end_hour": 5.5,
+    "hold_end_is_relative": False,
+    "hold_end_anchor": "",
+    "hold_end_value": 2000,
+    "transition_end_offset": 30,
+    "transition_end_is_relative": True,
+    "transition_end_anchor": "sunrise",
+    "transition_end_value": 5500,
+    "peak_hour": 13.0,
+    "peak_value": 5500,
+    "valley_hour": 2.0,
+    "valley_value": 2000,
+    "min_value": 2000,
+    "max_value": 5500,
+}
+
 TURNING_OFF_DELAY = 5
 
 DOCS_MANUAL_CONTROL = {
@@ -363,7 +418,7 @@ VALIDATION_TUPLES: list[tuple[str, Any, Any]] = [
         DEFAULT_BRIGHTNESS_MODE,
         selector.SelectSelector(  # type: ignore[arg-type]
             selector.SelectSelectorConfig(
-                options=["default", "linear", "tanh"],
+                options=["default", "linear", "tanh", "enhanced"],
                 multiple=False,
                 mode=selector.SelectSelectorMode.DROPDOWN,
             ),
