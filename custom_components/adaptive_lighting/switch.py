@@ -83,6 +83,7 @@ from .adaptation_utils import (
     prepare_adaptation_data,
 )
 from .color_and_brightness import SunLightSettings
+from .enhanced_timing import CurveConfig
 from .const import (
     ADAPT_BRIGHTNESS_SWITCH,
     ADAPT_COLOR_SWITCH,
@@ -96,6 +97,10 @@ from .const import (
     CONF_BRIGHTNESS_MODE,
     CONF_BRIGHTNESS_MODE_TIME_DARK,
     CONF_BRIGHTNESS_MODE_TIME_LIGHT,
+    CONF_ENHANCED_BRIGHTNESS_CURVE,
+    CONF_ENHANCED_COLOR_TEMP_CURVE,
+    DEFAULT_ENHANCED_BRIGHTNESS_CURVE,
+    DEFAULT_ENHANCED_COLOR_TEMP_CURVE,
     CONF_DETECT_NON_HA_CHANGES,
     CONF_INCLUDE_CONFIG_IN_ATTRIBUTES,
     CONF_INITIAL_TRANSITION,
@@ -946,6 +951,20 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._expand_light_groups()  # updates manual control timers
         location, _ = get_astral_location(self.hass)
 
+        enhanced_brightness_curve = None
+        enhanced_color_temp_curve = None
+        if data[CONF_BRIGHTNESS_MODE] == "enhanced":
+            brightness_dict = data.get(
+                CONF_ENHANCED_BRIGHTNESS_CURVE,
+                DEFAULT_ENHANCED_BRIGHTNESS_CURVE,
+            )
+            enhanced_brightness_curve = CurveConfig(**brightness_dict)
+            color_temp_dict = data.get(
+                CONF_ENHANCED_COLOR_TEMP_CURVE,
+                DEFAULT_ENHANCED_COLOR_TEMP_CURVE,
+            )
+            enhanced_color_temp_curve = CurveConfig(**color_temp_dict)
+
         self._sun_light_settings = SunLightSettings(
             name=self._name,
             astral_location=location,
@@ -970,6 +989,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             brightness_mode_time_dark=data[CONF_BRIGHTNESS_MODE_TIME_DARK],
             brightness_mode_time_light=data[CONF_BRIGHTNESS_MODE_TIME_LIGHT],
             timezone=zoneinfo.ZoneInfo(self.hass.config.time_zone),
+            enhanced_brightness_curve=enhanced_brightness_curve,
+            enhanced_color_temp_curve=enhanced_color_temp_curve,
         )
         _LOGGER.debug(
             "%s: Set switch settings for lights '%s'. now using data: '%s'",
