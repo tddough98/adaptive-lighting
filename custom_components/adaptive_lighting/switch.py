@@ -844,6 +844,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # Set attributes that can't be modified during runtime
         assert hass is not None
         self.hass = hass
+        self._config_entry = config_entry
         self.manager = manager
         self.sleep_mode_switch = sleep_mode_switch
         self.adapt_color_switch = adapt_color_switch
@@ -1136,6 +1137,23 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             light for light in self.lights if self.manager.manual_control.get(light)
         ]
         extra_state_attributes.update(self._settings)
+        # Expose sun event hours for the panel
+        try:
+            import datetime as _dt
+            _now = _dt.datetime.now(self._sun_light_settings.timezone)
+            _sunrise = self._sun_light_settings.sun.sunrise(_now)
+            _sunset = self._sun_light_settings.sun.sunset(_now)
+            _tz = self._sun_light_settings.timezone
+            _sr_local = _sunrise.astimezone(_tz)
+            _ss_local = _sunset.astimezone(_tz)
+            extra_state_attributes["sunrise_hour"] = round(
+                _sr_local.hour + _sr_local.minute / 60 + _sr_local.second / 3600, 4
+            )
+            extra_state_attributes["sunset_hour"] = round(
+                _ss_local.hour + _ss_local.minute / 60 + _ss_local.second / 3600, 4
+            )
+        except Exception:  # noqa: BLE001
+            pass
         timers = self.manager.auto_reset_manual_control_timers
         extra_state_attributes["autoreset_time_remaining"] = {
             light: time
