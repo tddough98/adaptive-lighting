@@ -1,5 +1,8 @@
 """Tests for enhanced_timing module."""
 
+import csv
+from pathlib import Path
+
 import pytest
 
 from homeassistant.components.adaptive_lighting.enhanced_timing import (
@@ -336,3 +339,46 @@ class TestEnhancedSunLightSettings:
         noon = dt.datetime(2026, 6, 21, 12, 0, 0, tzinfo=tz)
         result = settings.brightness_and_color(noon, is_sleep=False)
         assert result["brightness_pct"] == 100
+
+
+class TestCrossValidation:
+    """Verify Python output matches TypeScript reference data."""
+
+    @staticmethod
+    def _load_reference_data() -> list[tuple[float, float, float]]:
+        csv_path = Path(__file__).parent.parent / "panel" / "scripts" / "reference_values.csv"
+        rows = []
+        with open(csv_path) as f:
+            reader = csv.reader(f)
+            for line in reader:
+                if line[0].strip().startswith("#"):
+                    continue
+                hour = float(line[0].strip())
+                brightness = float(line[1].strip())
+                color_temp = float(line[2].strip())
+                rows.append((hour, brightness, color_temp))
+        return rows
+
+    def test_brightness_matches_typescript(self):
+        reference = self._load_reference_data()
+        for hour, expected_brightness, _ in reference:
+            actual = calculate_value_at_hour(hour, DEFAULT_BRIGHTNESS)
+            assert actual == pytest.approx(expected_brightness, abs=0.01), (
+                f"Brightness mismatch at hour {hour}: Python={actual}, TS={expected_brightness}"
+            )
+
+    def test_color_temp_matches_typescript(self):
+        reference = self._load_reference_data()
+        resolved_ct = ResolvedCurve(
+            transition_start=18.25, hold_start=23.0, hold_end=5.5, transition_end=7.0,
+            transition_start_value=5500.0, hold_start_value=2000.0,
+            hold_end_value=2000.0, transition_end_value=5500.0,
+            peak_hour=13.0, peak_value=5500.0,
+            valley_hour=2.0, valley_value=2000.0,
+            min_value=2000.0, max_value=5500.0,
+        )
+        for hour, _, expected_ct in reference:
+            actual = calculate_value_at_hour(hour, resolved_ct)
+            assert actual == pytest.approx(expected_ct, abs=0.01), (
+                f"Color temp mismatch at hour {hour}: Python={actual}, TS={expected_ct}"
+            )
