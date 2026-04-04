@@ -124,4 +124,5 @@ export type CurveSetAction =
   | { type: 'TOGGLE_LINKED' }
   | { type: 'UPDATE_COLOR_MODE_BOUNDARY'; boundary: 'start' | 'end'; newHour: number; sunTimes: SunTimes }
   | { type: 'TOGGLE_COLOR_MODE_BOUNDARY_LOCK'; boundary: 'start' | 'end'; sunTimes: SunTimes }
-  | { type: 'UPDATE_COLOR_TEMP_RANGE'; newMin: number; newMax: number };
+  | { type: 'UPDATE_COLOR_TEMP_RANGE'; newMin: number; newMax: number }
+  | { type: 'RESET'; curveSet: CurveSet };

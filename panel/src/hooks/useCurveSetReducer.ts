@@ -189,6 +189,10 @@ export function curveSetReducer(
   state: CurveSet,
   action: CurveSetAction,
 ): CurveSet {
+  if (action.type === 'RESET') {
+    return action.curveSet;
+  }
+
   switch (action.type) {
     case 'UPDATE_TIME_POINT': {
       const updated = enforceYConstraintCascade(

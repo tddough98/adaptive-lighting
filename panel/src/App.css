@@ -44,3 +44,17 @@ body {
   font-weight: 500;
   color: var(--text-primary);
 }
+
+.save-button {
+  padding: 6px 16px;
+  background: var(--primary-color, #03a9f4);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.save-button:hover {
+  opacity: 0.9;
+}
