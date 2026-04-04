@@ -298,6 +298,7 @@ class SunLightSettings:
         """Calculate brightness using the 6-segment Catmull-Rom model."""
         sunset_hour = self._datetime_to_decimal_hour(self.sun.sunset(dt))
         sunrise_hour = self._datetime_to_decimal_hour(self.sun.sunrise(dt))
+        assert self.enhanced_brightness_curve is not None
         resolved = self.enhanced_brightness_curve.resolve(sunset_hour, sunrise_hour)
         current_hour = self._datetime_to_decimal_hour(dt)
         return calculate_value_at_hour(current_hour, resolved)
