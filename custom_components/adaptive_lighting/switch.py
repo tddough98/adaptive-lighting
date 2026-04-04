@@ -346,6 +346,17 @@ async def handle_change_switch_settings(
 
     # deep copy the defaults so we don't modify the original dicts
     switch._set_changeable_settings(data=data, defaults=deepcopy(defaults))
+
+    # Persist enhanced curve changes to config_entry so they survive restarts
+    persist_keys = (CONF_ENHANCED_BRIGHTNESS_CURVE, CONF_ENHANCED_COLOR_TEMP_CURVE, CONF_BRIGHTNESS_MODE)
+    changed = {k: v for k, v in data.items() if k in persist_keys}
+    if changed and switch._config_entry is not None:
+        new_options = {**switch._config_entry.options, **changed}
+        switch.hass.config_entries.async_update_entry(
+            switch._config_entry,
+            options=new_options,
+        )
+
     if switch.is_on:
         switch._update_time_interval_listener()
 
