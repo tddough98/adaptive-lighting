@@ -3,6 +3,7 @@
 from homeassistant.components.adaptive_lighting.enhanced_timing import (
     catmull_rom,
     elapsed_hours,
+    get_phase,
     is_in_arc,
 )
 
@@ -61,3 +62,41 @@ class TestCatmullRom:
     def test_produces_smooth_curve(self):
         result = catmull_rom(0.5, 100, 100, 1, 1)
         assert 40.0 < result < 60.0
+
+
+class TestGetPhase:
+    """Default resolved points (sunset=18.75, sunrise=6.5):
+      transition_start=18.25, hold_start=23.0, valley=2.0,
+      hold_end=5.5, transition_end=7.0, peak=13.0
+    """
+
+    TS = 18.25   # transition_start
+    HS = 23.0    # hold_start
+    VL = 2.0     # valley
+    HE = 5.5     # hold_end
+    TE = 7.0     # transition_end
+    PK = 13.0    # peak
+
+    def test_evening_transition(self):
+        assert get_phase(20.0, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "evening_transition"
+
+    def test_descent_to_valley(self):
+        assert get_phase(23.5, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "descent_to_valley"
+
+    def test_descent_to_valley_after_midnight(self):
+        assert get_phase(1.0, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "descent_to_valley"
+
+    def test_ascent_from_valley(self):
+        assert get_phase(4.0, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "ascent_from_valley"
+
+    def test_morning_transition(self):
+        assert get_phase(6.0, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "morning_transition"
+
+    def test_ascent_to_peak(self):
+        assert get_phase(10.0, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "ascent_to_peak"
+
+    def test_descent_from_peak(self):
+        assert get_phase(15.0, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "descent_from_peak"
+
+    def test_at_transition_start_boundary(self):
+        assert get_phase(18.25, self.TS, self.HS, self.VL, self.HE, self.TE, self.PK) == "evening_transition"
