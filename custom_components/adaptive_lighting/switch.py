@@ -99,8 +99,6 @@ from .const import (
     CONF_BRIGHTNESS_MODE_TIME_LIGHT,
     CONF_ENHANCED_BRIGHTNESS_CURVE,
     CONF_ENHANCED_COLOR_TEMP_CURVE,
-    DEFAULT_ENHANCED_BRIGHTNESS_CURVE,
-    DEFAULT_ENHANCED_COLOR_TEMP_CURVE,
     CONF_DETECT_NON_HA_CHANGES,
     CONF_INCLUDE_CONFIG_IN_ATTRIBUTES,
     CONF_INITIAL_TRANSITION,
@@ -954,16 +952,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         enhanced_brightness_curve = None
         enhanced_color_temp_curve = None
         if data[CONF_BRIGHTNESS_MODE] == "enhanced":
-            brightness_dict = data.get(
-                CONF_ENHANCED_BRIGHTNESS_CURVE,
-                DEFAULT_ENHANCED_BRIGHTNESS_CURVE,
-            )
-            enhanced_brightness_curve = CurveConfig(**brightness_dict)
-            color_temp_dict = data.get(
-                CONF_ENHANCED_COLOR_TEMP_CURVE,
-                DEFAULT_ENHANCED_COLOR_TEMP_CURVE,
-            )
-            enhanced_color_temp_curve = CurveConfig(**color_temp_dict)
+            enhanced_brightness_curve = CurveConfig(**data[CONF_ENHANCED_BRIGHTNESS_CURVE])
+            enhanced_color_temp_curve = CurveConfig(**data[CONF_ENHANCED_COLOR_TEMP_CURVE])
 
         self._sun_light_settings = SunLightSettings(
             name=self._name,
