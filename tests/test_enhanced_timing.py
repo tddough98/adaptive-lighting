@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components.adaptive_lighting.enhanced_timing import (
+    CurveConfig,
     ResolvedCurve,
     calculate_value_at_hour,
     catmull_rom,
@@ -155,3 +156,73 @@ class TestCalculateValueAtHour:
         values = [calculate_value_at_hour(h, DEFAULT_BRIGHTNESS) for h in [18.5, 19.5, 20.5, 21.5, 22.5]]
         for i in range(len(values) - 1):
             assert values[i] >= values[i + 1], f"Not monotonic at index {i}: {values}"
+
+
+def _default_brightness_config() -> CurveConfig:
+    return CurveConfig(
+        transition_start_offset=-30,
+        transition_start_is_relative=True,
+        transition_start_anchor="sunset",
+        transition_start_value=100.0,
+        hold_start_hour=23.0,
+        hold_start_is_relative=False,
+        hold_start_anchor="",
+        hold_start_value=1.0,
+        hold_end_hour=5.5,
+        hold_end_is_relative=False,
+        hold_end_anchor="",
+        hold_end_value=1.0,
+        transition_end_offset=30,
+        transition_end_is_relative=True,
+        transition_end_anchor="sunrise",
+        transition_end_value=100.0,
+        peak_hour=13.0,
+        peak_value=100.0,
+        valley_hour=2.0,
+        valley_value=1.0,
+        min_value=1.0,
+        max_value=100.0,
+    )
+
+
+class TestCurveConfig:
+    def test_resolve_relative_transition_start(self):
+        resolved = _default_brightness_config().resolve(sunset_hour=18.75, sunrise_hour=6.5)
+        assert resolved.transition_start == pytest.approx(18.25)
+
+    def test_resolve_relative_transition_end(self):
+        resolved = _default_brightness_config().resolve(sunset_hour=18.75, sunrise_hour=6.5)
+        assert resolved.transition_end == pytest.approx(7.0)
+
+    def test_resolve_absolute_hold_start(self):
+        resolved = _default_brightness_config().resolve(sunset_hour=18.75, sunrise_hour=6.5)
+        assert resolved.hold_start == 23.0
+
+    def test_resolve_wraps_past_midnight(self):
+        resolved = _default_brightness_config().resolve(sunset_hour=23.8, sunrise_hour=0.25)
+        assert resolved.transition_start == pytest.approx(23.3)
+        assert resolved.transition_end == pytest.approx(0.75)
+
+    def test_resolve_wraps_negative(self):
+        cfg = CurveConfig(
+            transition_start_offset=-120,
+            transition_start_is_relative=True,
+            transition_start_anchor="sunset",
+            transition_start_value=100.0,
+            hold_start_hour=23.0, hold_start_is_relative=False, hold_start_anchor="", hold_start_value=1.0,
+            hold_end_hour=5.5, hold_end_is_relative=False, hold_end_anchor="", hold_end_value=1.0,
+            transition_end_offset=30, transition_end_is_relative=True, transition_end_anchor="sunrise", transition_end_value=100.0,
+            peak_hour=13.0, peak_value=100.0, valley_hour=2.0, valley_value=1.0,
+            min_value=1.0, max_value=100.0,
+        )
+        resolved = cfg.resolve(sunset_hour=1.0, sunrise_hour=6.5)
+        assert resolved.transition_start == pytest.approx(23.0)
+
+    def test_resolve_preserves_values(self):
+        resolved = _default_brightness_config().resolve(sunset_hour=18.75, sunrise_hour=6.5)
+        assert resolved.transition_start_value == 100.0
+        assert resolved.hold_start_value == 1.0
+        assert resolved.hold_end_value == 1.0
+        assert resolved.transition_end_value == 100.0
+        assert resolved.peak_value == 100.0
+        assert resolved.valley_value == 1.0

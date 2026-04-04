@@ -139,3 +139,77 @@ def calculate_value_at_hour(hour: float, resolved: ResolvedCurve) -> float:
         raw = catmull_rom(t, te_val, pk_val, ts_val, hs_val)
 
     return max(resolved.min_value, min(resolved.max_value, raw))
+
+
+@dataclass(frozen=True)
+class CurveConfig:
+    """Configuration for a single enhanced curve (brightness or color temp).
+
+    Each timing point can be relative (offset in minutes from a sun anchor)
+    or absolute (decimal hour 0-24).
+    """
+
+    transition_start_offset: float
+    transition_start_is_relative: bool
+    transition_start_anchor: str
+    transition_start_value: float
+
+    hold_start_hour: float
+    hold_start_is_relative: bool
+    hold_start_anchor: str
+    hold_start_value: float
+
+    hold_end_hour: float
+    hold_end_is_relative: bool
+    hold_end_anchor: str
+    hold_end_value: float
+
+    transition_end_offset: float
+    transition_end_is_relative: bool
+    transition_end_anchor: str
+    transition_end_value: float
+
+    peak_hour: float
+    peak_value: float
+    valley_hour: float
+    valley_value: float
+
+    min_value: float
+    max_value: float
+
+    @staticmethod
+    def _resolve_point(
+        raw_value: float,
+        is_relative: bool,
+        anchor: str,
+        sunset_hour: float,
+        sunrise_hour: float,
+    ) -> float:
+        if not is_relative:
+            return raw_value
+        base = sunset_hour if anchor == "sunset" else sunrise_hour
+        hour = base + raw_value / 60
+        if hour < 0:
+            hour += 24
+        if hour >= 24:
+            hour -= 24
+        return hour
+
+    def resolve(self, sunset_hour: float, sunrise_hour: float) -> ResolvedCurve:
+        rp = self._resolve_point
+        return ResolvedCurve(
+            transition_start=rp(self.transition_start_offset, self.transition_start_is_relative, self.transition_start_anchor, sunset_hour, sunrise_hour),
+            hold_start=rp(self.hold_start_hour, self.hold_start_is_relative, self.hold_start_anchor, sunset_hour, sunrise_hour),
+            hold_end=rp(self.hold_end_hour, self.hold_end_is_relative, self.hold_end_anchor, sunset_hour, sunrise_hour),
+            transition_end=rp(self.transition_end_offset, self.transition_end_is_relative, self.transition_end_anchor, sunset_hour, sunrise_hour),
+            transition_start_value=self.transition_start_value,
+            hold_start_value=self.hold_start_value,
+            hold_end_value=self.hold_end_value,
+            transition_end_value=self.transition_end_value,
+            peak_hour=self.peak_hour,
+            peak_value=self.peak_value,
+            valley_hour=self.valley_hour,
+            valley_value=self.valley_value,
+            min_value=self.min_value,
+            max_value=self.max_value,
+        )
