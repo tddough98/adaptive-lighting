@@ -1,14 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CURVE_SET } from '../data/defaults';
+import { evaluateLightingPlan } from '../domain/lightingPlanEvaluation';
 import type { SunTimes } from '../types/curves';
-import { calculateValueAtHour, resolveCurve } from './curvemath';
+import { calculateValueAtHour } from './curvemath';
 
 interface EvaluationFixture {
   version: number;
   scenarios: Array<{
     id: string;
     sunTimes: SunTimes;
+    resolvedCurves: {
+      brightness: Record<string, number>;
+      colorTemp: Record<string, number>;
+    };
+    colorModeWindow: {
+      startHour: number;
+      endHour: number;
+    };
     samples: Array<{
       hour: number;
       brightness: number;
@@ -27,18 +36,26 @@ if (!defaultScenario) {
 
 describe('curvemath parity fixtures', () => {
   it('matches default Brightness Curve fixture values', () => {
-    const resolved = resolveCurve(DEFAULT_CURVE_SET.brightness, defaultScenario.sunTimes);
+    const evaluation = evaluateLightingPlan(DEFAULT_CURVE_SET, defaultScenario.sunTimes, 12);
 
     for (const sample of defaultScenario.samples) {
-      expect(calculateValueAtHour(sample.hour, resolved)).toBeCloseTo(sample.brightness, 2);
+      expect(calculateValueAtHour(sample.hour, evaluation.resolvedBrightness)).toBeCloseTo(sample.brightness, 2);
     }
   });
 
   it('matches default Color Temperature Curve fixture values', () => {
-    const resolved = resolveCurve(DEFAULT_CURVE_SET.colorTemp, defaultScenario.sunTimes);
+    const evaluation = evaluateLightingPlan(DEFAULT_CURVE_SET, defaultScenario.sunTimes, 12);
 
     for (const sample of defaultScenario.samples) {
-      expect(calculateValueAtHour(sample.hour, resolved)).toBeCloseTo(sample.colorTemp, 2);
+      expect(calculateValueAtHour(sample.hour, evaluation.resolvedColorTemp)).toBeCloseTo(sample.colorTemp, 2);
     }
+  });
+
+  it('matches default resolved curve fixture values', () => {
+    const evaluation = evaluateLightingPlan(DEFAULT_CURVE_SET, defaultScenario.sunTimes, 12);
+
+    expect(evaluation.resolvedBrightness).toEqual(defaultScenario.resolvedCurves.brightness);
+    expect(evaluation.resolvedColorTemp).toEqual(defaultScenario.resolvedCurves.colorTemp);
+    expect(evaluation.colorModeWindow).toEqual(defaultScenario.colorModeWindow);
   });
 });

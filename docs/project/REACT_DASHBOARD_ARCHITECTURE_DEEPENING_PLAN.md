@@ -108,6 +108,7 @@ Interface shape:
 Work:
 
 - Move reducer helper behavior into domain operations.
+- Add a one-line module comment to `curvemath.ts` declaring it internal evaluation math so new callers do not widen that utility surface by accident.
 - Consolidate the duplicated Linked Timing branches currently spread across `UPDATE_TIME_POINT`, `UPDATE_PEAK`, and `UPDATE_VALLEY`.
 - Pull timing Plan Validity from `panel/src/utils/constraints.ts` into the draft module so bad action payloads cannot bypass timing constraints.
 - Keep `constraints.ts` as an implementation helper only if useful; the draft module should own the interface.
@@ -244,6 +245,10 @@ Files likely involved:
 
 Work:
 
+- Before adding clipping, tighten evaluation test coverage:
+  - Add assertions for `brightnessSamples` and `colorTempSamples` length and at least one sample value.
+  - Decide whether `evaluateColorModeWindow` remains exported with a direct test, or becomes private to `lightingPlanEvaluation.ts`.
+  - Stop rounding `resolvedCurves` in fixtures, or round both fixture and runtime values consistently before comparing.
 - Add evaluation-time clipping for sun-time changes that would violate control-point ordering.
 - Reuse existing primitives from `constraints.ts` where possible: `getTimePointConstraints`, `getPeakConstraints`, `getValleyConstraints`, and `clampHourInArc`.
 - Define the collision policy before implementation:

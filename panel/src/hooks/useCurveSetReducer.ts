@@ -1,5 +1,4 @@
 import type {
-  ColorModeConfig,
   CurveDefinition,
   CurveSet,
   CurveSetAction,
@@ -126,21 +125,6 @@ function mirrorTiming(source: CurveDefinition, target: CurveDefinition): CurveDe
     transitionEnd: { ...source.transitionEnd, id: target.transitionEnd.id, yValue: target.transitionEnd.yValue },
     peak: { ...target.peak, hour: source.peak.hour, isRelative: source.peak.isRelative, anchor: source.peak.anchor, offsetMinutes: source.peak.offsetMinutes },
     valley: { ...target.valley, hour: source.valley.hour, isRelative: source.valley.isRelative, anchor: source.valley.anchor, offsetMinutes: source.valley.offsetMinutes },
-  };
-}
-
-/** Resolve null boundaries to sun times (with offset). Returns the color_temp active range. */
-export function resolveColorModeBoundaries(
-  config: ColorModeConfig,
-  sunTimes: SunTimes,
-): { startHour: number; endHour: number } {
-  return {
-    startHour: config.colorTempStartHour !== null
-      ? config.colorTempStartHour
-      : sunTimes.sunriseHour + config.startOffsetMinutes / 60,
-    endHour: config.colorTempEndHour !== null
-      ? config.colorTempEndHour
-      : sunTimes.sunsetHour + config.endOffsetMinutes / 60,
   };
 }
 

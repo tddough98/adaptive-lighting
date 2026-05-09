@@ -345,7 +345,7 @@ class TestCrossValidation:
     """Verify Python output matches TypeScript reference data."""
 
     @staticmethod
-    def _load_reference_data() -> list[tuple[float, float, float]]:
+    def _load_reference_data() -> dict:
         fixture_path = (
             Path(__file__).parent.parent
             / "panel"
@@ -357,31 +357,49 @@ class TestCrossValidation:
         scenario = next(
             item for item in fixture["scenarios"] if item["id"] == "default-lighting-plan"
         )
-        return [
-            (sample["hour"], sample["brightness"], sample["colorTemp"])
-            for sample in scenario["samples"]
-        ]
+        return scenario
+
+    @staticmethod
+    def _resolved_curve_from_fixture(resolved_fixture: dict) -> ResolvedCurve:
+        return ResolvedCurve(
+            transition_start=resolved_fixture["p1"],
+            hold_start=resolved_fixture["p2"],
+            hold_end=resolved_fixture["p4"],
+            transition_end=resolved_fixture["p5"],
+            transition_start_value=resolved_fixture["p1Value"],
+            hold_start_value=resolved_fixture["p2Value"],
+            hold_end_value=resolved_fixture["p4Value"],
+            transition_end_value=resolved_fixture["p5Value"],
+            peak_hour=resolved_fixture["peakHour"],
+            peak_value=resolved_fixture["peakValue"],
+            valley_hour=resolved_fixture["valleyHour"],
+            valley_value=resolved_fixture["valleyValue"],
+            min_value=resolved_fixture["minValue"],
+            max_value=resolved_fixture["maxValue"],
+        )
 
     def test_brightness_matches_typescript(self):
         reference = self._load_reference_data()
-        for hour, expected_brightness, _ in reference:
-            actual = calculate_value_at_hour(hour, DEFAULT_BRIGHTNESS)
+        resolved = self._resolved_curve_from_fixture(
+            reference["resolvedCurves"]["brightness"],
+        )
+        for sample in reference["samples"]:
+            hour = sample["hour"]
+            expected_brightness = sample["brightness"]
+            actual = calculate_value_at_hour(hour, resolved)
             assert actual == pytest.approx(expected_brightness, abs=0.01), (
                 f"Brightness mismatch at hour {hour}: Python={actual}, TS={expected_brightness}"
             )
 
     def test_color_temp_matches_typescript(self):
         reference = self._load_reference_data()
-        resolved_ct = ResolvedCurve(
-            transition_start=18.25, hold_start=23.0, hold_end=5.5, transition_end=7.0,
-            transition_start_value=5500.0, hold_start_value=2000.0,
-            hold_end_value=2000.0, transition_end_value=5500.0,
-            peak_hour=13.0, peak_value=5500.0,
-            valley_hour=2.0, valley_value=2000.0,
-            min_value=2000.0, max_value=5500.0,
+        resolved = self._resolved_curve_from_fixture(
+            reference["resolvedCurves"]["colorTemp"],
         )
-        for hour, _, expected_ct in reference:
-            actual = calculate_value_at_hour(hour, resolved_ct)
+        for sample in reference["samples"]:
+            hour = sample["hour"]
+            expected_ct = sample["colorTemp"]
+            actual = calculate_value_at_hour(hour, resolved)
             assert actual == pytest.approx(expected_ct, abs=0.01), (
                 f"Color temp mismatch at hour {hour}: Python={actual}, TS={expected_ct}"
             )

@@ -8,6 +8,44 @@
         "sunriseHour": 6.5,
         "sunsetHour": 18.75
       },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 5500,
+          "p2Value": 2000,
+          "p4Value": 2000,
+          "p5Value": 5500,
+          "peakHour": 13,
+          "peakValue": 5500,
+          "valleyHour": 2,
+          "valleyValue": 2000,
+          "minValue": 2000,
+          "maxValue": 5500
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 6.5,
+        "endHour": 18.75
+      },
       "samples": [
         {
           "hour": 0,

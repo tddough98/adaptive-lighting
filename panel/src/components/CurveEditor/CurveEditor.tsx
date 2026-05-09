@@ -1,9 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { scaleLinear } from 'd3';
 import type { CurveSet, CurveSetAction, SunTimes } from '../../types/curves';
-import type { CurveData } from '../../hooks/useCurveData';
+import type { LightingPlanEvaluation } from '../../domain/lightingPlanEvaluation';
 import { brightnessToColor, kelvinToRgb } from '../../utils/colormap';
-import { resolveColorModeBoundaries } from '../../hooks/useCurveSetReducer';
 import { getSunElevationSamples } from '../../utils/sunElevation';
 import { MONTVALE_COORDS } from '../../data/defaults';
 import { SingleCurvePanel } from './SingleCurvePanel';
@@ -12,7 +11,7 @@ import { ColorModeBar } from '../ChartCanvas/ColorModeBar';
 import './CurveEditor.css';
 
 interface CurveEditorProps {
-  data: CurveData;
+  data: LightingPlanEvaluation;
   curveSet: CurveSet;
   sunTimes: SunTimes;
   currentDate: Date;
@@ -52,7 +51,7 @@ export function CurveEditor({
     () => getSunElevationSamples(currentDate, MONTVALE_COORDS.lat, MONTVALE_COORDS.lng),
     [currentDate],
   );
-  const { startHour, endHour } = resolveColorModeBoundaries(curveSet.colorMode, sunTimes);
+  const { startHour, endHour } = data.colorModeWindow;
   const minK = curveSet.colorTemp.minValue;
   const maxK = curveSet.colorTemp.maxValue;
 

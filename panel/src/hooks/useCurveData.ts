@@ -1,48 +1,41 @@
 import { useMemo } from 'react';
-import type { CurveSet, CurveSample, ResolvedCurve, SunTimes } from '../types/curves';
-import { resolveCurve } from '../utils/curvemath';
-import { generateCurveSamples } from '../utils/pathgen';
-
-export interface CurveData {
-  brightnessSamples: CurveSample[];
-  colorTempSamples: CurveSample[];
-  resolvedBrightness: ResolvedCurve;
-  resolvedColorTemp: ResolvedCurve;
-  sunTimes: SunTimes;
-  currentHour: number;
-}
+import {
+  evaluateColorModeWindow,
+  evaluateLightingCurve,
+  type LightingPlanEvaluation,
+} from '../domain/lightingPlanEvaluation';
+import type { CurveSet, SunTimes } from '../types/curves';
 
 export function useCurveData(
   curveSet: CurveSet,
   sunTimes: SunTimes,
   currentHour: number,
-): CurveData {
-  const resolvedBrightness = useMemo(
-    () => resolveCurve(curveSet.brightness, sunTimes),
+): LightingPlanEvaluation {
+  const brightness = useMemo(
+    () => evaluateLightingCurve(curveSet.brightness, sunTimes),
     [curveSet.brightness, sunTimes],
   );
 
-  const resolvedColorTemp = useMemo(
-    () => resolveCurve(curveSet.colorTemp, sunTimes),
+  const colorTemp = useMemo(
+    () => evaluateLightingCurve(curveSet.colorTemp, sunTimes),
     [curveSet.colorTemp, sunTimes],
   );
 
-  const brightnessSamples = useMemo(
-    () => generateCurveSamples(resolvedBrightness),
-    [resolvedBrightness],
+  const colorModeWindow = useMemo(
+    () => evaluateColorModeWindow(curveSet.colorMode, sunTimes),
+    [curveSet.colorMode, sunTimes],
   );
 
-  const colorTempSamples = useMemo(
-    () => generateCurveSamples(resolvedColorTemp),
-    [resolvedColorTemp],
+  return useMemo(
+    () => ({
+      brightnessSamples: brightness.samples,
+      colorTempSamples: colorTemp.samples,
+      resolvedBrightness: brightness.resolved,
+      resolvedColorTemp: colorTemp.resolved,
+      colorModeWindow,
+      sunTimes,
+      currentHour,
+    }),
+    [brightness, colorTemp, colorModeWindow, sunTimes, currentHour],
   );
-
-  return {
-    brightnessSamples,
-    colorTempSamples,
-    resolvedBrightness,
-    resolvedColorTemp,
-    sunTimes,
-    currentHour,
-  };
 }
