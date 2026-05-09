@@ -100,6 +100,7 @@ export type CurveSetAction =
       pointType: TimingPointType;
       newValue: number;
       newYValue: number;
+      sunTimes: SunTimes;
     }
   | {
       type: 'UPDATE_PEAK';

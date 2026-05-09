@@ -249,6 +249,7 @@ Work:
   - Add assertions for `brightnessSamples` and `colorTempSamples` length and at least one sample value.
   - Decide whether `evaluateColorModeWindow` remains exported with a direct test, or becomes private to `lightingPlanEvaluation.ts`.
   - Stop rounding `resolvedCurves` in fixtures, or round both fixture and runtime values consistently before comparing.
+  - Add a fixture freshness guard that fails when `pnpm gen:fixtures` leaves `panel/fixtures/` dirty.
 - Add evaluation-time clipping for sun-time changes that would violate control-point ordering.
 - Reuse existing primitives from `constraints.ts` where possible: `getTimePointConstraints`, `getPeakConstraints`, `getValleyConstraints`, and `clampHourInArc`.
 - Define the collision policy before implementation:

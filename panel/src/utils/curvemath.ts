@@ -7,6 +7,8 @@ import type {
   TimingPoint,
 } from '../types/curves';
 
+// Internal evaluation math. Prefer domain modules for Lighting Plan behavior.
+
 /** Convert a TimingPoint to an absolute decimal hour (0–24). */
 export function resolveTime(point: TimingPoint, sunTimes: SunTimes): number {
   if (!point.isRelative) {

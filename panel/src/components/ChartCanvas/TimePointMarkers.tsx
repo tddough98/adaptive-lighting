@@ -102,6 +102,7 @@ export function TimePointMarkers({
           pointType,
           newValue,
           newYValue,
+          sunTimes,
         };
       };
     },
