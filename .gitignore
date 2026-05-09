@@ -131,6 +131,7 @@ dmypy.json
 # IDEs
 .vscode
 .idea
+.DS_Store
 
 # Home Assistant configuration
 config/*

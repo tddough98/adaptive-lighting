@@ -6,6 +6,20 @@ A **Home Assistant custom integration** (Python) paired with a **React custom pa
 
 **Upstream fork**: [basnijholt/adaptive-lighting](https://github.com/basnijholt/adaptive-lighting)
 
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+This repo uses the default mattpocock/skills triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repo uses a multi-context domain-doc layout, with `react-dashboard` as a known context. See `docs/agents/domain.md`.
+
 ## Repository Structure
 
 ```

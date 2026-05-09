@@ -1,0 +1,3 @@
+# Seed Enhanced Mode from Existing Settings
+
+When an Adaptive Lighting Instance is opted into Enhanced Mode, the initial Lighting Plan Draft should be an Enhanced Mode Seed derived from that instance's existing settings where possible, rather than generic defaults. This preserves the user's current lighting intent for brightness range, color temperature range, sleep color behavior, and sun-related settings while filling only Enhanced Mode-specific shape details with defaults. The seeding transformation should be deterministic and covered by reference fixtures so the first draft users see is predictable.
