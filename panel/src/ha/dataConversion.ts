@@ -1,6 +1,16 @@
-import type { CurveDefinition, CurveSet, SunTimes } from '../types/curves';
+import type { ColorModeConfig, CurveDefinition, CurveSet, SunTimes } from '../types/curves';
 import type { HassEntity } from '../types/homeassistant';
 import { DEFAULT_CURVE_SET } from '../data/defaults';
+
+export type MissingLightingPlanIntentField = 'linked' | 'colorMode';
+
+export interface SavedLightingPlan {
+  curveSet: CurveSet;
+  sunTimes: SunTimes;
+  isEnhancedMode: boolean;
+  missingIntentFields: MissingLightingPlanIntentField[];
+  sourceVersion: string;
+}
 
 /** Shape of the enhanced curve config dict stored in HA entity attributes. */
 interface CurveConfigDict {
@@ -26,6 +36,28 @@ interface CurveConfigDict {
   valley_value: number;
   min_value: number;
   max_value: number;
+}
+
+interface ColorModeConfigDict {
+  color_temp_start_hour: number | null;
+  color_temp_end_hour: number | null;
+  start_offset_minutes: number;
+  end_offset_minutes: number;
+  sleep_rgb_color: [number, number, number];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function dictToColorModeConfig(dict: ColorModeConfigDict): ColorModeConfig {
+  return {
+    colorTempStartHour: dict.color_temp_start_hour,
+    colorTempEndHour: dict.color_temp_end_hour,
+    startOffsetMinutes: dict.start_offset_minutes,
+    endOffsetMinutes: dict.end_offset_minutes,
+    sleepRgbColor: dict.sleep_rgb_color,
+  };
 }
 
 /** Convert an HA curve config dict to a CurveDefinition. */
@@ -98,16 +130,27 @@ function curveDefinitionToDict(curve: CurveDefinition): CurveConfigDict {
   };
 }
 
-/** Extract CurveSet + SunTimes from an HA switch entity's attributes. */
-export function entityToCurveData(entity: HassEntity): {
-  curveSet: CurveSet;
-  sunTimes: SunTimes;
-} {
+function getSourceVersion(entity: HassEntity): string {
+  return `${entity.entity_id}:${entity.last_updated}`;
+}
+
+/** Extract Saved Lighting Plan data from an HA switch entity's attributes. */
+export function entityToSavedLightingPlan(entity: HassEntity): SavedLightingPlan {
   const attrs = entity.attributes;
   const config = (attrs.configuration ?? {}) as Record<string, unknown>;
 
   const brightnessDict = config.enhanced_brightness_curve as CurveConfigDict | undefined;
   const colorTempDict = config.enhanced_color_temp_curve as CurveConfigDict | undefined;
+  const linked = config.enhanced_linked_timing;
+  const colorModeDict = config.enhanced_color_mode;
+  const missingIntentFields: MissingLightingPlanIntentField[] = [];
+
+  if (typeof linked !== 'boolean') {
+    missingIntentFields.push('linked');
+  }
+  if (!isRecord(colorModeDict)) {
+    missingIntentFields.push('colorMode');
+  }
 
   const curveSet: CurveSet = {
     brightness: brightnessDict
@@ -116,8 +159,10 @@ export function entityToCurveData(entity: HassEntity): {
     colorTemp: colorTempDict
       ? dictToCurveDefinition(colorTempDict, 'ct')
       : DEFAULT_CURVE_SET.colorTemp,
-    linked: DEFAULT_CURVE_SET.linked,
-    colorMode: DEFAULT_CURVE_SET.colorMode,
+    linked: typeof linked === 'boolean' ? linked : DEFAULT_CURVE_SET.linked,
+    colorMode: isRecord(colorModeDict)
+      ? dictToColorModeConfig(colorModeDict as unknown as ColorModeConfigDict)
+      : DEFAULT_CURVE_SET.colorMode,
   };
 
   const sunTimes: SunTimes = {
@@ -125,7 +170,22 @@ export function entityToCurveData(entity: HassEntity): {
     sunsetHour: (attrs.sunset_hour as number) ?? 18.75,
   };
 
-  return { curveSet, sunTimes };
+  return {
+    curveSet,
+    sunTimes,
+    isEnhancedMode: config.brightness_mode === 'enhanced',
+    missingIntentFields,
+    sourceVersion: getSourceVersion(entity),
+  };
+}
+
+/** Extract CurveSet + SunTimes from an HA switch entity's attributes. */
+export function entityToCurveData(entity: HassEntity): {
+  curveSet: CurveSet;
+  sunTimes: SunTimes;
+} {
+  const savedPlan = entityToSavedLightingPlan(entity);
+  return { curveSet: savedPlan.curveSet, sunTimes: savedPlan.sunTimes };
 }
 
 /** Build the service call data to update curves in HA. */

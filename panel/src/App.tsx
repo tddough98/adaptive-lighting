@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { getMockData } from './data/dataProvider';
 import { useCurveData } from './hooks/useCurveData';
 import { useYearSimulation } from './hooks/useYearSimulation';
@@ -23,13 +23,23 @@ export default function App({ hass = null }: AppProps) {
   // Initialize from HA if connected, otherwise mock data
   const initialCurveSet = al.curveSet ?? mockData.curveSet;
   const [curveSet, dispatch] = useReducer(curveSetReducer, initialCurveSet);
+  const [appliedSavedPlanVersion, setAppliedSavedPlanVersion] = useState<string | null>(al.savedPlanVersion);
 
   // When HA entity data arrives/changes, reset local state to match
   useEffect(() => {
     if (al.curveSet) {
       dispatch({ type: 'RESET', curveSet: al.curveSet });
+      setAppliedSavedPlanVersion(al.savedPlanVersion);
     }
   }, [al.entityId]); // Only reset when switching entities, not on every attribute update
+
+  useEffect(() => {
+    if (!al.curveSet || !al.savedPlanVersion) return;
+    if (!al.draftIsDirty && appliedSavedPlanVersion !== al.savedPlanVersion) {
+      dispatch({ type: 'RESET', curveSet: al.curveSet });
+      setAppliedSavedPlanVersion(al.savedPlanVersion);
+    }
+  }, [al.curveSet, al.savedPlanVersion, al.draftIsDirty, appliedSavedPlanVersion]);
 
   const [simState, simControls] = useYearSimulation();
 
@@ -38,23 +48,49 @@ export default function App({ hass = null }: AppProps) {
   const curveData = useCurveData(curveSet, effectiveSunTimes, mockData.currentHour);
 
   const handlePointDrag = useCallback(
-    (action: CurveSetAction) => dispatch(action),
-    [],
+    (action: CurveSetAction) => {
+      al.markDraftChanged();
+      dispatch(action);
+    },
+    [al],
   );
 
   const handlePointDragEnd = useCallback(
-    (action: CurveSetAction) => dispatch(action),
-    [],
+    (action: CurveSetAction) => {
+      al.markDraftChanged();
+      dispatch(action);
+    },
+    [al],
   );
 
   // Save current curves to HA
-  const handleSave = useCallback(() => {
-    al.saveCurves(curveSet);
+  const handleSave = useCallback(async () => {
+    await al.saveCurves(curveSet);
   }, [al, curveSet]);
 
+  const saveButtonLabel = (() => {
+    switch (al.saveStatus.type) {
+      case 'saving':
+        return 'Saving...';
+      case 'confirmed':
+        return 'Saved';
+      case 'normalized':
+        return 'Saved with defaults';
+      case 'rejected':
+        return 'Save failed';
+      case 'stale':
+        return 'Saved Plan Changed';
+      case 'idle':
+        return 'Save to HA';
+    }
+  })();
+
   const handleToggleLinked = useCallback(
-    () => dispatch({ type: 'TOGGLE_LINKED' }),
-    [],
+    () => {
+      al.markDraftChanged();
+      dispatch({ type: 'TOGGLE_LINKED' });
+    },
+    [al],
   );
 
   return (
@@ -63,8 +99,15 @@ export default function App({ hass = null }: AppProps) {
         <header className="app-header">
           <h1>Adaptive Lighting</h1>
           {al.connected && (
-            <button className="save-button" onClick={handleSave}>
-              Save to HA
+            <button
+              className="save-button"
+              onClick={handleSave}
+              disabled={al.saveStatus.type === 'saving'}
+              title={al.saveStatus.type === 'rejected' || al.saveStatus.type === 'normalized' || al.saveStatus.type === 'stale'
+                ? al.saveStatus.message
+                : undefined}
+            >
+              {saveButtonLabel}
             </button>
           )}
         </header>
