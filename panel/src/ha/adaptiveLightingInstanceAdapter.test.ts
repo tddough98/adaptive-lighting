@@ -64,6 +64,23 @@ describe('Adaptive Lighting Instance adapter', () => {
     expect(fallback?.instance.entityId).toBe('switch.adaptive_lighting_one');
   });
 
+  it('selects a manually chosen Adaptive Lighting Instance when provided', () => {
+    const selected = selectAdaptiveLightingInstance({
+      'switch.adaptive_lighting_one': entity('switch.adaptive_lighting_one', 'default'),
+      'switch.adaptive_lighting_two': entity('switch.adaptive_lighting_two', 'enhanced'),
+    }, 'switch.adaptive_lighting_one');
+
+    expect(selected?.source).toBe('manual');
+    expect(selected?.instance.entityId).toBe('switch.adaptive_lighting_one');
+
+    const stale = selectAdaptiveLightingInstance({
+      'switch.adaptive_lighting_one': entity('switch.adaptive_lighting_one', 'enhanced'),
+    }, 'switch.adaptive_lighting_two');
+
+    expect(stale?.source).toBe('auto-enhanced');
+    expect(stale?.instance.entityId).toBe('switch.adaptive_lighting_one');
+  });
+
   it('reports missing linked timing and color mode intent instead of silently treating defaults as saved', () => {
     const savedPlan = entityToSavedLightingPlan(entity('switch.adaptive_lighting_one', 'enhanced'));
 
@@ -159,7 +176,6 @@ describe('Adaptive Lighting Instance adapter', () => {
   it('reports confirmed save when all draft intent included in the current payload is unchanged', () => {
     const savedPlan = entityToSavedLightingPlan(entity('switch.adaptive_lighting_one', 'enhanced'));
 
-    expect({ type: 'idle' }).toEqual({ type: 'idle' });
     expect(saveStatusBeforeServiceCall()).toEqual({ type: 'saving' });
     expect(saveStatusAfterSuccessfulServiceCall(savedPlan.curveSet, savedPlan)).toEqual({
       type: 'confirmed',

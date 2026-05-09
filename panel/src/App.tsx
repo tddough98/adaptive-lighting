@@ -93,22 +93,49 @@ export default function App({ hass = null }: AppProps) {
     [al],
   );
 
+  const handleSelectInstance = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      // TODO(slice-4c): warn before discarding dirty draft on instance switch.
+      if (al.draftIsDirty) {
+        console.warn('Switching Adaptive Lighting Instance discards the current Lighting Plan Draft.');
+      }
+      al.selectInstance(event.target.value);
+    },
+    [al],
+  );
+
   return (
     <HAContext.Provider value={hass}>
       <div className="app">
         <header className="app-header">
           <h1>Adaptive Lighting</h1>
           {al.connected && (
-            <button
-              className="save-button"
-              onClick={handleSave}
-              disabled={al.saveStatus.type === 'saving'}
-              title={al.saveStatus.type === 'rejected' || al.saveStatus.type === 'normalized' || al.saveStatus.type === 'stale'
-                ? al.saveStatus.message
-                : undefined}
-            >
-              {saveButtonLabel}
-            </button>
+            <div className="app-header-controls">
+              {al.instances.length > 1 && al.entityId && (
+                <select
+                  className="instance-select"
+                  value={al.entityId}
+                  onChange={handleSelectInstance}
+                  aria-label="Adaptive Lighting instance"
+                >
+                  {al.instances.map((instance) => (
+                    <option key={instance.entityId} value={instance.entityId}>
+                      {instance.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <button
+                className="save-button"
+                onClick={handleSave}
+                disabled={al.saveStatus.type === 'saving'}
+                title={al.saveStatus.type === 'rejected' || al.saveStatus.type === 'normalized' || al.saveStatus.type === 'stale'
+                  ? al.saveStatus.message
+                  : undefined}
+              >
+                {saveButtonLabel}
+              </button>
+            </div>
           )}
         </header>
         <CurveEditor

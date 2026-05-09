@@ -7,7 +7,7 @@ import {
   type SavedLightingPlan,
 } from './dataConversion';
 
-export type AdaptiveLightingSelectionSource = 'auto-enhanced' | 'auto-first';
+export type AdaptiveLightingSelectionSource = 'manual' | 'auto-enhanced' | 'auto-first';
 
 export interface AdaptiveLightingInstance {
   entityId: string;
@@ -72,8 +72,15 @@ export function listAdaptiveLightingInstances(
 
 export function selectAdaptiveLightingInstance(
   states: Record<string, HassEntity>,
+  selectedEntityId?: string | null,
 ): SelectedAdaptiveLightingInstance | null {
   const instances = listAdaptiveLightingInstances(states);
+  const manual = selectedEntityId
+    ? instances.find((instance) => instance.entityId === selectedEntityId)
+    : undefined;
+  if (manual) {
+    return { instance: manual, source: 'manual' };
+  }
   const enhanced = instances.find((instance) => instance.isEnhancedMode);
   if (enhanced) {
     return { instance: enhanced, source: 'auto-enhanced' };

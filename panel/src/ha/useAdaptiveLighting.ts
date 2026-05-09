@@ -26,6 +26,7 @@ export interface AdaptiveLightingData {
   saveStatus: SaveLightingPlanStatus;
   saveCurves: (curveSet: CurveSet) => Promise<SaveLightingPlanStatus>;
   markDraftChanged: () => void;
+  selectInstance: (entityId: string) => void;
 }
 
 export function useAdaptiveLighting(hass: HomeAssistant | null): AdaptiveLightingData {
@@ -33,6 +34,7 @@ export function useAdaptiveLighting(hass: HomeAssistant | null): AdaptiveLightin
   const [draftDirty, setDraftDirty] = useState(false);
   const [draftSourceVersion, setDraftSourceVersion] = useState<string | null>(null);
   const [trackedEntityId, setTrackedEntityId] = useState<string | null>(null);
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
 
   const instances = useMemo(() => {
     if (!hass) return [];
@@ -41,11 +43,17 @@ export function useAdaptiveLighting(hass: HomeAssistant | null): AdaptiveLightin
 
   const selection = useMemo(() => {
     if (!hass) return null;
-    return selectAdaptiveLightingInstance(hass.states);
-  }, [hass?.states]);
+    return selectAdaptiveLightingInstance(hass.states, selectedEntityId);
+  }, [hass?.states, selectedEntityId]);
 
   const selected = selection?.instance ?? null;
   const selectedSourceVersion = selected?.savedPlan.sourceVersion ?? null;
+
+  useEffect(() => {
+    if (!selectedEntityId) return;
+    if (instances.some((instance) => instance.entityId === selectedEntityId)) return;
+    setSelectedEntityId(null);
+  }, [instances, selectedEntityId]);
 
   useEffect(() => {
     const selectedEntityId = selected?.entityId ?? null;
@@ -109,5 +117,6 @@ export function useAdaptiveLighting(hass: HomeAssistant | null): AdaptiveLightin
     saveStatus: staleStatus ?? saveStatus,
     saveCurves,
     markDraftChanged,
+    selectInstance: setSelectedEntityId,
   };
 }
