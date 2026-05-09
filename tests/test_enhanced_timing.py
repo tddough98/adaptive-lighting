@@ -1,6 +1,6 @@
 """Tests for enhanced_timing module."""
 
-import csv
+import json
 from pathlib import Path
 
 import pytest
@@ -346,18 +346,21 @@ class TestCrossValidation:
 
     @staticmethod
     def _load_reference_data() -> list[tuple[float, float, float]]:
-        csv_path = Path(__file__).parent.parent / "panel" / "scripts" / "reference_values.csv"
-        rows = []
-        with open(csv_path) as f:
-            reader = csv.reader(f)
-            for line in reader:
-                if line[0].strip().startswith("#"):
-                    continue
-                hour = float(line[0].strip())
-                brightness = float(line[1].strip())
-                color_temp = float(line[2].strip())
-                rows.append((hour, brightness, color_temp))
-        return rows
+        fixture_path = (
+            Path(__file__).parent.parent
+            / "panel"
+            / "fixtures"
+            / "lighting-plan-evaluation.json"
+        )
+        with fixture_path.open() as f:
+            fixture = json.load(f)
+        scenario = next(
+            item for item in fixture["scenarios"] if item["id"] == "default-lighting-plan"
+        )
+        return [
+            (sample["hour"], sample["brightness"], sample["colorTemp"])
+            for sample in scenario["samples"]
+        ]
 
     def test_brightness_matches_typescript(self):
         reference = self._load_reference_data()

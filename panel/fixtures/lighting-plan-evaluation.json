@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "default-lighting-plan",
+      "description": "Default Lighting Plan evaluated every 30 minutes with fixed sunrise/sunset hours.",
+      "sunTimes": {
+        "sunriseHour": 6.5,
+        "sunsetHour": 18.75
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 6,
+          "brightness": 30.3333,
+          "colorTemp": 3037.037
+        },
+        {
+          "hour": 6.5,
+          "brightness": 70.6667,
+          "colorTemp": 4462.963
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 5500
+        },
+        {
+          "hour": 18.5,
+          "brightness": 96.9978,
+          "colorTemp": 5393.8621
+        },
+        {
+          "hour": 19,
+          "brightness": 88.8717,
+          "colorTemp": 5106.5753
+        },
+        {
+          "hour": 19.5,
+          "brightness": 78.4939,
+          "colorTemp": 4739.6851
+        },
+        {
+          "hour": 20,
+          "brightness": 66.5574,
+          "colorTemp": 4317.6848
+        },
+        {
+          "hour": 20.5,
+          "brightness": 53.7548,
+          "colorTemp": 3865.0678
+        },
+        {
+          "hour": 21,
+          "brightness": 40.779,
+          "colorTemp": 3406.3275
+        },
+        {
+          "hour": 21.5,
+          "brightness": 28.3228,
+          "colorTemp": 2965.9571
+        },
+        {
+          "hour": 22,
+          "brightness": 17.079,
+          "colorTemp": 2568.4502
+        },
+        {
+          "hour": 22.5,
+          "brightness": 7.7405,
+          "colorTemp": 2238.3
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2000
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2000
+        }
+      ]
+    }
+  ]
+}

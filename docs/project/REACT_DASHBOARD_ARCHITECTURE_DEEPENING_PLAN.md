@@ -71,6 +71,8 @@ Work:
 - Absorb `resolveColorModeBoundaries` from `useCurveSetReducer.ts` so Color Mode Window evaluation lives with the rest of Lighting State evaluation.
 - Keep current `curvemath.ts` as implementation detail or internal helper.
 - Preserve the current Curve Shape algorithm contract: TypeScript and Python must continue using the same Catmull-Rom behavior until an explicit ADR changes it.
+- Extend the shared JSON fixture with resolved curve data so Python parity tests read resolved inputs as fixture data instead of hand-recomputing them.
+- Add a fixture freshness guard, such as a CI/script check that fails when `pnpm gen:fixtures` leaves `git status` dirty.
 - Do not implement Seasonal Clipping yet; reserve the output shape for it.
 
 Acceptance:
@@ -79,6 +81,7 @@ Acceptance:
 - `CurveEditor` receives evaluated Color Mode Window data from `LightingPlanEvaluation`, not from reducer helpers.
 - Existing visuals remain unchanged.
 - Tests cover default brightness and color temperature evaluation through the new interface.
+- Python parity tests no longer duplicate default resolved-curve construction for the fixture scenario.
 
 ### 3. Create The Lighting Plan Draft Module
 
