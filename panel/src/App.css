@@ -36,7 +36,7 @@ body {
 
 .app-header {
   flex-shrink: 0;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -86,4 +86,57 @@ body {
 .save-button:disabled {
   cursor: default;
   opacity: 0.7;
+}
+
+.save-status-row {
+  min-height: 24px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.save-status {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-status-confirmed {
+  color: var(--accent-brightness);
+}
+
+.save-status-rejected,
+.save-status-stale {
+  color: #b91c1c;
+}
+
+.save-status-normalized {
+  color: var(--accent-sun);
+}
+
+.enhanced-opt-in {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.enhanced-opt-in span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-action-button {
+  padding: 4px 8px;
+  border: 1px solid var(--bg-card-border);
+  border-radius: 4px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
 }

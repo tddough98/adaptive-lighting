@@ -5,6 +5,7 @@ import {
   evaluateDraftStaleness,
   getUntransmittedDraftIntentFields,
   listAdaptiveLightingInstances,
+  requiresEnhancedModeOptIn,
   saveLightingPlan,
   saveStatusAfterRejectedServiceCall,
   saveStatusAfterSuccessfulServiceCall,
@@ -87,6 +88,19 @@ describe('Adaptive Lighting Instance adapter', () => {
     expect(savedPlan.curveSet.linked).toBe(DEFAULT_CURVE_SET.linked);
     expect(savedPlan.curveSet.colorMode).toEqual(DEFAULT_CURVE_SET.colorMode);
     expect(savedPlan.missingIntentFields).toEqual(['linked', 'colorMode']);
+  });
+
+  it('requires explicit opt-in before saving a non-enhanced instance as Enhanced Mode', () => {
+    const selected = selectAdaptiveLightingInstance({
+      'switch.adaptive_lighting_one': entity('switch.adaptive_lighting_one', 'default'),
+    });
+    const enhanced = selectAdaptiveLightingInstance({
+      'switch.adaptive_lighting_one': entity('switch.adaptive_lighting_one', 'enhanced'),
+    });
+
+    expect(requiresEnhancedModeOptIn(selected?.instance ?? null)).toBe(true);
+    expect(requiresEnhancedModeOptIn(enhanced?.instance ?? null)).toBe(false);
+    expect(requiresEnhancedModeOptIn(null)).toBe(false);
   });
 
   it('reads linked timing and color mode intent when HA provides them', () => {

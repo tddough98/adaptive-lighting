@@ -19,6 +19,7 @@ interface AppProps {
 
 export default function App({ hass = null }: AppProps) {
   const al = useAdaptiveLighting(hass);
+  const [enhancedOptInAccepted, setEnhancedOptInAccepted] = useState(false);
 
   // Initialize from HA if connected, otherwise mock data
   const initialCurveSet = al.curveSet ?? mockData.curveSet;
@@ -30,6 +31,7 @@ export default function App({ hass = null }: AppProps) {
     if (al.curveSet) {
       dispatch({ type: 'RESET', curveSet: al.curveSet });
       setAppliedSavedPlanVersion(al.savedPlanVersion);
+      setEnhancedOptInAccepted(al.selectedInstance?.isEnhancedMode ?? false);
     }
   }, [al.entityId]); // Only reset when switching entities, not on every attribute update
 
@@ -65,8 +67,11 @@ export default function App({ hass = null }: AppProps) {
 
   // Save current curves to HA
   const handleSave = useCallback(async () => {
+    if (al.requiresEnhancedModeOptIn && !enhancedOptInAccepted) {
+      return;
+    }
     await al.saveCurves(curveSet);
-  }, [al, curveSet]);
+  }, [al, curveSet, enhancedOptInAccepted]);
 
   const saveButtonLabel = (() => {
     switch (al.saveStatus.type) {
@@ -95,14 +100,38 @@ export default function App({ hass = null }: AppProps) {
 
   const handleSelectInstance = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
-      // TODO(slice-4c): warn before discarding dirty draft on instance switch.
       if (al.draftIsDirty) {
-        console.warn('Switching Adaptive Lighting Instance discards the current Lighting Plan Draft.');
+        const shouldDiscard = window.confirm('Discard the current Lighting Plan Draft and switch instances?');
+        if (!shouldDiscard) return;
       }
       al.selectInstance(event.target.value);
     },
     [al],
   );
+
+  const handleReloadSavedPlan = useCallback(() => {
+    if (!al.curveSet) return;
+    dispatch({ type: 'RESET', curveSet: al.curveSet });
+    setAppliedSavedPlanVersion(al.savedPlanVersion);
+    al.markDraftClean();
+  }, [al]);
+
+  const saveStatusText = (() => {
+    switch (al.saveStatus.type) {
+      case 'idle':
+        return al.requiresEnhancedModeOptIn
+          ? 'Enhanced Mode opt-in required before saving.'
+          : null;
+      case 'saving':
+        return 'Saving Lighting Plan...';
+      case 'confirmed':
+        return 'Lighting Plan saved.';
+      case 'normalized':
+      case 'rejected':
+      case 'stale':
+        return al.saveStatus.message;
+    }
+  })();
 
   return (
     <HAContext.Provider value={hass}>
@@ -138,6 +167,29 @@ export default function App({ hass = null }: AppProps) {
             </div>
           )}
         </header>
+        {al.connected && (
+          <div className="save-status-row" role="status">
+            {al.requiresEnhancedModeOptIn && !enhancedOptInAccepted ? (
+              <label className="enhanced-opt-in">
+                <input
+                  type="checkbox"
+                  checked={enhancedOptInAccepted}
+                  onChange={(event) => setEnhancedOptInAccepted(event.target.checked)}
+                />
+                <span>I understand saving will switch this instance to Enhanced Mode.</span>
+              </label>
+            ) : (
+              <span className={`save-status save-status-${al.saveStatus.type}`}>
+                {saveStatusText ?? ''}
+              </span>
+            )}
+            {al.saveStatus.type === 'stale' && (
+              <button className="status-action-button" onClick={handleReloadSavedPlan}>
+                Reload Saved Plan
+              </button>
+            )}
+          </div>
+        )}
         <CurveEditor
           data={curveData}
           curveSet={curveSet}

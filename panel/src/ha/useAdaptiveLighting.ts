@@ -4,6 +4,7 @@ import type { CurveSet, SunTimes } from '../types/curves';
 import {
   evaluateDraftStaleness,
   listAdaptiveLightingInstances,
+  requiresEnhancedModeOptIn,
   saveLightingPlan,
   saveStatusAfterRejectedServiceCall,
   saveStatusAfterSuccessfulServiceCall,
@@ -19,6 +20,8 @@ export interface AdaptiveLightingData {
   entityId: string | null;
   instances: AdaptiveLightingInstance[];
   selectionSource: AdaptiveLightingSelectionSource | null;
+  selectedInstance: AdaptiveLightingInstance | null;
+  requiresEnhancedModeOptIn: boolean;
   curveSet: CurveSet | null;
   sunTimes: SunTimes | null;
   savedPlanVersion: string | null;
@@ -26,6 +29,7 @@ export interface AdaptiveLightingData {
   saveStatus: SaveLightingPlanStatus;
   saveCurves: (curveSet: CurveSet) => Promise<SaveLightingPlanStatus>;
   markDraftChanged: () => void;
+  markDraftClean: () => void;
   selectInstance: (entityId: string) => void;
 }
 
@@ -70,6 +74,11 @@ export function useAdaptiveLighting(hass: HomeAssistant | null): AdaptiveLightin
     setDraftSourceVersion((current) => draftDirty && current ? current : selected.savedPlan.sourceVersion);
   }, [draftDirty, selected]);
 
+  const markDraftClean = useCallback(() => {
+    setDraftDirty(false);
+    setDraftSourceVersion(selectedSourceVersion);
+  }, [selectedSourceVersion]);
+
   const staleStatus = evaluateDraftStaleness({
     dirty: draftDirty,
     draftSourceVersion,
@@ -110,6 +119,8 @@ export function useAdaptiveLighting(hass: HomeAssistant | null): AdaptiveLightin
     entityId: selected?.entityId ?? null,
     instances,
     selectionSource: selection?.source ?? null,
+    selectedInstance: selected,
+    requiresEnhancedModeOptIn: requiresEnhancedModeOptIn(selected),
     curveSet: selected?.savedPlan.curveSet ?? null,
     sunTimes: selected?.savedPlan.sunTimes ?? null,
     savedPlanVersion: selectedSourceVersion,
@@ -117,6 +128,7 @@ export function useAdaptiveLighting(hass: HomeAssistant | null): AdaptiveLightin
     saveStatus: staleStatus ?? saveStatus,
     saveCurves,
     markDraftChanged,
+    markDraftClean,
     selectInstance: setSelectedEntityId,
   };
 }

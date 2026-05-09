@@ -44,6 +44,10 @@ export function saveStatusBeforeServiceCall(): SaveLightingPlanStatus {
   return { type: 'saving' };
 }
 
+export function requiresEnhancedModeOptIn(instance: AdaptiveLightingInstance | null): boolean {
+  return Boolean(instance && !instance.isEnhancedMode);
+}
+
 function isAdaptiveLightingSwitch(entityId: string): boolean {
   return entityId.startsWith('switch.adaptive_lighting_');
 }
