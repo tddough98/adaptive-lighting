@@ -118,6 +118,7 @@ export function CurveEditor({
           title="Brightness"
           samples={data.brightnessSamples}
           resolved={data.resolvedBrightness}
+          intendedResolved={data.intendedBrightness}
           curveSet={curveSet}
           sunTimes={sunTimes}
           currentHour={data.currentHour}
@@ -141,6 +142,7 @@ export function CurveEditor({
           title="Color Temperature"
           samples={data.colorTempSamples}
           resolved={data.resolvedColorTemp}
+          intendedResolved={data.intendedColorTemp}
           curveSet={curveSet}
           sunTimes={sunTimes}
           currentHour={data.currentHour}
@@ -170,6 +172,8 @@ export function CurveEditor({
           innerWidth={INNER_WIDTH}
           colorTempStartHour={startHour}
           colorTempEndHour={endHour}
+          intendedColorTempStartHour={data.intendedColorModeWindow.startHour}
+          intendedColorTempEndHour={data.intendedColorModeWindow.endHour}
           colorTempSamples={data.colorTempSamples}
           margins={{ left: CHART_MARGINS.left, right: CHART_MARGINS.right }}
           onBoundaryDrag={effectiveDrag}

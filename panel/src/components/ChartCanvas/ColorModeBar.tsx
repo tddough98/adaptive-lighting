@@ -11,6 +11,8 @@ interface ColorModeBarProps {
   innerWidth: number;
   colorTempStartHour: number;
   colorTempEndHour: number;
+  intendedColorTempStartHour: number;
+  intendedColorTempEndHour: number;
   colorTempSamples: CurveSample[];
   margins: { left: number; right: number };
   onBoundaryDrag: (action: CurveSetAction) => void;
@@ -47,6 +49,8 @@ export function ColorModeBar({
   innerWidth,
   colorTempStartHour,
   colorTempEndHour,
+  intendedColorTempStartHour,
+  intendedColorTempEndHour,
   colorTempSamples,
   margins,
   onBoundaryDrag,
@@ -173,6 +177,8 @@ export function ColorModeBar({
 
   const startX = xScale(colorTempStartHour);
   const endX = xScale(colorTempEndHour);
+  const intendedStartX = xScale(intendedColorTempStartHour);
+  const intendedEndX = xScale(intendedColorTempEndHour);
 
   // Zone label positions (centered in each segment)
   const nightLeftCenter = startX / 2;
@@ -185,19 +191,20 @@ export function ColorModeBar({
   // Time labels for each handle
   const startTimeLabel = startIsRelative
     ? formatRelativeOffset(startOffsetMinutes, 'sunrise')
-    : formatHour(colorTempStartHour);
+    : formatHour(intendedColorTempStartHour);
   const endTimeLabel = endIsRelative
     ? formatRelativeOffset(endOffsetMinutes, 'sunset')
-    : formatHour(colorTempEndHour);
+    : formatHour(intendedColorTempEndHour);
 
   const handles: Array<{
     id: 'start' | 'end';
     cx: number;
+    evaluatedCx: number;
     isRelative: boolean;
     timeLabel: string;
   }> = [
-    { id: 'start', cx: startX, isRelative: startIsRelative, timeLabel: startTimeLabel },
-    { id: 'end', cx: endX, isRelative: endIsRelative, timeLabel: endTimeLabel },
+    { id: 'start', cx: intendedStartX, evaluatedCx: startX, isRelative: startIsRelative, timeLabel: startTimeLabel },
+    { id: 'end', cx: intendedEndX, evaluatedCx: endX, isRelative: endIsRelative, timeLabel: endTimeLabel },
   ];
 
   return (
@@ -316,9 +323,35 @@ export function ColorModeBar({
           const isDragging = dragState.isDragging && dragState.activePointId === `color-mode-${h.id}`;
           const isHovered = hoveredId === h.id;
           const scale = isDragging || isHovered ? 1.2 : 1;
+          const isClipped = Math.abs(h.evaluatedCx - h.cx) > 0.5;
 
           return (
             <g key={h.id} transform={`translate(${h.cx},${handleCY})`}>
+              {isClipped && (
+                <g>
+                  <title>{`Color Mode ${h.id} evaluated at ${formatHour(h.id === 'start' ? colorTempStartHour : colorTempEndHour)}`}</title>
+                  <line
+                    x1={0}
+                    y1={0}
+                    x2={h.evaluatedCx - h.cx}
+                    y2={0}
+                    stroke={HANDLE_STROKE}
+                    strokeWidth={1}
+                    strokeDasharray="3 2"
+                    opacity={0.6}
+                  />
+                  <rect
+                    x={h.evaluatedCx - h.cx - 3}
+                    y={-BAR_HEIGHT / 2}
+                    width={6}
+                    height={BAR_HEIGHT}
+                    fill="var(--bg-card)"
+                    stroke={HANDLE_STROKE}
+                    strokeWidth={1.5}
+                    opacity={0.9}
+                  />
+                </g>
+              )}
               {/* Time label above handle */}
               <text
                 x={0}
@@ -344,6 +377,7 @@ export function ColorModeBar({
                 onMouseEnter={() => setHoveredId(h.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
+                <title>{`Color Mode ${h.id} draft intent at ${formatHour(h.id === 'start' ? intendedColorTempStartHour : intendedColorTempEndHour)}`}</title>
                 <circle
                   r={HANDLE_RADIUS}
                   fill="var(--bg-card)"

@@ -34,6 +34,7 @@ interface SingleCurvePanelProps {
   title: string;
   samples: CurveSample[];
   resolved: ResolvedCurve;
+  intendedResolved: ResolvedCurve;
   curveSet: CurveSet;
   sunTimes: SunTimes;
   currentHour: number;
@@ -65,6 +66,7 @@ export function SingleCurvePanel({
   title,
   samples,
   resolved,
+  intendedResolved,
   curveSet,
   sunTimes,
   currentHour,
@@ -162,6 +164,7 @@ export function SingleCurvePanel({
         />
         <TimePointMarkers
           resolved={resolved}
+          intendedResolved={intendedResolved}
           curveDefinition={curveSet[curveName]}
           yScale={yScale}
           xScale={xScale}
@@ -177,6 +180,7 @@ export function SingleCurvePanel({
         />
         <ExtremePointMarkers
           resolved={resolved}
+          intendedResolved={intendedResolved}
           curveDefinition={curveSet[curveName]}
           xScale={xScale}
           yScale={yScale}

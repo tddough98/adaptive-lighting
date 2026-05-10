@@ -23,6 +23,7 @@ import { SunModeIcon, ClockModeIcon } from './ModeIcons';
 
 interface TimePointMarkersProps {
   resolved: ResolvedCurve;
+  intendedResolved: ResolvedCurve;
   curveDefinition: CurveDefinition;
   yScale: ScaleLinear<number, number>;
   xScale: ScaleLinear<number, number>;
@@ -56,6 +57,7 @@ const DOUBLE_CLICK_RADIUS = 5;
 
 export function TimePointMarkers({
   resolved,
+  intendedResolved,
   curveDefinition,
   yScale,
   xScale,
@@ -140,35 +142,42 @@ export function TimePointMarkers({
     [curveName, sunTimes, onPointDragEnd, startDrag, makeConstrainFn],
   );
 
+  const evaluatedByType: Record<TimingPointType, { hour: number; value: number }> = {
+    transition_start: { hour: resolved.p1, value: resolved.p1Value },
+    hold_start: { hour: resolved.p2, value: resolved.p2Value },
+    hold_end: { hour: resolved.p4, value: resolved.p4Value },
+    transition_end: { hour: resolved.p5, value: resolved.p5Value },
+  };
+
   const points = [
     {
       type: 'transition_start' as const,
-      hour: resolved.p1,
-      value: resolved.p1Value,
+      hour: intendedResolved.p1,
+      value: intendedResolved.p1Value,
       isRelative: curveDefinition.transitionStart.isRelative,
       anchor: curveDefinition.transitionStart.anchor,
       storedValue: curveDefinition.transitionStart.value,
     },
     {
       type: 'hold_start' as const,
-      hour: resolved.p2,
-      value: resolved.p2Value,
+      hour: intendedResolved.p2,
+      value: intendedResolved.p2Value,
       isRelative: curveDefinition.holdStart.isRelative,
       anchor: curveDefinition.holdStart.anchor,
       storedValue: curveDefinition.holdStart.value,
     },
     {
       type: 'hold_end' as const,
-      hour: resolved.p4,
-      value: resolved.p4Value,
+      hour: intendedResolved.p4,
+      value: intendedResolved.p4Value,
       isRelative: curveDefinition.holdEnd.isRelative,
       anchor: curveDefinition.holdEnd.anchor,
       storedValue: curveDefinition.holdEnd.value,
     },
     {
       type: 'transition_end' as const,
-      hour: resolved.p5,
-      value: resolved.p5Value,
+      hour: intendedResolved.p5,
+      value: intendedResolved.p5Value,
       isRelative: curveDefinition.transitionEnd.isRelative,
       anchor: curveDefinition.transitionEnd.anchor,
       storedValue: curveDefinition.transitionEnd.value,
@@ -181,6 +190,10 @@ export function TimePointMarkers({
         const label = LABELS[pt.type];
         const cx = xScale(pt.hour);
         const cy = yScale(pt.value);
+        const evaluated = evaluatedByType[pt.type];
+        const evaluatedCx = xScale(evaluated.hour);
+        const evaluatedCy = yScale(evaluated.value);
+        const isClipped = Math.abs(evaluatedCx - cx) > 0.5 || Math.abs(evaluatedCy - cy) > 0.5;
         const isDragging =
           dragState.isDragging && dragState.activePointId === pt.type;
         const isHovered = hoveredId === pt.type;
@@ -192,6 +205,30 @@ export function TimePointMarkers({
 
         return (
           <g key={label} transform={`translate(${cx},${cy})`}>
+            {isClipped && (
+              <g>
+                <title>{`${label} evaluated at ${formatHour(evaluated.hour)}`}</title>
+                <line
+                  x1={0}
+                  y1={0}
+                  x2={evaluatedCx - cx}
+                  y2={evaluatedCy - cy}
+                  stroke={curveColor}
+                  strokeWidth={1}
+                  strokeDasharray="3 2"
+                  opacity={0.6}
+                />
+                <circle
+                  cx={evaluatedCx - cx}
+                  cy={evaluatedCy - cy}
+                  r={4}
+                  fill="var(--bg-card)"
+                  stroke={curveColor}
+                  strokeWidth={1.5}
+                  opacity={0.9}
+                />
+              </g>
+            )}
             {/* Time label */}
             <g transform="translate(0,-14)">
               <text
@@ -218,6 +255,7 @@ export function TimePointMarkers({
               onMouseEnter={() => setHoveredId(pt.type)}
               onMouseLeave={() => setHoveredId(null)}
             >
+              <title>{`${label} draft intent at ${formatHour(pt.hour)}`}</title>
               <circle
                 r={8}
                 fill="var(--bg-card)"

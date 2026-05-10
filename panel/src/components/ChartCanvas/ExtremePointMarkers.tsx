@@ -21,6 +21,7 @@ import { SunModeIcon, ClockModeIcon } from './ModeIcons';
 
 interface ExtremePointMarkersProps {
   resolved: ResolvedCurve;
+  intendedResolved: ResolvedCurve;
   curveDefinition: CurveDefinition;
   xScale: ScaleLinear<number, number>;
   yScale: ScaleLinear<number, number>;
@@ -43,6 +44,7 @@ const DOUBLE_CLICK_RADIUS = 5;
 
 export function ExtremePointMarkers({
   resolved,
+  intendedResolved,
   curveDefinition,
   xScale,
   yScale,
@@ -151,8 +153,10 @@ export function ExtremePointMarkers({
   const markers = [
     {
       id: 'peak' as const,
-      hour: resolved.peakHour,
-      value: resolved.peakValue,
+      hour: intendedResolved.peakHour,
+      value: intendedResolved.peakValue,
+      evaluatedHour: resolved.peakHour,
+      evaluatedValue: resolved.peakValue,
       path: TRIANGLE_UP,
       fill: '#ffc107',       // Gold
       constrainFn: makePeakConstrainFn(),
@@ -164,8 +168,10 @@ export function ExtremePointMarkers({
     },
     {
       id: 'valley' as const,
-      hour: resolved.valleyHour,
-      value: resolved.valleyValue,
+      hour: intendedResolved.valleyHour,
+      value: intendedResolved.valleyValue,
+      evaluatedHour: resolved.valleyHour,
+      evaluatedValue: resolved.valleyValue,
       path: TRIANGLE_DOWN,
       fill: '#42a5f5',       // Blue
       constrainFn: makeValleyConstrainFn(),
@@ -182,6 +188,9 @@ export function ExtremePointMarkers({
       {markers.map((m) => {
         const cx = xScale(m.hour);
         const cy = yScale(m.value);
+        const evaluatedCx = xScale(m.evaluatedHour);
+        const evaluatedCy = yScale(m.evaluatedValue);
+        const isClipped = Math.abs(evaluatedCx - cx) > 0.5 || Math.abs(evaluatedCy - cy) > 0.5;
         const isDragging =
           dragState.isDragging && dragState.activePointId === m.id;
         const isHovered = hoveredId === m.id;
@@ -193,6 +202,29 @@ export function ExtremePointMarkers({
 
         return (
           <g key={m.id} transform={`translate(${cx},${cy})`}>
+            {isClipped && (
+              <g>
+                <title>{`${m.label} evaluated at ${formatHour(m.evaluatedHour)}`}</title>
+                <line
+                  x1={0}
+                  y1={0}
+                  x2={evaluatedCx - cx}
+                  y2={evaluatedCy - cy}
+                  stroke={m.fill}
+                  strokeWidth={1}
+                  strokeDasharray="3 2"
+                  opacity={0.6}
+                />
+                <path
+                  d={m.path}
+                  transform={`translate(${evaluatedCx - cx},${evaluatedCy - cy}) scale(0.55)`}
+                  fill="var(--bg-card)"
+                  stroke={m.fill}
+                  strokeWidth={2}
+                  opacity={0.9}
+                />
+              </g>
+            )}
             {/* Label with time */}
             <g transform={`translate(0,${m.labelYOffset})`}>
               <text
@@ -219,6 +251,7 @@ export function ExtremePointMarkers({
               onMouseEnter={() => setHoveredId(m.id)}
               onMouseLeave={() => setHoveredId(null)}
             >
+              <title>{`${m.label} draft intent at ${formatHour(m.hour)}`}</title>
               <path
                 d={m.path}
                 fill={m.fill}
