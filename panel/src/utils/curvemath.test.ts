@@ -54,6 +54,10 @@ describe('curvemath parity fixtures', () => {
   it('matches default resolved curve fixture values', () => {
     const evaluation = evaluateLightingPlan(DEFAULT_CURVE_SET, defaultScenario.sunTimes, 12);
 
+    expect(evaluation.brightnessSamples).toHaveLength(201);
+    expect(evaluation.colorTempSamples).toHaveLength(201);
+    expect(evaluation.brightnessSamples[100].value).toBeCloseTo(defaultScenario.samples[24].brightness, 2);
+    expect(evaluation.colorTempSamples[100].value).toBeCloseTo(defaultScenario.samples[24].colorTemp, 2);
     expect(evaluation.resolvedBrightness).toEqual(defaultScenario.resolvedCurves.brightness);
     expect(evaluation.resolvedColorTemp).toEqual(defaultScenario.resolvedCurves.colorTemp);
     expect(evaluation.colorModeWindow).toEqual(defaultScenario.colorModeWindow);

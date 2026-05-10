@@ -7,7 +7,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluateLightingPlan } from '../src/domain/lightingPlanEvaluation';
 import { DEFAULT_CURVE_SET } from '../src/data/defaults';
-import type { ResolvedCurve, SunTimes } from '../src/types/curves';
+import type { SunTimes } from '../src/types/curves';
 import { calculateValueAtHour } from '../src/utils/curvemath';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -28,12 +28,6 @@ for (let h = 0; h < 24; h += 0.5) {
   });
 }
 
-function roundResolvedCurve(resolved: ResolvedCurve): ResolvedCurve {
-  return Object.fromEntries(
-    Object.entries(resolved).map(([key, value]) => [key, Number(value.toFixed(4))]),
-  ) as unknown as ResolvedCurve;
-}
-
 const fixture = {
   version: 1,
   scenarios: [
@@ -42,8 +36,8 @@ const fixture = {
       description: 'Default Lighting Plan evaluated every 30 minutes with fixed sunrise/sunset hours.',
       sunTimes,
       resolvedCurves: {
-        brightness: roundResolvedCurve(evaluation.resolvedBrightness),
-        colorTemp: roundResolvedCurve(evaluation.resolvedColorTemp),
+        brightness: evaluation.resolvedBrightness,
+        colorTemp: evaluation.resolvedColorTemp,
       },
       colorModeWindow: evaluation.colorModeWindow,
       samples,

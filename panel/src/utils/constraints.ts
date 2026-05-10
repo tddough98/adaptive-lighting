@@ -7,8 +7,8 @@ export interface TimePointConstraints {
   snapMinutes: number;
 }
 
-const MIN_GAP_MINUTES = 15;
-const MIN_GAP_HOURS = MIN_GAP_MINUTES / 60;
+export const MIN_GAP_MINUTES = 15;
+export const MIN_GAP_HOURS = MIN_GAP_MINUTES / 60;
 
 /**
  * Get the allowed hour range for a given timing point.
@@ -106,4 +106,3 @@ export function getValleyConstraints(resolved: ResolvedCurve): { minHour: number
   const maxHour = resolved.p4 - MIN_GAP_HOURS;
   return { minHour, maxHour };
 }
-
