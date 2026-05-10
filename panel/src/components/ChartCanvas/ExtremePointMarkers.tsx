@@ -9,12 +9,11 @@ import type {
   SunTimes,
 } from '../../types/curves';
 import {
-  clampHourInArc,
-  constrainYValue,
-  getPeakConstraints,
-  getValleyConstraints,
-  snapToMinutes,
-} from '../../utils/constraints';
+  CLIP_VISIBLE_THRESHOLD_PX,
+  extremePointDragAction,
+  isRepeatPointerDown,
+  pointerDownRecord,
+} from '../../interaction/timeBearingControl';
 import { useDrag } from '../../hooks/useDrag';
 import { formatHour, formatRelativeOffset } from '../../utils/timeformat';
 import { SunModeIcon, ClockModeIcon } from './ModeIcons';
@@ -38,9 +37,6 @@ interface ExtremePointMarkersProps {
 const TRIANGLE_UP = 'M 0,-7 L 6,5 L -6,5 Z';
 // Triangle path pointing down (valley) — centered at origin
 const TRIANGLE_DOWN = 'M 0,7 L 6,-5 L -6,-5 Z';
-
-const DOUBLE_CLICK_MS = 300;
-const DOUBLE_CLICK_RADIUS = 5;
 
 export function ExtremePointMarkers({
   resolved,
@@ -68,66 +64,46 @@ export function ExtremePointMarkers({
   const makePeakConstrainFn = useCallback(
     () => {
       return (svgX: number, svgY: number): CurveSetAction => {
-        const plotX = svgX - margins.left;
-        const rawHour = ((xScale.invert(plotX) % 24) + 24) % 24;
-        const { minHour, maxHour } = getPeakConstraints(resolved);
-        const clamped = clampHourInArc(rawHour, minHour, maxHour);
-        let snapped = snapToMinutes(clamped, 5);
-        if (snapped >= 24) snapped -= 24;
-
-        const plotY = svgY - margins.top;
-        const rawY = yScale.invert(plotY);
-        const newValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
-
-        return {
-          type: 'UPDATE_PEAK',
+        return extremePointDragAction({
+          svgX,
+          svgY,
+          margins,
+          xScale,
+          yScale,
+          resolved,
           curveName,
-          newHour: snapped,
-          newValue,
           sunTimes,
-        };
+          pointId: 'peak',
+        });
       };
     },
-    [margins.left, margins.top, xScale, yScale, curveName, resolved, sunTimes],
+    [margins, xScale, yScale, resolved, curveName, sunTimes],
   );
 
   const makeValleyConstrainFn = useCallback(
     () => {
       return (svgX: number, svgY: number): CurveSetAction => {
-        const plotX = svgX - margins.left;
-        const rawHour = ((xScale.invert(plotX) % 24) + 24) % 24;
-        const { minHour, maxHour } = getValleyConstraints(resolved);
-        const clamped = clampHourInArc(rawHour, minHour, maxHour);
-        let snapped = snapToMinutes(clamped, 5);
-        if (snapped >= 24) snapped -= 24;
-
-        const plotY = svgY - margins.top;
-        const rawY = yScale.invert(plotY);
-        const newValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
-
-        return {
-          type: 'UPDATE_VALLEY',
+        return extremePointDragAction({
+          svgX,
+          svgY,
+          margins,
+          xScale,
+          yScale,
+          resolved,
           curveName,
-          newHour: snapped,
-          newValue,
           sunTimes,
-        };
+          pointId: 'valley',
+        });
       };
     },
-    [margins.left, margins.top, xScale, yScale, curveName, resolved, sunTimes],
+    [margins, xScale, yScale, resolved, curveName, sunTimes],
   );
 
   const handleMouseDown = useCallback(
     (pointId: 'peak' | 'valley', constrainFn: (svgX: number, svgY: number) => CurveSetAction, e: React.MouseEvent) => {
-      const now = Date.now();
       const prev = lastMouseDown.current;
 
-      if (
-        prev &&
-        prev.pointId === pointId &&
-        now - prev.time < DOUBLE_CLICK_MS &&
-        Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < DOUBLE_CLICK_RADIUS
-      ) {
+      if (isRepeatPointerDown(prev, pointId, e)) {
         // Double-click detected — toggle time lock
         lastMouseDown.current = null;
         e.preventDefault();
@@ -141,7 +117,7 @@ export function ExtremePointMarkers({
         return;
       }
 
-      lastMouseDown.current = { pointId, time: now, x: e.clientX, y: e.clientY };
+      lastMouseDown.current = pointerDownRecord(pointId, e);
       startDrag(pointId, constrainFn)(e);
     },
     [curveName, sunTimes, onPointDragEnd, startDrag],
@@ -190,7 +166,8 @@ export function ExtremePointMarkers({
         const cy = yScale(m.value);
         const evaluatedCx = xScale(m.evaluatedHour);
         const evaluatedCy = yScale(m.evaluatedValue);
-        const isClipped = Math.abs(evaluatedCx - cx) > 0.5 || Math.abs(evaluatedCy - cy) > 0.5;
+        const isClipped = Math.abs(evaluatedCx - cx) > CLIP_VISIBLE_THRESHOLD_PX ||
+          Math.abs(evaluatedCy - cy) > CLIP_VISIBLE_THRESHOLD_PX;
         const isDragging =
           dragState.isDragging && dragState.activePointId === m.id;
         const isHovered = hoveredId === m.id;

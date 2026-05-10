@@ -12,12 +12,11 @@ import type {
 } from '../../types/curves';
 import { formatHour, formatRelativeOffset } from '../../utils/timeformat';
 import {
-  absoluteHourToTimingValue,
-  clampHourInArc,
-  constrainYValue,
-  getTimePointConstraints,
-  snapToMinutes,
-} from '../../utils/constraints';
+  CLIP_VISIBLE_THRESHOLD_PX,
+  isRepeatPointerDown,
+  pointerDownRecord,
+  timingPointDragAction,
+} from '../../interaction/timeBearingControl';
 import { useDrag } from '../../hooks/useDrag';
 import { SunModeIcon, ClockModeIcon } from './ModeIcons';
 
@@ -44,16 +43,6 @@ const LABELS: Record<TimingPointType, string> = {
   hold_end: 'P4',
   transition_end: 'P5',
 };
-
-const POINT_FIELDS: Record<TimingPointType, keyof CurveDefinition> = {
-  transition_start: 'transitionStart',
-  hold_start: 'holdStart',
-  hold_end: 'holdEnd',
-  transition_end: 'transitionEnd',
-};
-
-const DOUBLE_CLICK_MS = 300;
-const DOUBLE_CLICK_RADIUS = 5;
 
 export function TimePointMarkers({
   resolved,
@@ -83,45 +72,29 @@ export function TimePointMarkers({
   const makeConstrainFn = useCallback(
     (pointType: TimingPointType) => {
       return (svgX: number, svgY: number): CurveSetAction => {
-        const plotX = svgX - margins.left;
-        const rawHour = ((xScale.invert(plotX) % 24) + 24) % 24;
-        const constraints = getTimePointConstraints(pointType, curveSet, sunTimes, curveName);
-        const clamped = clampHourInArc(rawHour, constraints.minHour, constraints.maxHour);
-        let snapped = snapToMinutes(clamped, constraints.snapMinutes);
-        if (snapped >= 24) snapped -= 24;
-        const field = POINT_FIELDS[pointType];
-        const point = curveDefinition[field];
-        const tp = point as { isRelative: boolean; anchor?: 'sunset' | 'sunrise' };
-        const newValue = absoluteHourToTimingValue(snapped, tp.isRelative, tp.anchor, sunTimes);
-
-        const plotY = svgY - margins.top;
-        const rawY = yScale.invert(plotY);
-        const newYValue = constrainYValue(rawY, resolved.minValue, resolved.maxValue);
-
-        return {
-          type: 'UPDATE_TIME_POINT',
+        return timingPointDragAction({
+          svgX,
+          svgY,
+          margins,
+          xScale,
+          yScale,
+          curveSet,
+          curveDefinition,
+          resolved,
+          sunTimes,
           curveName,
           pointType,
-          newValue,
-          newYValue,
-          sunTimes,
-        };
+        });
       };
     },
-    [margins.left, margins.top, xScale, yScale, curveSet, sunTimes, curveName, resolved, curveDefinition],
+    [margins, xScale, yScale, curveSet, curveDefinition, resolved, sunTimes, curveName],
   );
 
   const handleMouseDown = useCallback(
     (pointType: TimingPointType, e: React.MouseEvent) => {
-      const now = Date.now();
       const prev = lastMouseDown.current;
 
-      if (
-        prev &&
-        prev.pointId === pointType &&
-        now - prev.time < DOUBLE_CLICK_MS &&
-        Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < DOUBLE_CLICK_RADIUS
-      ) {
+      if (isRepeatPointerDown(prev, pointType, e)) {
         // Double-click detected — toggle time lock
         lastMouseDown.current = null;
         e.preventDefault();
@@ -135,7 +108,7 @@ export function TimePointMarkers({
         return;
       }
 
-      lastMouseDown.current = { pointId: pointType, time: now, x: e.clientX, y: e.clientY };
+      lastMouseDown.current = pointerDownRecord(pointType, e);
       // Proceed with normal drag
       startDrag(pointType, makeConstrainFn(pointType))(e);
     },
@@ -193,7 +166,8 @@ export function TimePointMarkers({
         const evaluated = evaluatedByType[pt.type];
         const evaluatedCx = xScale(evaluated.hour);
         const evaluatedCy = yScale(evaluated.value);
-        const isClipped = Math.abs(evaluatedCx - cx) > 0.5 || Math.abs(evaluatedCy - cy) > 0.5;
+        const isClipped = Math.abs(evaluatedCx - cx) > CLIP_VISIBLE_THRESHOLD_PX ||
+          Math.abs(evaluatedCy - cy) > CLIP_VISIBLE_THRESHOLD_PX;
         const isDragging =
           dragState.isDragging && dragState.activePointId === pt.type;
         const isHovered = hoveredId === pt.type;

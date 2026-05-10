@@ -5,6 +5,12 @@ import { kelvinToRgb } from '../../utils/colormap';
 import { formatHour, formatRelativeOffset } from '../../utils/timeformat';
 import { useDrag } from '../../hooks/useDrag';
 import { SunModeIcon, ClockModeIcon } from './ModeIcons';
+import {
+  CLIP_VISIBLE_THRESHOLD_PX,
+  colorModeBoundaryDragAction,
+  isRepeatPointerDown,
+  pointerDownRecord,
+} from '../../interaction/timeBearingControl';
 
 interface ColorModeBarProps {
   xScale: ScaleLinear<number, number>;
@@ -28,16 +34,7 @@ interface ColorModeBarProps {
 const BAR_HEIGHT = 24;
 const HANDLE_RADIUS = 8;
 const HANDLE_TOP = 16; // vertical space above bar for labels
-const MIN_GAP_HOURS = 0.5;
-const SNAP_MINUTES = 1;
-const DOUBLE_CLICK_MS = 300;
-const DOUBLE_CLICK_RADIUS = 5;
 const HANDLE_STROKE = '#ea580c';
-
-function snapToMinute(hour: number): number {
-  const totalMinutes = hour * 60;
-  return Math.round(totalMinutes / SNAP_MINUTES) * SNAP_MINUTES / 60;
-}
 
 /** Number of evenly-spaced stops for the full-bar curve gradient */
 const CURVE_STOPS = 24;
@@ -107,32 +104,32 @@ export function ColorModeBar({
   // Constraint functions for drag
   const startConstrainFn = useCallback(
     (svgX: number, _svgY: number): CurveSetAction => {
-      const rawHour = xScale.invert(svgX - margins.left);
-      const snapped = snapToMinute(Math.max(0, Math.min(24, rawHour)));
-      const clamped = Math.min(snapped, colorTempEndHour - MIN_GAP_HOURS);
-      return {
-        type: 'UPDATE_COLOR_MODE_BOUNDARY',
+      return colorModeBoundaryDragAction({
+        svgX,
+        marginsLeft: margins.left,
+        xScale,
         boundary: 'start',
-        newHour: Math.max(0, clamped),
+        colorTempStartHour,
+        colorTempEndHour,
         sunTimes,
-      };
+      });
     },
-    [xScale, margins.left, colorTempEndHour, sunTimes],
+    [xScale, margins.left, colorTempStartHour, colorTempEndHour, sunTimes],
   );
 
   const endConstrainFn = useCallback(
     (svgX: number, _svgY: number): CurveSetAction => {
-      const rawHour = xScale.invert(svgX - margins.left);
-      const snapped = snapToMinute(Math.max(0, Math.min(24, rawHour)));
-      const clamped = Math.max(snapped, colorTempStartHour + MIN_GAP_HOURS);
-      return {
-        type: 'UPDATE_COLOR_MODE_BOUNDARY',
+      return colorModeBoundaryDragAction({
+        svgX,
+        marginsLeft: margins.left,
+        xScale,
         boundary: 'end',
-        newHour: Math.min(24, clamped),
+        colorTempStartHour,
+        colorTempEndHour,
         sunTimes,
-      };
+      });
     },
-    [xScale, margins.left, colorTempStartHour, sunTimes],
+    [xScale, margins.left, colorTempStartHour, colorTempEndHour, sunTimes],
   );
 
   // Single unified useDrag instance
@@ -147,15 +144,9 @@ export function ColorModeBar({
     (boundary: 'start' | 'end', e: React.MouseEvent) => {
       if (readOnly) return;
       const pointId = `color-mode-${boundary}`;
-      const now = Date.now();
       const prev = lastMouseDown.current;
 
-      if (
-        prev &&
-        prev.pointId === pointId &&
-        now - prev.time < DOUBLE_CLICK_MS &&
-        Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < DOUBLE_CLICK_RADIUS
-      ) {
+      if (isRepeatPointerDown(prev, pointId, e)) {
         // Double-click detected - toggle lock mode
         lastMouseDown.current = null;
         e.preventDefault();
@@ -168,7 +159,7 @@ export function ColorModeBar({
         return;
       }
 
-      lastMouseDown.current = { pointId, time: now, x: e.clientX, y: e.clientY };
+      lastMouseDown.current = pointerDownRecord(pointId, e);
       const constrainFn = boundary === 'start' ? startConstrainFn : endConstrainFn;
       startDrag(pointId, constrainFn)(e);
     },
@@ -323,7 +314,7 @@ export function ColorModeBar({
           const isDragging = dragState.isDragging && dragState.activePointId === `color-mode-${h.id}`;
           const isHovered = hoveredId === h.id;
           const scale = isDragging || isHovered ? 1.2 : 1;
-          const isClipped = Math.abs(h.evaluatedCx - h.cx) > 0.5;
+          const isClipped = Math.abs(h.evaluatedCx - h.cx) > CLIP_VISIBLE_THRESHOLD_PX;
 
           return (
             <g key={h.id} transform={`translate(${h.cx},${handleCY})`}>
