@@ -18,7 +18,15 @@ function entity(
   entityId: string,
   brightnessMode: string,
   extraConfig: Record<string, unknown> = {},
+  includeEnhancedCurves = true,
 ): HassEntity {
+  const enhancedCurveConfig = includeEnhancedCurves
+    ? {
+        enhanced_brightness_curve: curveSetToServiceData(DEFAULT_CURVE_SET).enhanced_brightness_curve,
+        enhanced_color_temp_curve: curveSetToServiceData(DEFAULT_CURVE_SET).enhanced_color_temp_curve,
+      }
+    : {};
+
   return {
     entity_id: entityId,
     state: 'on',
@@ -30,8 +38,7 @@ function entity(
       sunset_hour: 18,
       configuration: {
         brightness_mode: brightnessMode,
-        enhanced_brightness_curve: curveSetToServiceData(DEFAULT_CURVE_SET).enhanced_brightness_curve,
-        enhanced_color_temp_curve: curveSetToServiceData(DEFAULT_CURVE_SET).enhanced_color_temp_curve,
+        ...enhancedCurveConfig,
         ...extraConfig,
       },
     },
@@ -101,6 +108,27 @@ describe('Adaptive Lighting Instance adapter', () => {
     expect(requiresEnhancedModeOptIn(selected?.instance ?? null)).toBe(true);
     expect(requiresEnhancedModeOptIn(enhanced?.instance ?? null)).toBe(false);
     expect(requiresEnhancedModeOptIn(null)).toBe(false);
+  });
+
+  it('seeds non-enhanced instances from existing settings when enhanced curves are absent', () => {
+    const savedPlan = entityToSavedLightingPlan(entity('switch.adaptive_lighting_one', 'linear', {
+      min_brightness: 10,
+      max_brightness: 90,
+      min_color_temp: 2300,
+      max_color_temp: 5100,
+      brightness_mode_time_dark: 1200,
+      brightness_mode_time_light: 5400,
+      sleep_rgb_color: [12, 34, 56],
+    }, false));
+
+    expect(savedPlan.isEnhancedMode).toBe(false);
+    expect(savedPlan.curveSet.brightness.minValue).toBe(10);
+    expect(savedPlan.curveSet.brightness.maxValue).toBe(90);
+    expect(savedPlan.curveSet.colorTemp.minValue).toBe(2300);
+    expect(savedPlan.curveSet.colorTemp.maxValue).toBe(5100);
+    expect(savedPlan.curveSet.brightness.transitionStart.value).toBe(-90);
+    expect(savedPlan.curveSet.brightness.holdStart.value).toBe(20);
+    expect(savedPlan.curveSet.colorMode.sleepRgbColor).toEqual([12, 34, 56]);
   });
 
   it('reads linked timing and color mode intent when HA provides them', () => {

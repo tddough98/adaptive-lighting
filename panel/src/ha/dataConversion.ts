@@ -1,6 +1,6 @@
 import type { ColorModeConfig, CurveDefinition, CurveSet, SunTimes } from '../types/curves';
 import type { HassEntity } from '../types/homeassistant';
-import { DEFAULT_CURVE_SET } from '../data/defaults';
+import { createEnhancedModeSeed } from '../domain/enhancedModeSeed';
 
 export type MissingLightingPlanIntentField = 'linked' | 'colorMode';
 
@@ -141,6 +141,7 @@ export function entityToSavedLightingPlan(entity: HassEntity): SavedLightingPlan
 
   const brightnessDict = config.enhanced_brightness_curve as CurveConfigDict | undefined;
   const colorTempDict = config.enhanced_color_temp_curve as CurveConfigDict | undefined;
+  const seededCurveSet = createEnhancedModeSeed(config);
   const linked = config.enhanced_linked_timing;
   const colorModeDict = config.enhanced_color_mode;
   const missingIntentFields: MissingLightingPlanIntentField[] = [];
@@ -149,20 +150,21 @@ export function entityToSavedLightingPlan(entity: HassEntity): SavedLightingPlan
     missingIntentFields.push('linked');
   }
   if (!isRecord(colorModeDict)) {
+    // Seed may preserve legacy sleep RGB, but Color Mode Window intent cannot round-trip until Slice 9.
     missingIntentFields.push('colorMode');
   }
 
   const curveSet: CurveSet = {
     brightness: brightnessDict
       ? dictToCurveDefinition(brightnessDict, 'b')
-      : DEFAULT_CURVE_SET.brightness,
+      : seededCurveSet.brightness,
     colorTemp: colorTempDict
       ? dictToCurveDefinition(colorTempDict, 'ct')
-      : DEFAULT_CURVE_SET.colorTemp,
-    linked: typeof linked === 'boolean' ? linked : DEFAULT_CURVE_SET.linked,
+      : seededCurveSet.colorTemp,
+    linked: typeof linked === 'boolean' ? linked : seededCurveSet.linked,
     colorMode: isRecord(colorModeDict)
       ? dictToColorModeConfig(colorModeDict as unknown as ColorModeConfigDict)
-      : DEFAULT_CURVE_SET.colorMode,
+      : seededCurveSet.colorMode,
   };
 
   const sunTimes: SunTimes = {
