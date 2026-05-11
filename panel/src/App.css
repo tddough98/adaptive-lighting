@@ -114,10 +114,6 @@ body {
   color: #b91c1c;
 }
 
-.save-status-normalized {
-  color: var(--accent-sun);
-}
-
 .enhanced-opt-in {
   display: flex;
   align-items: center;

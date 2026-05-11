@@ -3,7 +3,6 @@ import { DEFAULT_CURVE_SET } from '../data/defaults';
 import type { HassEntity, HomeAssistant } from '../types/homeassistant';
 import {
   evaluateDraftStaleness,
-  getUntransmittedDraftIntentFields,
   listAdaptiveLightingInstances,
   requiresEnhancedModeOptIn,
   saveLightingPlan,
@@ -89,12 +88,11 @@ describe('Adaptive Lighting Instance adapter', () => {
     expect(stale?.instance.entityId).toBe('switch.adaptive_lighting_one');
   });
 
-  it('reports missing linked timing and color mode intent instead of silently treating defaults as saved', () => {
+  it('defaults absent linked timing and color mode intent into the saved plan', () => {
     const savedPlan = entityToSavedLightingPlan(entity('switch.adaptive_lighting_one', 'enhanced'));
 
     expect(savedPlan.curveSet.linked).toBe(DEFAULT_CURVE_SET.linked);
     expect(savedPlan.curveSet.colorMode).toEqual(DEFAULT_CURVE_SET.colorMode);
-    expect(savedPlan.missingIntentFields).toEqual(['linked', 'colorMode']);
   });
 
   it('requires explicit opt-in before saving a non-enhanced instance as Enhanced Mode', () => {
@@ -151,15 +149,47 @@ describe('Adaptive Lighting Instance adapter', () => {
       endOffsetMinutes: -45,
       sleepRgbColor: [1, 2, 3],
     });
-    expect(savedPlan.missingIntentFields).toEqual([]);
   });
 
-  it('keeps the current HA save payload valid for the existing service schema', () => {
+  it('persists complete Lighting Plan intent in the HA save payload', () => {
     expect(curveSetToServiceData(DEFAULT_CURVE_SET)).toEqual({
       brightness_mode: 'enhanced',
       enhanced_brightness_curve: expect.any(Object),
       enhanced_color_temp_curve: expect.any(Object),
+      enhanced_linked_timing: true,
+      enhanced_color_mode: {
+        color_temp_start_hour: DEFAULT_CURVE_SET.colorMode.colorTempStartHour,
+        color_temp_end_hour: DEFAULT_CURVE_SET.colorMode.colorTempEndHour,
+        start_offset_minutes: DEFAULT_CURVE_SET.colorMode.startOffsetMinutes,
+        end_offset_minutes: DEFAULT_CURVE_SET.colorMode.endOffsetMinutes,
+        sleep_rgb_color: DEFAULT_CURVE_SET.colorMode.sleepRgbColor,
+      },
     });
+  });
+
+  it('round-trips peak and valley sun anchors through HA curve dictionaries', () => {
+    const draft = structuredClone(DEFAULT_CURVE_SET);
+    draft.brightness.peak = {
+      hour: 13,
+      value: 90,
+      isRelative: true,
+      anchor: 'sunrise',
+      offsetMinutes: 390,
+    };
+    draft.brightness.valley = {
+      hour: 2,
+      value: 5,
+      isRelative: true,
+      anchor: 'sunset',
+      offsetMinutes: 480,
+    };
+
+    const savedPlan = entityToSavedLightingPlan(entity('switch.adaptive_lighting_one', 'enhanced', {
+      enhanced_brightness_curve: curveSetToServiceData(draft).enhanced_brightness_curve,
+    }));
+
+    expect(savedPlan.curveSet.brightness.peak).toEqual(draft.brightness.peak);
+    expect(savedPlan.curveSet.brightness.valley).toEqual(draft.brightness.valley);
   });
 
   it('saves a Lighting Plan through the selected Adaptive Lighting Instance service target', async () => {
@@ -193,7 +223,7 @@ describe('Adaptive Lighting Instance adapter', () => {
     })).rejects.toThrow('service failed');
   });
 
-  it('reports normalized save when draft intent is not transmitted by the current wire format', () => {
+  it('reports confirmed save after a successful service call', () => {
     const savedPlan = entityToSavedLightingPlan(entity('switch.adaptive_lighting_one', 'enhanced', {
       enhanced_linked_timing: false,
       enhanced_color_mode: {
@@ -208,10 +238,8 @@ describe('Adaptive Lighting Instance adapter', () => {
     draft.linked = true;
     draft.colorMode.startOffsetMinutes = 30;
 
-    expect(getUntransmittedDraftIntentFields(draft, savedPlan)).toEqual(['linked', 'colorMode']);
     expect(saveStatusAfterSuccessfulServiceCall(draft, savedPlan)).toEqual({
-      type: 'normalized',
-      message: 'linked, colorMode intent changed in the draft but is not persisted by the current Home Assistant wire format.',
+      type: 'confirmed',
     });
   });
 

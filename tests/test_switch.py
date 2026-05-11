@@ -35,6 +35,8 @@ from homeassistant.components.adaptive_lighting.const import (
     CONF_BRIGHTNESS_MODE_TIME_DARK,
     CONF_BRIGHTNESS_MODE_TIME_LIGHT,
     CONF_DETECT_NON_HA_CHANGES,
+    CONF_ENHANCED_COLOR_MODE,
+    CONF_ENHANCED_LINKED_TIMING,
     CONF_INITIAL_TRANSITION,
     CONF_MANUAL_CONTROL,
     CONF_MAX_BRIGHTNESS,
@@ -1663,6 +1665,27 @@ async def test_change_switch_settings_service(hass):
     assert switch._sun_light_settings.max_brightness == 100
     await change_switch_settings(**{CONF_MAX_BRIGHTNESS: 50})
     assert switch._sun_light_settings.max_brightness == 50
+
+    # Test enhanced color mode schema and persisted settings
+    enhanced_color_mode = {
+        "color_temp_start_hour": 8,
+        "color_temp_end_hour": 18,
+        "start_offset_minutes": 30,
+        "end_offset_minutes": -45,
+        "sleep_rgb_color": [12, 34, 56],
+    }
+    await change_switch_settings(
+        **{
+            CONF_BRIGHTNESS_MODE: "enhanced",
+            CONF_ENHANCED_LINKED_TIMING: False,
+            CONF_ENHANCED_COLOR_MODE: enhanced_color_mode,
+        },
+    )
+    assert switch._sun_light_settings.enhanced_color_mode is not None
+    assert switch._sun_light_settings.enhanced_color_mode.sleep_rgb_color == [12, 34, 56]
+    assert switch._config_entry is not None
+    assert switch._config_entry.options[CONF_ENHANCED_COLOR_MODE] == enhanced_color_mode
+    assert switch._config_entry.options[CONF_ENHANCED_LINKED_TIMING] is False
 
     # Test changing to illegal max brightness
     with pytest.raises(

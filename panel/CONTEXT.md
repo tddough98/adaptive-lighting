@@ -137,7 +137,7 @@ _Avoid_: saved plan mutation, auto-fix
 - **Linked Timing** never links Brightness Curve values to Color Temperature Curve values.
 - While **Linked Timing** is enabled, **Seasonal Clipping** should preserve shared evaluated timing across the Brightness Curve and Color Temperature Curve.
 - When **Linked Timing** is disabled, each Lighting Curve may use **Seasonal Clipping** independently.
-- The **Color Mode Window** is part of a **Lighting Plan**, but backend persistence for it is currently incomplete.
+- The **Color Mode Window** is part of a **Lighting Plan** and is persisted through the Enhanced Mode wire format described in ADR-0003.
 - Home Assistant is the source of truth for the **Saved Lighting Plan**.
 - The **React Dashboard** owns a **Lighting Plan Draft** while the user edits.
 - A **Saved Lighting Plan** belongs to exactly one **Adaptive Lighting Instance**.
@@ -147,7 +147,7 @@ _Avoid_: saved plan mutation, auto-fix
 - After **Save Lighting Plan**, the **React Dashboard** should wait for Home Assistant confirmation before treating the **Lighting Plan Draft** as the **Saved Lighting Plan**.
 - The **React Dashboard** may show a saving state while waiting for Home Assistant confirmation.
 - If Home Assistant rejects **Save Lighting Plan**, keep the **Lighting Plan Draft** and show the save error.
-- If Home Assistant accepts but normalizes the **Saved Lighting Plan**, refresh the **Lighting Plan Draft** from the normalized saved version and surface that confirmation changed the plan.
+- If Home Assistant accepts **Save Lighting Plan**, refresh the **Lighting Plan Draft** from the confirmed **Saved Lighting Plan**.
 - External updates to the same **Saved Lighting Plan** should not silently overwrite an active **Lighting Plan Draft**.
 - The **React Dashboard** should eventually surface externally changed saved state as a draft staleness or conflict state.
 - The current **React Dashboard** edits one active **Lighting Plan** for the selected Adaptive Lighting switch.
@@ -173,7 +173,7 @@ _Avoid_: saved plan mutation, auto-fix
 - The same **Lighting Plan** can produce different **Lighting States** on different dates or locations.
 - Each **Lighting Curve Control Point** uses either **Clock Time** or **Sun-Relative Time**.
 - Each **Color Mode Window** edge uses either **Clock Time** or **Sun-Relative Time**.
-- Peak and Valley **Sun-Relative Time** are supported in the **Lighting Plan Draft** but are not fully persisted through the Home Assistant Enhanced Mode settings yet.
+- Peak and Valley **Sun-Relative Time** are persisted through the Enhanced Mode wire format described in ADR-0003.
 - The **React Dashboard** should prevent edits that would make a **Lighting Plan Draft** invalid.
 - **Plan Validity** requires each **Lighting Curve** to preserve its daytime-to-nighttime value hierarchy: **Peak** is the upper anchor, **Valley** is the lower anchor, and transition endpoints cannot invert that shape.
 - For the **Brightness Curve**, higher values mean brighter light.
@@ -220,7 +220,7 @@ _Avoid_: saved plan mutation, auto-fix
 > **Domain expert:** "No - saving preserves intent, not evaluated output."
 >
 > **Dev:** "If Home Assistant clamps a saved point, should the dashboard still show my original draft as saved?"
-> **Domain expert:** "No - refresh from the normalized **Saved Lighting Plan** and surface that confirmation changed the plan."
+> **Domain expert:** "No - refresh from the confirmed **Saved Lighting Plan** before treating the draft as saved."
 >
 > **Dev:** "If Home Assistant receives a changed **Saved Lighting Plan** while I am editing, should my **Lighting Plan Draft** reset?"
 > **Domain expert:** "No - do not silently overwrite an active draft; surface the saved-plan change as staleness or conflict."
@@ -259,7 +259,7 @@ _Avoid_: saved plan mutation, auto-fix
 > **Domain expert:** "No - 23:00 is **Clock Time**; 30 minutes before sunset is **Sun-Relative Time**."
 >
 > **Dev:** "Can **Peak** or **Valley** be tied to sunrise or sunset?"
-> **Domain expert:** "Yes - all six **Lighting Curve Control Points** may use **Sun-Relative Time**, though persistence for **Peak** and **Valley** still needs to be completed."
+> **Domain expert:** "Yes - all six **Lighting Curve Control Points** may use **Sun-Relative Time**. ADR-0003 persists Peak and Valley anchors through the Enhanced Mode wire format."
 >
 > **Dev:** "If seasonal sunrise/sunset changes would make a **Saved Lighting Plan** invalid, should we reject the plan?"
 > **Domain expert:** "No - prevent invalid edits in the UI, but use **Seasonal Clipping** during evaluation when sun times change."
@@ -304,13 +304,13 @@ _Avoid_: saved plan mutation, auto-fix
 - "curve" was used both for the shared shape and for specific brightness/color-temperature schedules. Resolved: **Lighting Curve** is the shared shape; **Brightness Curve** and **Color Temperature Curve** are unit-specific Lighting Curves.
 - P1/P2/P4/P5 names were used for editable points. Resolved: use **Evening Start**, **Night Hold Start**, **Night Hold End**, and **Morning End** in domain language.
 - "linked" could mean linked timing or linked values. Resolved: **Linked Timing** links control-point times only.
-- The **Color Mode Window** exists in the React Dashboard but is not fully persisted through the Home Assistant Enhanced Mode settings yet.
+- The **Color Mode Window** exists in the React Dashboard and persists through the Home Assistant Enhanced Mode settings described in ADR-0003.
 - `CurveSet` in React state was used for both draft and saved configuration. Resolved: use **Lighting Plan Draft** for local edits and **Saved Lighting Plan** for Home Assistant state.
 - "publish" implied making something public, and "apply" conflicts with an existing Home Assistant service. Resolved: use **Save Lighting Plan** for the draft-to-saved action.
 - Optimistic save status could conflict with Home Assistant failures or normalization. Resolved: saved status comes from Home Assistant confirmation.
 - Patch-style saves were considered. Resolved: **Save Lighting Plan** replaces the complete saved plan.
 - Evaluated or clipped values could accidentally become persisted intent. Resolved: **Save Lighting Plan** saves intent only.
-- Home Assistant may reject or normalize a save. Resolved: rejected saves keep the draft with an error; accepted normalized saves refresh the draft from confirmed saved state.
+- Home Assistant may reject a save. Resolved: rejected saves keep the draft with an error; accepted saves refresh the draft from confirmed saved state.
 - Home Assistant updates during editing could be mistaken for authoritative resets. Resolved: active **Lighting Plan Drafts** must not be silently overwritten by external **Saved Lighting Plan** changes.
 - Planning docs mention profiles, but the current implementation has no profile model. Resolved: profile support is future scope above the current **Lighting Plan** model.
 - "switch", "group", and "profile" were all considered for the selected Home Assistant target. Resolved: use **Adaptive Lighting Instance** because the target is a configured controller, not a light group or future profile.
@@ -324,7 +324,7 @@ _Avoid_: saved plan mutation, auto-fix
 - Actual `light.turn_on` payloads include device and integration concerns. Resolved: **Lighting State** is conceptual output only.
 - Sunrise/sunset can mean either a saved reference or today's actual time. Resolved: **Sun Anchor** is the saved reference; actual sun times are evaluation context.
 - "absolute" and "relative" were implementation-oriented timing labels. Resolved: use **Clock Time** and **Sun-Relative Time** in domain language.
-- The React model supports Sun-Relative Time for Peak and Valley, but the Home Assistant enhanced curve dict currently persists only their resolved hours. Resolved: all six **Lighting Curve Control Points** may use **Sun-Relative Time**; Peak/Valley persistence is an implementation gap.
+- The React model supports Sun-Relative Time for Peak and Valley. Resolved: all six **Lighting Curve Control Points** may use **Sun-Relative Time**, and ADR-0003 persists Peak/Valley anchor metadata in the Home Assistant enhanced curve dict.
 - Invalid plans can come from direct user edits or from changing sun times. Resolved: the UI prevents invalid edits, while **Seasonal Clipping** preserves **Plan Validity** when sun times change.
 - **Seasonal Clipping** could be mistaken for mutating saved intent. Resolved: clipping affects evaluated **Lighting State** only, while the **React Dashboard** renders clipped evaluated positions when relevant.
 - Rendered clipped positions could be mistaken for saved edits. Resolved: draggable handles show **Lighting Plan Draft** intent; clipped evaluated positions use secondary indicators.

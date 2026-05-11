@@ -79,8 +79,6 @@ export default function App({ hass = null }: AppProps) {
         return 'Saving...';
       case 'confirmed':
         return 'Saved';
-      case 'normalized':
-        return 'Saved with defaults';
       case 'rejected':
         return 'Save failed';
       case 'stale':
@@ -126,7 +124,6 @@ export default function App({ hass = null }: AppProps) {
         return 'Saving Lighting Plan...';
       case 'confirmed':
         return 'Lighting Plan saved.';
-      case 'normalized':
       case 'rejected':
       case 'stale':
         return al.saveStatus.message;
@@ -158,7 +155,7 @@ export default function App({ hass = null }: AppProps) {
                 className="save-button"
                 onClick={handleSave}
                 disabled={al.saveStatus.type === 'saving'}
-                title={al.saveStatus.type === 'rejected' || al.saveStatus.type === 'normalized' || al.saveStatus.type === 'stale'
+                title={al.saveStatus.type === 'rejected' || al.saveStatus.type === 'stale'
                   ? al.saveStatus.message
                   : undefined}
               >

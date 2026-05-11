@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "scenarios": [
     {
       "id": "default-lighting-plan",
@@ -50,242 +50,290 @@
         {
           "hour": 0,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 0.5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 1,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 1.5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 2,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 2.5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 3,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 3.5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 4,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 4.5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 5.5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 6,
           "brightness": 30.3333,
-          "colorTemp": 3037.037
+          "colorTemp": 3037.037,
+          "colorPreference": "rgb"
         },
         {
           "hour": 6.5,
           "brightness": 70.6667,
-          "colorTemp": 4462.963
+          "colorTemp": 4462.963,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 7,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 7.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 8,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 8.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 9,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 9.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 10,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 10.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 11,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 11.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 12,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 12.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 13,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 13.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 14,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 14.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 15,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 15.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 16,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 16.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 17,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 17.5,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 18,
           "brightness": 100,
-          "colorTemp": 5500
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 18.5,
           "brightness": 96.9978,
-          "colorTemp": 5393.8621
+          "colorTemp": 5393.8621,
+          "colorPreference": "colorTemp"
         },
         {
           "hour": 19,
           "brightness": 88.8717,
-          "colorTemp": 5106.5753
+          "colorTemp": 5106.5753,
+          "colorPreference": "rgb"
         },
         {
           "hour": 19.5,
           "brightness": 78.4939,
-          "colorTemp": 4739.6851
+          "colorTemp": 4739.6851,
+          "colorPreference": "rgb"
         },
         {
           "hour": 20,
           "brightness": 66.5574,
-          "colorTemp": 4317.6848
+          "colorTemp": 4317.6848,
+          "colorPreference": "rgb"
         },
         {
           "hour": 20.5,
           "brightness": 53.7548,
-          "colorTemp": 3865.0678
+          "colorTemp": 3865.0678,
+          "colorPreference": "rgb"
         },
         {
           "hour": 21,
           "brightness": 40.779,
-          "colorTemp": 3406.3275
+          "colorTemp": 3406.3275,
+          "colorPreference": "rgb"
         },
         {
           "hour": 21.5,
           "brightness": 28.3228,
-          "colorTemp": 2965.9571
+          "colorTemp": 2965.9571,
+          "colorPreference": "rgb"
         },
         {
           "hour": 22,
           "brightness": 17.079,
-          "colorTemp": 2568.4502
+          "colorTemp": 2568.4502,
+          "colorPreference": "rgb"
         },
         {
           "hour": 22.5,
           "brightness": 7.7405,
-          "colorTemp": 2238.3
+          "colorTemp": 2238.3,
+          "colorPreference": "rgb"
         },
         {
           "hour": 23,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         },
         {
           "hour": 23.5,
           "brightness": 1,
-          "colorTemp": 2000
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
         }
       ]
     }

@@ -82,6 +82,16 @@ change_switch_settings:
           - current
           - configuration
           - factory
+    enhanced_linked_timing:
+      description: Whether the Enhanced Mode Brightness Curve and Color Temperature Curve share timing control points.
+      required: false
+      selector:
+        boolean: null
+    enhanced_color_mode:
+      description: Enhanced Mode Color Mode Window and sleep RGB intent. The window emits color temperature; outside it, the runtime emits the configured sleep RGB color.
+      required: false
+      selector:
+        object: null
     include_config_in_attributes:
       description: Show all options as attributes on the switch in Home Assistant when set to `true`. 📝
       required: false

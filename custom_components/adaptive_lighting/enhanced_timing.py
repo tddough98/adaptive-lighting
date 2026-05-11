@@ -89,6 +89,14 @@ class ResolvedCurve:
     max_value: float
 
 
+@dataclass(frozen=True)
+class ResolvedColorModeWindow:
+    """Resolved Color Mode Window boundaries in absolute decimal hours."""
+
+    color_temp_start: float
+    color_temp_end: float
+
+
 def calculate_value_at_hour(hour: float, resolved: ResolvedCurve) -> float:
     """Calculate the curve value (brightness % or color temp K) at a given hour.
 
@@ -177,6 +185,13 @@ class CurveConfig:
     min_value: float
     max_value: float
 
+    peak_is_relative: bool = False
+    peak_anchor: str = ""
+    peak_offset_minutes: float = 0
+    valley_is_relative: bool = False
+    valley_anchor: str = ""
+    valley_offset_minutes: float = 0
+
     @staticmethod
     def _resolve_point(
         raw_value: float,
@@ -196,6 +211,7 @@ class CurveConfig:
         return hour
 
     def resolve(self, sunset_hour: float, sunrise_hour: float) -> ResolvedCurve:
+        """Resolve sun-relative timing points to absolute decimal hours."""
         rp = self._resolve_point
         return ResolvedCurve(
             transition_start=rp(self.transition_start_offset, self.transition_start_is_relative, self.transition_start_anchor, sunset_hour, sunrise_hour),
@@ -206,10 +222,72 @@ class CurveConfig:
             hold_start_value=self.hold_start_value,
             hold_end_value=self.hold_end_value,
             transition_end_value=self.transition_end_value,
-            peak_hour=self.peak_hour,
+            peak_hour=rp(
+                self.peak_offset_minutes,
+                self.peak_is_relative,
+                self.peak_anchor,
+                sunset_hour,
+                sunrise_hour,
+            )
+            if self.peak_is_relative
+            else self.peak_hour,
             peak_value=self.peak_value,
-            valley_hour=self.valley_hour,
+            valley_hour=rp(
+                self.valley_offset_minutes,
+                self.valley_is_relative,
+                self.valley_anchor,
+                sunset_hour,
+                sunrise_hour,
+            )
+            if self.valley_is_relative
+            else self.valley_hour,
             valley_value=self.valley_value,
             min_value=self.min_value,
             max_value=self.max_value,
         )
+
+
+@dataclass(frozen=True)
+class EnhancedColorModeConfig:
+    """Saved enhanced color-mode intent.
+
+    Inside the resolved window, enhanced mode sends color temperature. Outside
+    the window it sends the configured sleep RGB color.
+    """
+
+    color_temp_start_hour: float | None = None
+    color_temp_end_hour: float | None = None
+    start_offset_minutes: float = 0
+    end_offset_minutes: float = 0
+    sleep_rgb_color: tuple[int, int, int] = (255, 56, 0)
+
+    @staticmethod
+    def _normalize_hour(hour: float) -> float:
+        return hour % 24
+
+    def resolve(self, sunset_hour: float, sunrise_hour: float) -> ResolvedColorModeWindow:
+        """Resolve the Color Mode Window boundaries to absolute decimal hours."""
+        start = (
+            sunrise_hour + self.start_offset_minutes / 60
+            if self.color_temp_start_hour is None
+            else self.color_temp_start_hour
+        )
+        end = (
+            sunset_hour + self.end_offset_minutes / 60
+            if self.color_temp_end_hour is None
+            else self.color_temp_end_hour
+        )
+        return ResolvedColorModeWindow(
+            color_temp_start=self._normalize_hour(start),
+            color_temp_end=self._normalize_hour(end),
+        )
+
+    def uses_color_temp(
+        self,
+        hour: float,
+        sunset_hour: float,
+        sunrise_hour: float,
+    ) -> bool:
+        """Return whether enhanced mode should emit color temperature at this hour."""
+        resolved = self.resolve(sunset_hour, sunrise_hour)
+        return is_in_arc(hour, resolved.color_temp_start, resolved.color_temp_end)

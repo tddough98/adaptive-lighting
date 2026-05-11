@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CURVE_SET } from '../data/defaults';
 import type { CurveSet } from '../types/curves';
-import { evaluateColorModeWindow, evaluateLightingPlan } from './lightingPlanEvaluation';
+import { evaluateColorModeWindow, evaluateColorPreferenceAtHour, evaluateLightingPlan } from './lightingPlanEvaluation';
 
 function cloneCurveSet(curveSet: CurveSet = DEFAULT_CURVE_SET): CurveSet {
   return structuredClone(curveSet);
@@ -99,6 +99,24 @@ describe('evaluateLightingPlan', () => {
     });
     expect(evaluation.clipping.colorModeWindow).toBe(true);
   });
+
+  it('evaluates the current color preference from the clipped Color Mode Window', () => {
+    const plan = cloneCurveSet();
+    plan.colorMode = {
+      ...plan.colorMode,
+      colorTempStartHour: 8,
+      colorTempEndHour: 18,
+    };
+
+    expect(evaluateLightingPlan(plan, {
+      sunriseHour: 6,
+      sunsetHour: 18,
+    }, 12).currentColorPreference).toBe('colorTemp');
+    expect(evaluateLightingPlan(plan, {
+      sunriseHour: 6,
+      sunsetHour: 18,
+    }, 22).currentColorPreference).toBe('rgb');
+  });
 });
 
 describe('evaluateColorModeWindow', () => {
@@ -110,5 +128,28 @@ describe('evaluateColorModeWindow', () => {
       startHour: 6.25,
       endHour: 19,
     });
+  });
+
+  it('wraps out-of-range relative boundaries modulo 24 to match runtime', () => {
+    const config = {
+      ...DEFAULT_CURVE_SET.colorMode,
+      colorTempStartHour: null,
+      startOffsetMinutes: -480,
+    };
+
+    expect(evaluateColorModeWindow(config, {
+      sunriseHour: 6.5,
+      sunsetHour: 18.75,
+    }).startHour).toBe(22.5);
+  });
+});
+
+describe('evaluateColorPreferenceAtHour', () => {
+  it('uses color temperature inside a wrapping window and RGB outside it', () => {
+    const window = { startHour: 22.5, endHour: 18.75 };
+
+    expect(evaluateColorPreferenceAtHour(23, window)).toBe('colorTemp');
+    expect(evaluateColorPreferenceAtHour(12, window)).toBe('colorTemp');
+    expect(evaluateColorPreferenceAtHour(20, window)).toBe('rgb');
   });
 });

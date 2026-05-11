@@ -19,7 +19,11 @@ from homeassistant.util.color import (
     color_xy_to_hs,
 )
 
-from .enhanced_timing import CurveConfig, calculate_value_at_hour
+from .enhanced_timing import (
+    CurveConfig,
+    EnhancedColorModeConfig,
+    calculate_value_at_hour,
+)
 
 if TYPE_CHECKING:
     import astral.location
@@ -234,6 +238,7 @@ class SunLightSettings:
     timezone: datetime.tzinfo = UTC
     enhanced_brightness_curve: CurveConfig | None = None
     enhanced_color_temp_curve: CurveConfig | None = None
+    enhanced_color_mode: EnhancedColorModeConfig | None = None
 
     @cached_property
     def sun(self) -> SunEvents:
@@ -384,8 +389,19 @@ class SunLightSettings:
             color_temp_kelvin = 5 * round(
                 calculate_value_at_hour(current_hour, resolved) / 5,
             )
-            r, g, b = color_temperature_to_rgb(color_temp_kelvin)
-            rgb_color = (round(r), round(g), round(b))
+            if (
+                self.enhanced_color_mode is not None
+                and not self.enhanced_color_mode.uses_color_temp(
+                    current_hour,
+                    sunset_hour,
+                    sunrise_hour,
+                )
+            ):
+                rgb_color = tuple(self.enhanced_color_mode.sleep_rgb_color)
+                force_rgb_color = True
+            else:
+                r, g, b = color_temperature_to_rgb(color_temp_kelvin)
+                rgb_color = (round(r), round(g), round(b))
         elif (
             self.sleep_rgb_or_color_temp == "rgb_color"
             and self.adapt_until_sleep

@@ -300,6 +300,16 @@ DOCS[CONF_USE_DEFAULTS] = (
 # Enhanced timing model constants
 CONF_ENHANCED_BRIGHTNESS_CURVE = "enhanced_brightness_curve"
 CONF_ENHANCED_COLOR_TEMP_CURVE = "enhanced_color_temp_curve"
+CONF_ENHANCED_LINKED_TIMING = "enhanced_linked_timing"
+DOCS[CONF_ENHANCED_LINKED_TIMING] = (
+    "Whether the Enhanced Mode Brightness Curve and Color Temperature Curve "
+    "share timing control points."
+)
+CONF_ENHANCED_COLOR_MODE = "enhanced_color_mode"
+DOCS[CONF_ENHANCED_COLOR_MODE] = (
+    "Enhanced Mode Color Mode Window and sleep RGB intent. The window emits "
+    "color temperature; outside it, the runtime emits the configured sleep RGB color."
+)
 
 # Default CurveConfig values (matching panel/src/data/defaults.ts)
 DEFAULT_ENHANCED_BRIGHTNESS_CURVE: dict = {
@@ -321,8 +331,14 @@ DEFAULT_ENHANCED_BRIGHTNESS_CURVE: dict = {
     "transition_end_value": 100,
     "peak_hour": 13.0,
     "peak_value": 100,
+    "peak_is_relative": False,
+    "peak_anchor": "",
+    "peak_offset_minutes": 0,
     "valley_hour": 2.0,
     "valley_value": 1,
+    "valley_is_relative": False,
+    "valley_anchor": "",
+    "valley_offset_minutes": 0,
     "min_value": 1,
     "max_value": 100,
 }
@@ -346,10 +362,25 @@ DEFAULT_ENHANCED_COLOR_TEMP_CURVE: dict = {
     "transition_end_value": 5500,
     "peak_hour": 13.0,
     "peak_value": 5500,
+    "peak_is_relative": False,
+    "peak_anchor": "",
+    "peak_offset_minutes": 0,
     "valley_hour": 2.0,
     "valley_value": 2000,
+    "valley_is_relative": False,
+    "valley_anchor": "",
+    "valley_offset_minutes": 0,
     "min_value": 2000,
     "max_value": 5500,
+}
+
+DEFAULT_ENHANCED_LINKED_TIMING = True
+DEFAULT_ENHANCED_COLOR_MODE: dict = {
+    "color_temp_start_hour": None,
+    "color_temp_end_hour": None,
+    "start_offset_minutes": 0,
+    "end_offset_minutes": 0,
+    "sleep_rgb_color": DEFAULT_SLEEP_RGB_COLOR,
 }
 
 TURNING_OFF_DELAY = 5
@@ -462,6 +493,8 @@ VALIDATION_TUPLES: list[tuple[str, Any, Any]] = [
     (CONF_INCLUDE_CONFIG_IN_ATTRIBUTES, DEFAULT_INCLUDE_CONFIG_IN_ATTRIBUTES, bool),
     (CONF_ENHANCED_BRIGHTNESS_CURVE, DEFAULT_ENHANCED_BRIGHTNESS_CURVE, dict),
     (CONF_ENHANCED_COLOR_TEMP_CURVE, DEFAULT_ENHANCED_COLOR_TEMP_CURVE, dict),
+    (CONF_ENHANCED_LINKED_TIMING, DEFAULT_ENHANCED_LINKED_TIMING, bool),
+    (CONF_ENHANCED_COLOR_MODE, DEFAULT_ENHANCED_COLOR_MODE, dict),
 ]
 
 

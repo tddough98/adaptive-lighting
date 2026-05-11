@@ -15,6 +15,8 @@ export interface EvaluatedColorModeWindow {
   endHour: number;
 }
 
+export type ColorPreference = 'colorTemp' | 'rgb';
+
 export interface LightingPlanClipping {
   brightness: boolean;
   colorTemp: boolean;
@@ -30,6 +32,7 @@ export interface LightingPlanEvaluation {
   intendedColorTemp: ResolvedCurve;
   colorModeWindow: EvaluatedColorModeWindow;
   intendedColorModeWindow: EvaluatedColorModeWindow;
+  currentColorPreference: ColorPreference;
   clipping: LightingPlanClipping;
   sunTimes: SunTimes;
   currentHour: number;
@@ -44,6 +47,16 @@ export interface LightingCurveEvaluation {
 
 function normalizeHour(hour: number): number {
   return ((hour % 24) + 24) % 24;
+}
+
+function isInHourArc(hour: number, start: number, end: number): boolean {
+  const normalizedHour = normalizeHour(hour);
+  const normalizedStart = normalizeHour(start);
+  const normalizedEnd = normalizeHour(end);
+  if (normalizedStart <= normalizedEnd) {
+    return normalizedHour >= normalizedStart && normalizedHour < normalizedEnd;
+  }
+  return normalizedHour >= normalizedStart || normalizedHour < normalizedEnd;
 }
 
 function sameHour(left: number, right: number): boolean {
@@ -118,15 +131,14 @@ function clipResolvedCurveTiming(resolved: ResolvedCurve, sunTimes: SunTimes): R
 }
 
 function clipColorModeWindow(window: EvaluatedColorModeWindow): EvaluatedColorModeWindow {
-  // Color Mode Window is treated as a non-wrapping daytime interval until Slice 9 finalizes the wire format.
-  let startHour = Math.max(0, Math.min(24, window.startHour));
-  let endHour = Math.max(0, Math.min(24, window.endHour));
+  let startHour = normalizeHour(window.startHour);
+  let endHour = normalizeHour(window.endHour);
   const minGap = 0.5;
 
-  if (startHour > endHour - minGap) {
+  if (startHour <= endHour && startHour > endHour - minGap) {
     startHour = Math.max(0, endHour - minGap);
   }
-  if (endHour < startHour + minGap) {
+  if (startHour <= endHour && endHour < startHour + minGap) {
     endHour = Math.min(24, startHour + minGap);
   }
 
@@ -142,13 +154,20 @@ export function evaluateColorModeWindow(
   sunTimes: SunTimes,
 ): EvaluatedColorModeWindow {
   return {
-    startHour: config.colorTempStartHour !== null
+    startHour: normalizeHour(config.colorTempStartHour !== null
       ? config.colorTempStartHour
-      : sunTimes.sunriseHour + config.startOffsetMinutes / 60,
-    endHour: config.colorTempEndHour !== null
+      : sunTimes.sunriseHour + config.startOffsetMinutes / 60),
+    endHour: normalizeHour(config.colorTempEndHour !== null
       ? config.colorTempEndHour
-      : sunTimes.sunsetHour + config.endOffsetMinutes / 60,
+      : sunTimes.sunsetHour + config.endOffsetMinutes / 60),
   };
+}
+
+export function evaluateColorPreferenceAtHour(
+  hour: number,
+  colorModeWindow: EvaluatedColorModeWindow,
+): ColorPreference {
+  return isInHourArc(hour, colorModeWindow.startHour, colorModeWindow.endHour) ? 'colorTemp' : 'rgb';
 }
 
 export function evaluateLightingCurve(
@@ -195,6 +214,7 @@ export function evaluateLightingPlan(
     intendedColorTemp: colorTemp.intended,
     colorModeWindow,
     intendedColorModeWindow,
+    currentColorPreference: evaluateColorPreferenceAtHour(currentHour, colorModeWindow),
     clipping: {
       brightness: brightness.clipped,
       colorTemp: colorTemp.clipped,

@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.adaptive_lighting.enhanced_timing import (
     CurveConfig,
+    EnhancedColorModeConfig,
     ResolvedCurve,
     calculate_value_at_hour,
     catmull_rom,
@@ -230,6 +231,63 @@ class TestCurveConfig:
         assert resolved.peak_value == 100.0
         assert resolved.valley_value == 1.0
 
+    def test_resolve_peak_and_valley_sun_relative(self):
+        cfg = _default_brightness_config()
+        relative = CurveConfig(
+            **{
+                **cfg.__dict__,
+                "peak_is_relative": True,
+                "peak_anchor": "sunrise",
+                "peak_offset_minutes": 390,
+                "valley_is_relative": True,
+                "valley_anchor": "sunset",
+                "valley_offset_minutes": 480,
+            },
+        )
+        resolved = relative.resolve(sunset_hour=18.75, sunrise_hour=6.5)
+        assert resolved.peak_hour == pytest.approx(13.0)
+        assert resolved.valley_hour == pytest.approx(2.75)
+
+
+class TestEnhancedColorModeConfig:
+    def test_resolves_sun_relative_window(self):
+        config = EnhancedColorModeConfig(
+            color_temp_start_hour=None,
+            color_temp_end_hour=None,
+            start_offset_minutes=30,
+            end_offset_minutes=-45,
+            sleep_rgb_color=(1, 2, 3),
+        )
+
+        resolved = config.resolve(sunset_hour=18.75, sunrise_hour=6.5)
+
+        assert resolved.color_temp_start == pytest.approx(7.0)
+        assert resolved.color_temp_end == pytest.approx(18.0)
+
+    def test_uses_color_temp_inside_window(self):
+        config = EnhancedColorModeConfig(
+            color_temp_start_hour=8,
+            color_temp_end_hour=18,
+            sleep_rgb_color=(1, 2, 3),
+        )
+
+        assert config.uses_color_temp(12, sunset_hour=18.75, sunrise_hour=6.5) is True
+        assert config.uses_color_temp(20, sunset_hour=18.75, sunrise_hour=6.5) is False
+
+    def test_wraps_out_of_range_relative_boundaries(self):
+        config = EnhancedColorModeConfig(
+            color_temp_start_hour=None,
+            color_temp_end_hour=None,
+            start_offset_minutes=-480,
+            end_offset_minutes=0,
+        )
+
+        resolved = config.resolve(sunset_hour=18.75, sunrise_hour=6.5)
+
+        assert resolved.color_temp_start == pytest.approx(22.5)
+        assert config.uses_color_temp(23, sunset_hour=18.75, sunrise_hour=6.5) is True
+        assert config.uses_color_temp(20, sunset_hour=18.75, sunrise_hour=6.5) is False
+
 
 import datetime as dt
 import zoneinfo
@@ -279,6 +337,11 @@ def _make_enhanced_settings() -> SunLightSettings:
         brightness_mode="enhanced", timezone=tz,
         enhanced_brightness_curve=brightness_curve,
         enhanced_color_temp_curve=color_temp_curve,
+        enhanced_color_mode=EnhancedColorModeConfig(
+            color_temp_start_hour=7.0,
+            color_temp_end_hour=18.0,
+            sleep_rgb_color=(12, 34, 56),
+        ),
     )
 
 
@@ -306,6 +369,20 @@ class TestEnhancedSunLightSettings:
         midnight = dt.datetime(2026, 6, 21, 2, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
         result = settings.brightness_and_color(midnight, is_sleep=False)
         assert result["color_temp_kelvin"] <= 2500
+
+    def test_enhanced_color_mode_uses_sleep_rgb_outside_window(self):
+        settings = _make_enhanced_settings()
+        midnight = dt.datetime(2026, 6, 21, 2, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(midnight, is_sleep=False)
+        assert result["rgb_color"] == (12, 34, 56)
+        assert result["force_rgb_color"] is True
+
+    def test_enhanced_color_mode_uses_color_temp_inside_window(self):
+        settings = _make_enhanced_settings()
+        noon = dt.datetime(2026, 6, 21, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("US/Eastern"))
+        result = settings.brightness_and_color(noon, is_sleep=False)
+        assert result["rgb_color"] != (12, 34, 56)
+        assert result["force_rgb_color"] is False
 
     def test_sleep_mode_overrides_enhanced(self):
         settings = _make_enhanced_settings()
@@ -402,4 +479,27 @@ class TestCrossValidation:
             actual = calculate_value_at_hour(hour, resolved)
             assert actual == pytest.approx(expected_ct, abs=0.01), (
                 f"Color temp mismatch at hour {hour}: Python={actual}, TS={expected_ct}"
+            )
+
+    def test_color_preference_matches_typescript(self):
+        reference = self._load_reference_data()
+        window = reference["colorModeWindow"]
+        color_mode = EnhancedColorModeConfig(
+            color_temp_start_hour=window["startHour"],
+            color_temp_end_hour=window["endHour"],
+        )
+        for sample in reference["samples"]:
+            hour = sample["hour"]
+            expected = sample["colorPreference"]
+            actual = (
+                "colorTemp"
+                if color_mode.uses_color_temp(
+                    hour,
+                    sunset_hour=reference["sunTimes"]["sunsetHour"],
+                    sunrise_hour=reference["sunTimes"]["sunriseHour"],
+                )
+                else "rgb"
+            )
+            assert actual == expected, (
+                f"Color preference mismatch at hour {hour}: Python={actual}, TS={expected}"
             )

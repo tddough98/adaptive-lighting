@@ -83,7 +83,6 @@ from .adaptation_utils import (
     prepare_adaptation_data,
 )
 from .color_and_brightness import SunLightSettings
-from .enhanced_timing import CurveConfig
 from .const import (
     ADAPT_BRIGHTNESS_SWITCH,
     ADAPT_COLOR_SWITCH,
@@ -97,9 +96,11 @@ from .const import (
     CONF_BRIGHTNESS_MODE,
     CONF_BRIGHTNESS_MODE_TIME_DARK,
     CONF_BRIGHTNESS_MODE_TIME_LIGHT,
-    CONF_ENHANCED_BRIGHTNESS_CURVE,
-    CONF_ENHANCED_COLOR_TEMP_CURVE,
     CONF_DETECT_NON_HA_CHANGES,
+    CONF_ENHANCED_BRIGHTNESS_CURVE,
+    CONF_ENHANCED_COLOR_MODE,
+    CONF_ENHANCED_COLOR_TEMP_CURVE,
+    CONF_ENHANCED_LINKED_TIMING,
     CONF_INCLUDE_CONFIG_IN_ATTRIBUTES,
     CONF_INITIAL_TRANSITION,
     CONF_INTERCEPT,
@@ -151,6 +152,7 @@ from .const import (
     apply_service_schema,
     replace_none_str,
 )
+from .enhanced_timing import CurveConfig, EnhancedColorModeConfig
 from .hass_utils import area_entities, setup_service_call_interceptor
 from .helpers import (
     clamp,
@@ -348,7 +350,13 @@ async def handle_change_switch_settings(
     switch._set_changeable_settings(data=data, defaults=deepcopy(defaults))
 
     # Persist enhanced curve changes to config_entry so they survive restarts
-    persist_keys = (CONF_ENHANCED_BRIGHTNESS_CURVE, CONF_ENHANCED_COLOR_TEMP_CURVE, CONF_BRIGHTNESS_MODE)
+    persist_keys = (
+        CONF_ENHANCED_BRIGHTNESS_CURVE,
+        CONF_ENHANCED_COLOR_TEMP_CURVE,
+        CONF_ENHANCED_LINKED_TIMING,
+        CONF_ENHANCED_COLOR_MODE,
+        CONF_BRIGHTNESS_MODE,
+    )
     changed = {k: v for k, v in data.items() if k in persist_keys}
     if changed and switch._config_entry is not None:
         new_options = {**switch._config_entry.options, **changed}
@@ -963,9 +971,11 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
         enhanced_brightness_curve = None
         enhanced_color_temp_curve = None
+        enhanced_color_mode = None
         if data[CONF_BRIGHTNESS_MODE] == "enhanced":
             enhanced_brightness_curve = CurveConfig(**data[CONF_ENHANCED_BRIGHTNESS_CURVE])
             enhanced_color_temp_curve = CurveConfig(**data[CONF_ENHANCED_COLOR_TEMP_CURVE])
+            enhanced_color_mode = EnhancedColorModeConfig(**data[CONF_ENHANCED_COLOR_MODE])
 
         self._sun_light_settings = SunLightSettings(
             name=self._name,
@@ -993,6 +1003,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             timezone=zoneinfo.ZoneInfo(self.hass.config.time_zone),
             enhanced_brightness_curve=enhanced_brightness_curve,
             enhanced_color_temp_curve=enhanced_color_temp_curve,
+            enhanced_color_mode=enhanced_color_mode,
         )
         _LOGGER.debug(
             "%s: Set switch settings for lights '%s'. now using data: '%s'",

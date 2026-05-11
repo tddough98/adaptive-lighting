@@ -5,7 +5,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluateLightingPlan } from '../src/domain/lightingPlanEvaluation';
+import { evaluateColorPreferenceAtHour, evaluateLightingPlan } from '../src/domain/lightingPlanEvaluation';
 import { DEFAULT_CURVE_SET } from '../src/data/defaults';
 import type { SunTimes } from '../src/types/curves';
 import { calculateValueAtHour } from '../src/utils/curvemath';
@@ -16,7 +16,12 @@ const sunTimes: SunTimes = { sunriseHour: 6.5, sunsetHour: 18.75 };
 
 const evaluation = evaluateLightingPlan(DEFAULT_CURVE_SET, sunTimes, 12);
 
-const samples: Array<{ hour: number; brightness: number; colorTemp: number }> = [];
+const samples: Array<{
+  hour: number;
+  brightness: number;
+  colorTemp: number;
+  colorPreference: 'colorTemp' | 'rgb';
+}> = [];
 
 for (let h = 0; h < 24; h += 0.5) {
   const brightness = calculateValueAtHour(h, evaluation.resolvedBrightness);
@@ -25,11 +30,12 @@ for (let h = 0; h < 24; h += 0.5) {
     hour: Number(h.toFixed(1)),
     brightness: Number(brightness.toFixed(4)),
     colorTemp: Number(colorTemp.toFixed(4)),
+    colorPreference: evaluateColorPreferenceAtHour(h, evaluation.colorModeWindow),
   });
 }
 
 const fixture = {
-  version: 1,
+  version: 2,
   scenarios: [
     {
       id: 'default-lighting-plan',

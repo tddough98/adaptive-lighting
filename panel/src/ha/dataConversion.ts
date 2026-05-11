@@ -2,13 +2,10 @@ import type { ColorModeConfig, CurveDefinition, CurveSet, SunTimes } from '../ty
 import type { HassEntity } from '../types/homeassistant';
 import { createEnhancedModeSeed } from '../domain/enhancedModeSeed';
 
-export type MissingLightingPlanIntentField = 'linked' | 'colorMode';
-
 export interface SavedLightingPlan {
   curveSet: CurveSet;
   sunTimes: SunTimes;
   isEnhancedMode: boolean;
-  missingIntentFields: MissingLightingPlanIntentField[];
   sourceVersion: string;
 }
 
@@ -32,8 +29,14 @@ interface CurveConfigDict {
   transition_end_value: number;
   peak_hour: number;
   peak_value: number;
+  peak_is_relative?: boolean;
+  peak_anchor?: string;
+  peak_offset_minutes?: number;
   valley_hour: number;
   valley_value: number;
+  valley_is_relative?: boolean;
+  valley_anchor?: string;
+  valley_offset_minutes?: number;
   min_value: number;
   max_value: number;
 }
@@ -62,6 +65,8 @@ function dictToColorModeConfig(dict: ColorModeConfigDict): ColorModeConfig {
 
 /** Convert an HA curve config dict to a CurveDefinition. */
 function dictToCurveDefinition(dict: CurveConfigDict, idPrefix: string): CurveDefinition {
+  const peakIsRelative = dict.peak_is_relative ?? false;
+  const valleyIsRelative = dict.valley_is_relative ?? false;
   return {
     transitionStart: {
       id: `${idPrefix}-ts`,
@@ -97,8 +102,20 @@ function dictToCurveDefinition(dict: CurveConfigDict, idPrefix: string): CurveDe
     },
     minValue: dict.min_value,
     maxValue: dict.max_value,
-    peak: { hour: dict.peak_hour, value: dict.peak_value, isRelative: false },
-    valley: { hour: dict.valley_hour, value: dict.valley_value, isRelative: false },
+    peak: {
+      hour: dict.peak_hour,
+      value: dict.peak_value,
+      isRelative: peakIsRelative,
+      anchor: peakIsRelative ? ((dict.peak_anchor || undefined) as 'sunset' | 'sunrise' | undefined) : undefined,
+      offsetMinutes: peakIsRelative ? (dict.peak_offset_minutes ?? 0) : undefined,
+    },
+    valley: {
+      hour: dict.valley_hour,
+      value: dict.valley_value,
+      isRelative: valleyIsRelative,
+      anchor: valleyIsRelative ? ((dict.valley_anchor || undefined) as 'sunset' | 'sunrise' | undefined) : undefined,
+      offsetMinutes: valleyIsRelative ? (dict.valley_offset_minutes ?? 0) : undefined,
+    },
   };
 }
 
@@ -123,10 +140,26 @@ function curveDefinitionToDict(curve: CurveDefinition): CurveConfigDict {
     transition_end_value: curve.transitionEnd.yValue,
     peak_hour: curve.peak.hour,
     peak_value: curve.peak.value,
+    peak_is_relative: curve.peak.isRelative ?? false,
+    peak_anchor: curve.peak.anchor ?? '',
+    peak_offset_minutes: curve.peak.offsetMinutes ?? 0,
     valley_hour: curve.valley.hour,
     valley_value: curve.valley.value,
+    valley_is_relative: curve.valley.isRelative ?? false,
+    valley_anchor: curve.valley.anchor ?? '',
+    valley_offset_minutes: curve.valley.offsetMinutes ?? 0,
     min_value: curve.minValue,
     max_value: curve.maxValue,
+  };
+}
+
+function colorModeConfigToDict(config: ColorModeConfig): ColorModeConfigDict {
+  return {
+    color_temp_start_hour: config.colorTempStartHour,
+    color_temp_end_hour: config.colorTempEndHour,
+    start_offset_minutes: config.startOffsetMinutes,
+    end_offset_minutes: config.endOffsetMinutes,
+    sleep_rgb_color: config.sleepRgbColor,
   };
 }
 
@@ -144,15 +177,6 @@ export function entityToSavedLightingPlan(entity: HassEntity): SavedLightingPlan
   const seededCurveSet = createEnhancedModeSeed(config);
   const linked = config.enhanced_linked_timing;
   const colorModeDict = config.enhanced_color_mode;
-  const missingIntentFields: MissingLightingPlanIntentField[] = [];
-
-  if (typeof linked !== 'boolean') {
-    missingIntentFields.push('linked');
-  }
-  if (!isRecord(colorModeDict)) {
-    // Seed may preserve legacy sleep RGB, but Color Mode Window intent cannot round-trip until Slice 9.
-    missingIntentFields.push('colorMode');
-  }
 
   const curveSet: CurveSet = {
     brightness: brightnessDict
@@ -176,7 +200,6 @@ export function entityToSavedLightingPlan(entity: HassEntity): SavedLightingPlan
     curveSet,
     sunTimes,
     isEnhancedMode: config.brightness_mode === 'enhanced',
-    missingIntentFields,
     sourceVersion: getSourceVersion(entity),
   };
 }
@@ -196,5 +219,7 @@ export function curveSetToServiceData(curveSet: CurveSet): Record<string, unknow
     brightness_mode: 'enhanced',
     enhanced_brightness_curve: curveDefinitionToDict(curveSet.brightness),
     enhanced_color_temp_curve: curveDefinitionToDict(curveSet.colorTemp),
+    enhanced_linked_timing: curveSet.linked,
+    enhanced_color_mode: colorModeConfigToDict(curveSet.colorMode),
   };
 }
