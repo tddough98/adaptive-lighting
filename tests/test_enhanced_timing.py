@@ -419,10 +419,17 @@ class TestEnhancedSunLightSettings:
 
 
 class TestCrossValidation:
-    """Verify Python output matches TypeScript reference data."""
+    """Verify Python runtime math matches TypeScript reference data.
+
+    The fixture includes raw Saved Lighting Plan intent plus TypeScript-resolved
+    evaluation output. Python resolves raw curve and color-mode intent, then
+    samples the resulting state. Seasonal clipping itself is currently
+    TypeScript-only, so clipping scenarios compare Python sampling against the
+    already-clipped evaluated fixture rather than asserting Python clipping.
+    """
 
     @staticmethod
-    def _load_reference_data() -> dict:
+    def _load_reference_data() -> list[dict]:
         fixture_path = (
             Path(__file__).parent.parent
             / "panel"
@@ -431,10 +438,8 @@ class TestCrossValidation:
         )
         with fixture_path.open() as f:
             fixture = json.load(f)
-        scenario = next(
-            item for item in fixture["scenarios"] if item["id"] == "default-lighting-plan"
-        )
-        return scenario
+        assert fixture["version"] == 4
+        return fixture["scenarios"]
 
     @staticmethod
     def _resolved_curve_from_fixture(resolved_fixture: dict) -> ResolvedCurve:
@@ -455,51 +460,157 @@ class TestCrossValidation:
             max_value=resolved_fixture["maxValue"],
         )
 
-    def test_brightness_matches_typescript(self):
-        reference = self._load_reference_data()
-        resolved = self._resolved_curve_from_fixture(
-            reference["resolvedCurves"]["brightness"],
+    @staticmethod
+    def _resolved_curve_from_raw(raw_curve: dict, sun_times: dict) -> ResolvedCurve:
+        return CurveConfig(**raw_curve).resolve(
+            sunset_hour=sun_times["sunsetHour"],
+            sunrise_hour=sun_times["sunriseHour"],
         )
-        for sample in reference["samples"]:
-            hour = sample["hour"]
-            expected_brightness = sample["brightness"]
-            actual = calculate_value_at_hour(hour, resolved)
-            assert actual == pytest.approx(expected_brightness, abs=0.01), (
-                f"Brightness mismatch at hour {hour}: Python={actual}, TS={expected_brightness}"
+
+    @staticmethod
+    def _with_timing(source: ResolvedCurve, timing: ResolvedCurve) -> ResolvedCurve:
+        return ResolvedCurve(
+            transition_start=timing.transition_start,
+            hold_start=timing.hold_start,
+            hold_end=timing.hold_end,
+            transition_end=timing.transition_end,
+            transition_start_value=source.transition_start_value,
+            hold_start_value=source.hold_start_value,
+            hold_end_value=source.hold_end_value,
+            transition_end_value=source.transition_end_value,
+            peak_hour=timing.peak_hour,
+            peak_value=source.peak_value,
+            valley_hour=timing.valley_hour,
+            valley_value=source.valley_value,
+            min_value=source.min_value,
+            max_value=source.max_value,
+        )
+
+    @staticmethod
+    def _assert_resolved_curve_matches(
+        actual: ResolvedCurve,
+        expected: ResolvedCurve,
+        scenario_id: str,
+        curve_name: str,
+    ) -> None:
+        for field in actual.__dataclass_fields__:
+            assert getattr(actual, field) == pytest.approx(getattr(expected, field)), (
+                f"{scenario_id} {curve_name} resolved {field} mismatch: "
+                f"Python={getattr(actual, field)}, TS={getattr(expected, field)}"
             )
+
+    def _resolved_curves_from_raw_intent(
+        self,
+        reference: dict,
+    ) -> tuple[ResolvedCurve, ResolvedCurve]:
+        raw_intent = reference["rawIntent"]
+        sun_times = reference["sunTimes"]
+        brightness = self._resolved_curve_from_raw(
+            raw_intent["enhanced_brightness_curve"],
+            sun_times,
+        )
+        color_temp = self._resolved_curve_from_raw(
+            raw_intent["enhanced_color_temp_curve"],
+            sun_times,
+        )
+        if raw_intent["enhanced_linked_timing"]:
+            color_temp = self._with_timing(color_temp, brightness)
+        return brightness, color_temp
+
+    def test_raw_intent_resolves_to_typescript_evaluation(self):
+        for reference in self._load_reference_data():
+            if any(reference["clipping"].values()):
+                continue
+            brightness, color_temp = self._resolved_curves_from_raw_intent(reference)
+            self._assert_resolved_curve_matches(
+                brightness,
+                self._resolved_curve_from_fixture(
+                    reference["resolvedCurves"]["brightness"],
+                ),
+                reference["id"],
+                "brightness",
+            )
+            self._assert_resolved_curve_matches(
+                color_temp,
+                self._resolved_curve_from_fixture(
+                    reference["resolvedCurves"]["colorTemp"],
+                ),
+                reference["id"],
+                "colorTemp",
+            )
+
+    def test_raw_color_mode_intent_resolves_to_typescript_evaluation(self):
+        for reference in self._load_reference_data():
+            if reference["clipping"]["colorModeWindow"]:
+                continue
+            raw_color_mode = reference["rawIntent"]["enhanced_color_mode"]
+            actual = EnhancedColorModeConfig(**raw_color_mode).resolve(
+                sunset_hour=reference["sunTimes"]["sunsetHour"],
+                sunrise_hour=reference["sunTimes"]["sunriseHour"],
+            )
+            expected = reference["colorModeWindow"]
+            assert actual.color_temp_start == pytest.approx(expected["startHour"])
+            assert actual.color_temp_end == pytest.approx(expected["endHour"])
+
+    def test_brightness_matches_typescript(self):
+        for reference in self._load_reference_data():
+            if any(reference["clipping"].values()):
+                resolved = self._resolved_curve_from_fixture(
+                    reference["resolvedCurves"]["brightness"],
+                )
+            else:
+                resolved, _ = self._resolved_curves_from_raw_intent(reference)
+            for sample in reference["samples"]:
+                hour = sample["hour"]
+                expected_brightness = sample["brightness"]
+                actual = calculate_value_at_hour(hour, resolved)
+                assert actual == pytest.approx(expected_brightness, abs=0.01), (
+                    f"{reference['id']} brightness mismatch at hour {hour}: "
+                    f"Python={actual}, TS={expected_brightness}"
+                )
 
     def test_color_temp_matches_typescript(self):
-        reference = self._load_reference_data()
-        resolved = self._resolved_curve_from_fixture(
-            reference["resolvedCurves"]["colorTemp"],
-        )
-        for sample in reference["samples"]:
-            hour = sample["hour"]
-            expected_ct = sample["colorTemp"]
-            actual = calculate_value_at_hour(hour, resolved)
-            assert actual == pytest.approx(expected_ct, abs=0.01), (
-                f"Color temp mismatch at hour {hour}: Python={actual}, TS={expected_ct}"
-            )
+        for reference in self._load_reference_data():
+            if any(reference["clipping"].values()):
+                resolved = self._resolved_curve_from_fixture(
+                    reference["resolvedCurves"]["colorTemp"],
+                )
+            else:
+                _, resolved = self._resolved_curves_from_raw_intent(reference)
+            for sample in reference["samples"]:
+                hour = sample["hour"]
+                expected_ct = sample["colorTemp"]
+                actual = calculate_value_at_hour(hour, resolved)
+                assert actual == pytest.approx(expected_ct, abs=0.01), (
+                    f"{reference['id']} color temp mismatch at hour {hour}: "
+                    f"Python={actual}, TS={expected_ct}"
+                )
 
     def test_color_preference_matches_typescript(self):
-        reference = self._load_reference_data()
-        window = reference["colorModeWindow"]
-        color_mode = EnhancedColorModeConfig(
-            color_temp_start_hour=window["startHour"],
-            color_temp_end_hour=window["endHour"],
-        )
-        for sample in reference["samples"]:
-            hour = sample["hour"]
-            expected = sample["colorPreference"]
-            actual = (
-                "colorTemp"
-                if color_mode.uses_color_temp(
-                    hour,
-                    sunset_hour=reference["sunTimes"]["sunsetHour"],
-                    sunrise_hour=reference["sunTimes"]["sunriseHour"],
+        for reference in self._load_reference_data():
+            if reference["clipping"]["colorModeWindow"]:
+                window = reference["colorModeWindow"]
+                color_mode = EnhancedColorModeConfig(
+                    color_temp_start_hour=window["startHour"],
+                    color_temp_end_hour=window["endHour"],
                 )
-                else "rgb"
-            )
-            assert actual == expected, (
-                f"Color preference mismatch at hour {hour}: Python={actual}, TS={expected}"
-            )
+            else:
+                color_mode = EnhancedColorModeConfig(
+                    **reference["rawIntent"]["enhanced_color_mode"],
+                )
+            for sample in reference["samples"]:
+                hour = sample["hour"]
+                expected = sample["colorPreference"]
+                actual = (
+                    "colorTemp"
+                    if color_mode.uses_color_temp(
+                        hour,
+                        sunset_hour=reference["sunTimes"]["sunsetHour"],
+                        sunrise_hour=reference["sunTimes"]["sunriseHour"],
+                    )
+                    else "rgb"
+                )
+                assert actual == expected, (
+                    f"{reference['id']} color preference mismatch at hour {hour}: "
+                    f"Python={actual}, TS={expected}"
+                )

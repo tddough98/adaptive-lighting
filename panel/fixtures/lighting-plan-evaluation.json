@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 4,
   "scenarios": [
     {
       "id": "default-lighting-plan",
@@ -7,6 +7,86 @@
       "sunTimes": {
         "sunriseHour": 6.5,
         "sunsetHour": 18.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 100,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 5500,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 2000,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2000,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 5500,
+          "peak_hour": 13,
+          "peak_value": 5500,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 2000,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 2000,
+          "max_value": 5500
+        },
+        "enhanced_linked_timing": true,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": null,
+          "start_offset_minutes": 0,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            255,
+            56,
+            0
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": false,
+        "colorTemp": false,
+        "colorModeWindow": false
       },
       "resolvedCurves": {
         "brightness": {
@@ -334,6 +414,2918 @@
           "brightness": 1,
           "colorTemp": 2000,
           "colorPreference": "rgb"
+        }
+      ]
+    },
+    {
+      "id": "clock-and-sun-relative-mix",
+      "description": "Lighting Plan with mixed Clock Time and Sun-Relative Time control points.",
+      "sunTimes": {
+        "sunriseHour": 6.5,
+        "sunsetHour": 18.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": 19,
+          "transition_start_is_relative": false,
+          "transition_start_anchor": "",
+          "transition_start_value": 100,
+          "hold_start_hour": 240,
+          "hold_start_is_relative": true,
+          "hold_start_anchor": "sunset",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 7,
+          "transition_end_is_relative": false,
+          "transition_end_anchor": "",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": 19,
+          "transition_start_is_relative": false,
+          "transition_start_anchor": "",
+          "transition_start_value": 5500,
+          "hold_start_hour": 240,
+          "hold_start_is_relative": true,
+          "hold_start_anchor": "sunset",
+          "hold_start_value": 2000,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2000,
+          "transition_end_offset": 7,
+          "transition_end_is_relative": false,
+          "transition_end_anchor": "",
+          "transition_end_value": 5500,
+          "peak_hour": 13,
+          "peak_value": 5500,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 2000,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 2000,
+          "max_value": 5500
+        },
+        "enhanced_linked_timing": true,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": null,
+          "start_offset_minutes": 0,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            255,
+            56,
+            0
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": false,
+        "colorTemp": false,
+        "colorModeWindow": false
+      },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 19,
+          "p2": 22.75,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 19,
+          "p2": 22.75,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 5500,
+          "p2Value": 2000,
+          "p4Value": 2000,
+          "p5Value": 5500,
+          "peakHour": 13,
+          "peakValue": 5500,
+          "valleyHour": 2,
+          "valleyValue": 2000,
+          "minValue": 2000,
+          "maxValue": 5500
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 6.5,
+        "endHour": 18.75
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6,
+          "brightness": 30.3333,
+          "colorTemp": 3037.037,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6.5,
+          "brightness": 70.6667,
+          "colorTemp": 4462.963,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 19,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 19.5,
+          "brightness": 90.9947,
+          "colorTemp": 5181.6296,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20,
+          "brightness": 78.1173,
+          "colorTemp": 4726.3704,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20.5,
+          "brightness": 62.776,
+          "colorTemp": 4184,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21,
+          "brightness": 46.3787,
+          "colorTemp": 3604.2963,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21.5,
+          "brightness": 30.3333,
+          "colorTemp": 3037.037,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22,
+          "brightness": 16.048,
+          "colorTemp": 2532,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22.5,
+          "brightness": 4.9307,
+          "colorTemp": 2138.963,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        }
+      ]
+    },
+    {
+      "id": "sun-relative-peak-valley",
+      "description": "Lighting Plan with Peak and Valley stored as Sun-Relative Time.",
+      "sunTimes": {
+        "sunriseHour": 6.5,
+        "sunsetHour": 18.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 100,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": true,
+          "peak_anchor": "sunrise",
+          "peak_offset_minutes": 390,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": true,
+          "valley_anchor": "sunset",
+          "valley_offset_minutes": 480,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 5500,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 2000,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2000,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 5500,
+          "peak_hour": 13,
+          "peak_value": 5500,
+          "peak_is_relative": true,
+          "peak_anchor": "sunrise",
+          "peak_offset_minutes": 390,
+          "valley_hour": 2,
+          "valley_value": 2000,
+          "valley_is_relative": true,
+          "valley_anchor": "sunset",
+          "valley_offset_minutes": 480,
+          "min_value": 2000,
+          "max_value": 5500
+        },
+        "enhanced_linked_timing": true,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": null,
+          "start_offset_minutes": 0,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            255,
+            56,
+            0
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": false,
+        "colorTemp": false,
+        "colorModeWindow": false
+      },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2.75,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 5500,
+          "p2Value": 2000,
+          "p4Value": 2000,
+          "p5Value": 5500,
+          "peakHour": 13,
+          "peakValue": 5500,
+          "valleyHour": 2.75,
+          "valleyValue": 2000,
+          "minValue": 2000,
+          "maxValue": 5500
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 6.5,
+        "endHour": 18.75
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6,
+          "brightness": 30.3333,
+          "colorTemp": 3037.037,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6.5,
+          "brightness": 70.6667,
+          "colorTemp": 4462.963,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18.5,
+          "brightness": 96.9978,
+          "colorTemp": 5393.8621,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 19,
+          "brightness": 88.8717,
+          "colorTemp": 5106.5753,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 19.5,
+          "brightness": 78.4939,
+          "colorTemp": 4739.6851,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20,
+          "brightness": 66.5574,
+          "colorTemp": 4317.6848,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20.5,
+          "brightness": 53.7548,
+          "colorTemp": 3865.0678,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21,
+          "brightness": 40.779,
+          "colorTemp": 3406.3275,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21.5,
+          "brightness": 28.3228,
+          "colorTemp": 2965.9571,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22,
+          "brightness": 17.079,
+          "colorTemp": 2568.4502,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22.5,
+          "brightness": 7.7405,
+          "colorTemp": 2238.3,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        }
+      ]
+    },
+    {
+      "id": "linked-color-temperature-drift",
+      "description": "Linked Lighting Plan where divergent Color Temperature timing is reasserted from Brightness timing.",
+      "sunTimes": {
+        "sunriseHour": 6.5,
+        "sunsetHour": 18.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 100,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": -120,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 5500,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 2000,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2000,
+          "transition_end_offset": 90,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 5500,
+          "peak_hour": 14,
+          "peak_value": 5500,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 3,
+          "valley_value": 2000,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 2000,
+          "max_value": 5500
+        },
+        "enhanced_linked_timing": true,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": null,
+          "start_offset_minutes": 0,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            255,
+            56,
+            0
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": false,
+        "colorTemp": true,
+        "colorModeWindow": false
+      },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 5500,
+          "p2Value": 2000,
+          "p4Value": 2000,
+          "p5Value": 5500,
+          "peakHour": 13,
+          "peakValue": 5500,
+          "valleyHour": 2,
+          "valleyValue": 2000,
+          "minValue": 2000,
+          "maxValue": 5500
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 6.5,
+        "endHour": 18.75
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6,
+          "brightness": 30.3333,
+          "colorTemp": 3037.037,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6.5,
+          "brightness": 70.6667,
+          "colorTemp": 4462.963,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18.5,
+          "brightness": 96.9978,
+          "colorTemp": 5393.8621,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 19,
+          "brightness": 88.8717,
+          "colorTemp": 5106.5753,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 19.5,
+          "brightness": 78.4939,
+          "colorTemp": 4739.6851,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20,
+          "brightness": 66.5574,
+          "colorTemp": 4317.6848,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20.5,
+          "brightness": 53.7548,
+          "colorTemp": 3865.0678,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21,
+          "brightness": 40.779,
+          "colorTemp": 3406.3275,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21.5,
+          "brightness": 28.3228,
+          "colorTemp": 2965.9571,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22,
+          "brightness": 17.079,
+          "colorTemp": 2568.4502,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22.5,
+          "brightness": 7.7405,
+          "colorTemp": 2238.3,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        }
+      ]
+    },
+    {
+      "id": "unlinked-color-temperature-timing",
+      "description": "Unlinked Lighting Plan where the Color Temperature Curve has independent timing.",
+      "sunTimes": {
+        "sunriseHour": 6.5,
+        "sunsetHour": 18.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 100,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": -120,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 5500,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 2000,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2000,
+          "transition_end_offset": 90,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 5500,
+          "peak_hour": 14,
+          "peak_value": 5500,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 3,
+          "valley_value": 2000,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 2000,
+          "max_value": 5500
+        },
+        "enhanced_linked_timing": false,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": null,
+          "start_offset_minutes": 0,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            255,
+            56,
+            0
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": false,
+        "colorTemp": false,
+        "colorModeWindow": false
+      },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 16.75,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 8,
+          "p1Value": 5500,
+          "p2Value": 2000,
+          "p4Value": 2000,
+          "p5Value": 5500,
+          "peakHour": 14,
+          "peakValue": 5500,
+          "valleyHour": 3,
+          "valleyValue": 2000,
+          "minValue": 2000,
+          "maxValue": 5500
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 6.5,
+        "endHour": 18.75
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6,
+          "brightness": 30.3333,
+          "colorTemp": 2532,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6.5,
+          "brightness": 70.6667,
+          "colorTemp": 3316,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 4184,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 4968,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5421.824,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5220.448,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 4968,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18.5,
+          "brightness": 96.9978,
+          "colorTemp": 4675.232,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 19,
+          "brightness": 88.8717,
+          "colorTemp": 4352.896,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 19.5,
+          "brightness": 78.4939,
+          "colorTemp": 4011.744,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20,
+          "brightness": 66.5574,
+          "colorTemp": 3662.528,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20.5,
+          "brightness": 53.7548,
+          "colorTemp": 3316,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21,
+          "brightness": 40.779,
+          "colorTemp": 2982.912,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21.5,
+          "brightness": 28.3228,
+          "colorTemp": 2674.016,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22,
+          "brightness": 17.079,
+          "colorTemp": 2400.064,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22.5,
+          "brightness": 7.7405,
+          "colorTemp": 2171.808,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        }
+      ]
+    },
+    {
+      "id": "color-temperature-value-range",
+      "description": "Lighting Plan with a narrowed Color Temperature Curve value range.",
+      "sunTimes": {
+        "sunriseHour": 6.5,
+        "sunsetHour": 18.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 100,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 5000,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 2200,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2200,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 5000,
+          "peak_hour": 13,
+          "peak_value": 5000,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 2200,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 2200,
+          "max_value": 5000
+        },
+        "enhanced_linked_timing": true,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": null,
+          "start_offset_minutes": 0,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            255,
+            56,
+            0
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": false,
+        "colorTemp": false,
+        "colorModeWindow": false
+      },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 5000,
+          "p2Value": 2200,
+          "p4Value": 2200,
+          "p5Value": 5000,
+          "peakHour": 13,
+          "peakValue": 5000,
+          "valleyHour": 2,
+          "valleyValue": 2200,
+          "minValue": 2200,
+          "maxValue": 5000
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 6.5,
+        "endHour": 18.75
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6,
+          "brightness": 30.3333,
+          "colorTemp": 3029.6296,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6.5,
+          "brightness": 70.6667,
+          "colorTemp": 4170.3704,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 5000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18.5,
+          "brightness": 96.9978,
+          "colorTemp": 4915.0897,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 19,
+          "brightness": 88.8717,
+          "colorTemp": 4685.2602,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 19.5,
+          "brightness": 78.4939,
+          "colorTemp": 4391.7481,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20,
+          "brightness": 66.5574,
+          "colorTemp": 4054.1478,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20.5,
+          "brightness": 53.7548,
+          "colorTemp": 3692.0542,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21,
+          "brightness": 40.779,
+          "colorTemp": 3325.062,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21.5,
+          "brightness": 28.3228,
+          "colorTemp": 2972.7657,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22,
+          "brightness": 17.079,
+          "colorTemp": 2654.7602,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22.5,
+          "brightness": 7.7405,
+          "colorTemp": 2390.64,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2200,
+          "colorPreference": "rgb"
+        }
+      ]
+    },
+    {
+      "id": "seasonal-clipping-late-sunset",
+      "description": "TypeScript evaluation clips late-sunset timing before sampling; Python parity consumes the clipped fixture because backend clipping is future scope.",
+      "sunTimes": {
+        "sunriseHour": 6,
+        "sunsetHour": 23.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 100,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 5500,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 2000,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2000,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 5500,
+          "peak_hour": 13,
+          "peak_value": 5500,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 2000,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 2000,
+          "max_value": 5500
+        },
+        "enhanced_linked_timing": true,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": null,
+          "start_offset_minutes": 0,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            255,
+            56,
+            0
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": true,
+        "colorTemp": true,
+        "colorModeWindow": false
+      },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 22.75,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 6.5,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 22.75,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 6.5,
+          "p1Value": 5500,
+          "p2Value": 2000,
+          "p4Value": 2000,
+          "p5Value": 5500,
+          "peakHour": 13,
+          "peakValue": 5500,
+          "valleyHour": 2,
+          "valleyValue": 2000,
+          "minValue": 2000,
+          "maxValue": 5500
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 6,
+        "endHour": 23.75
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 6,
+          "brightness": 50.5,
+          "colorTemp": 3750,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 6.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 19,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 19.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 20,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 20.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 21,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 21.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 22,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 22.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        }
+      ]
+    },
+    {
+      "id": "wrapping-color-mode-window",
+      "description": "Color Mode Window with modulo-24 sun-relative wrapping and RGB outside the window.",
+      "sunTimes": {
+        "sunriseHour": 6.5,
+        "sunsetHour": 18.75
+      },
+      "rawIntent": {
+        "brightness_mode": "enhanced",
+        "enhanced_brightness_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 100,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 1,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 1,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 100,
+          "peak_hour": 13,
+          "peak_value": 100,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 1,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 1,
+          "max_value": 100
+        },
+        "enhanced_color_temp_curve": {
+          "transition_start_offset": -30,
+          "transition_start_is_relative": true,
+          "transition_start_anchor": "sunset",
+          "transition_start_value": 5500,
+          "hold_start_hour": 23,
+          "hold_start_is_relative": false,
+          "hold_start_anchor": "",
+          "hold_start_value": 2000,
+          "hold_end_hour": 5.5,
+          "hold_end_is_relative": false,
+          "hold_end_anchor": "",
+          "hold_end_value": 2000,
+          "transition_end_offset": 30,
+          "transition_end_is_relative": true,
+          "transition_end_anchor": "sunrise",
+          "transition_end_value": 5500,
+          "peak_hour": 13,
+          "peak_value": 5500,
+          "peak_is_relative": false,
+          "peak_anchor": "",
+          "peak_offset_minutes": 0,
+          "valley_hour": 2,
+          "valley_value": 2000,
+          "valley_is_relative": false,
+          "valley_anchor": "",
+          "valley_offset_minutes": 0,
+          "min_value": 2000,
+          "max_value": 5500
+        },
+        "enhanced_linked_timing": true,
+        "enhanced_color_mode": {
+          "color_temp_start_hour": null,
+          "color_temp_end_hour": 18.25,
+          "start_offset_minutes": -480,
+          "end_offset_minutes": 0,
+          "sleep_rgb_color": [
+            12,
+            34,
+            56
+          ]
+        }
+      },
+      "clipping": {
+        "brightness": false,
+        "colorTemp": false,
+        "colorModeWindow": false
+      },
+      "resolvedCurves": {
+        "brightness": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 100,
+          "p2Value": 1,
+          "p4Value": 1,
+          "p5Value": 100,
+          "peakHour": 13,
+          "peakValue": 100,
+          "valleyHour": 2,
+          "valleyValue": 1,
+          "minValue": 1,
+          "maxValue": 100
+        },
+        "colorTemp": {
+          "p1": 18.25,
+          "p2": 23,
+          "p4": 5.5,
+          "p5": 7,
+          "p1Value": 5500,
+          "p2Value": 2000,
+          "p4Value": 2000,
+          "p5Value": 5500,
+          "peakHour": 13,
+          "peakValue": 5500,
+          "valleyHour": 2,
+          "valleyValue": 2000,
+          "minValue": 2000,
+          "maxValue": 5500
+        }
+      },
+      "colorModeWindow": {
+        "startHour": 22.5,
+        "endHour": 18.25
+      },
+      "samples": [
+        {
+          "hour": 0,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 0.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 1,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 1.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 2,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 2.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 3,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 3.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 4,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 4.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 5.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 6,
+          "brightness": 30.3333,
+          "colorTemp": 3037.037,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 6.5,
+          "brightness": 70.6667,
+          "colorTemp": 4462.963,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 7.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 8.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 9.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 10.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 11.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 12.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 13.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 14.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 15.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 16.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 17.5,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18,
+          "brightness": 100,
+          "colorTemp": 5500,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 18.5,
+          "brightness": 96.9978,
+          "colorTemp": 5393.8621,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 19,
+          "brightness": 88.8717,
+          "colorTemp": 5106.5753,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 19.5,
+          "brightness": 78.4939,
+          "colorTemp": 4739.6851,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20,
+          "brightness": 66.5574,
+          "colorTemp": 4317.6848,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 20.5,
+          "brightness": 53.7548,
+          "colorTemp": 3865.0678,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21,
+          "brightness": 40.779,
+          "colorTemp": 3406.3275,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 21.5,
+          "brightness": 28.3228,
+          "colorTemp": 2965.9571,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22,
+          "brightness": 17.079,
+          "colorTemp": 2568.4502,
+          "colorPreference": "rgb"
+        },
+        {
+          "hour": 22.5,
+          "brightness": 7.7405,
+          "colorTemp": 2238.3,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 23,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
+        },
+        {
+          "hour": 23.5,
+          "brightness": 1,
+          "colorTemp": 2000,
+          "colorPreference": "colorTemp"
         }
       ]
     }

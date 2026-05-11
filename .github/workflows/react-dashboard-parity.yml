@@ -1,0 +1,53 @@
+name: React Dashboard Parity
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    name: Preview/runtime parity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: panel/pnpm-lock.yaml
+
+      - name: Install panel dependencies
+        working-directory: panel
+        run: pnpm install --frozen-lockfile
+
+      - name: Run panel parity tests
+        working-directory: panel
+        run: |
+          pnpm test
+          pnpm build
+          pnpm fixtures:check
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Run Python parity tests
+        run: uv run --group docs --with pytest pytest tests/test_enhanced_timing.py -q

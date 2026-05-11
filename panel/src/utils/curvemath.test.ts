@@ -10,6 +10,12 @@ interface EvaluationFixture {
   scenarios: Array<{
     id: string;
     sunTimes: SunTimes;
+    rawIntent: Record<string, unknown>;
+    clipping: {
+      brightness: boolean;
+      colorTemp: boolean;
+      colorModeWindow: boolean;
+    };
     resolvedCurves: {
       brightness: Record<string, number>;
       colorTemp: Record<string, number>;
@@ -22,6 +28,7 @@ interface EvaluationFixture {
       hour: number;
       brightness: number;
       colorTemp: number;
+      colorPreference: 'colorTemp' | 'rgb';
     }>;
   }>;
 }
@@ -35,6 +42,28 @@ if (!defaultScenario) {
 }
 
 describe('curvemath parity fixtures', () => {
+  it('covers the expected parity scenario surface', () => {
+    expect(fixture.version).toBe(4);
+    expect(fixture.scenarios.map((scenario) => scenario.id)).toEqual([
+      'default-lighting-plan',
+      'clock-and-sun-relative-mix',
+      'sun-relative-peak-valley',
+      'linked-color-temperature-drift',
+      'unlinked-color-temperature-timing',
+      'color-temperature-value-range',
+      'seasonal-clipping-late-sunset',
+      'wrapping-color-mode-window',
+    ]);
+    expect(fixture.scenarios.every((scenario) => scenario.rawIntent)).toBe(true);
+    expect(fixture.scenarios.some((scenario) => scenario.clipping.brightness)).toBe(true);
+    expect(
+      fixture.scenarios.some((scenario) => scenario.samples.some((sample) => sample.colorPreference === 'rgb')),
+    ).toBe(true);
+    expect(
+      fixture.scenarios.some((scenario) => scenario.samples.some((sample) => sample.colorPreference === 'colorTemp')),
+    ).toBe(true);
+  });
+
   it('matches default Brightness Curve fixture values', () => {
     const evaluation = evaluateLightingPlan(DEFAULT_CURVE_SET, defaultScenario.sunTimes, 12);
 
